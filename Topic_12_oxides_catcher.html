@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Period 3 Oxide Catcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --sky-top: #87CEEB;
+        --sky-bottom: #d1e9f3;
+        --basket-acidic: #ff6b6b;
+        --basket-basic: #4db6ac;
+        --basket-amphoteric: #ffc107;
+        --oxide-color: #f0e68c;
+        --text-dark: #333;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        text-align: center;
+        margin: 0;
+        overflow: hidden;
+        background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+        color: var(--text-dark);
+    }
+
+    #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .oxide {
+        position: absolute;
+        width: 100px;
+        height: 50px;
+        line-height: 50px;
+        background-color: var(--oxide-color);
+        border: 3px solid #a1887f;
+        border-radius: 12px;
+        font-size: 1.5em;
+        font-weight: 600;
+        top: -60px; /* Start off-screen */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        pointer-events: none; /* Oxides are not interactive */
+    }
+    
+    .basket {
+        position: absolute;
+        width: 150px;
+        height: 80px;
+        border: 6px solid #8B4513;
+        border-top: none;
+        border-radius: 0 0 20px 20px;
+        cursor: grab;
+        box-shadow: inset 0 -10px 15px rgba(0,0,0,0.2), 0 5px 15px rgba(0,0,0,0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .basket.dragging {
+        cursor: grabbing;
+        transform: scale(1.1);
+        box-shadow: inset 0 -10px 20px rgba(0,0,0,0.3), 0 15px 25px rgba(0,0,0,0.4);
+        z-index: 20;
+    }
+
+    .basket-label {
+        font-size: 1.3em;
+        font-weight: 700;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        pointer-events: none; /* Make sure label doesn't interfere with dragging */
+    }
+
+    #acidic-basket {
+        background-color: var(--basket-acidic);
+        bottom: 20px;
+        left: calc(25% - 75px);
+    }
+    #basic-basket {
+        background-color: var(--basket-basic);
+        bottom: 20px;
+        left: calc(50% - 75px);
+    }
+    #amphoteric-basket {
+        background-color: var(--basket-amphoteric);
+        bottom: 20px;
+        left: calc(75% - 75px);
+    }
+    
+    #stats-container {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #score, #lives {
+        font-size: 2em;
+        font-weight: 700;
+        color: white;
+        background-color: rgba(0,0,0,0.3);
+        padding: 10px 20px;
+        border-radius: 15px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    #message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        font-size: 4em;
+        font-weight: 700;
+        display: none;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease-out;
+        z-index: 100;
+    }
+    
+    #message.show {
+        display: block;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .feedback {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    #game-over-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 99;
+    }
+
+    #game-over-box {
+        background-color: white;
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    #game-over-box h1 {
+        font-size: 3em;
+        margin-bottom: 20px;
+    }
+
+    #game-over-box p {
+        font-size: 1.5em;
+        margin-bottom: 30px;
+    }
+
+    #restart-button {
+        padding: 15px 30px;
+        font-size: 1.2em;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        border-radius: 10px;
+        background-color: var(--sky-top);
+        color: white;
+        transition: background-color 0.3s;
+    }
+
+    #restart-button:hover {
+        background-color: #6ca7c4;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .basket { width: 100px; height: 60px; }
+        .oxide { width: 80px; height: 40px; line-height: 40px; font-size: 1.2em; }
+        #score, #lives { font-size: 1.2em; padding: 8px 15px;}
+        #message { font-size: 2.5em; }
+        .basket-label { font-size: 1em; }
+
+        #acidic-basket { left: calc(20% - 50px); }
+        #basic-basket { left: calc(50% - 50px); }
+        #amphoteric-basket { left: calc(80% - 50px); }
+    }
+
+</style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="stats-container">
+        <div id="score">Score: 0</div>
+        <div id="lives">Lives: 3</div>
+    </div>
+    <div id="message"></div>
+    
+    <!-- Baskets -->
+    <div id="acidic-basket" class="basket" data-type="acidic"><span class="basket-label">Acidic</span></div>
+    <div id="basic-basket" class="basket" data-type="basic"><span class="basket-label">Basic</span></div>
+    <div id="amphoteric-basket" class="basket" data-type="amphoteric"><span class="basket-label">Amphoteric</span></div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen">
+        <div id="game-over-box">
+            <h1>Game Over</h1>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="restart-button">Play Again</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const gameContainer = document.getElementById('game-container');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+        const messageElement = document.getElementById('message');
+        const baskets = document.querySelectorAll('.basket');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreElement = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart-button');
+
+        const period3Oxides = [
+            { name: 'Na₂O', type: 'basic' },
+            { name: 'MgO', type: 'basic' },
+            { name: 'Al₂O₃', type: 'amphoteric' },
+            { name: 'SiO₂', type: 'acidic' },
+            { name: 'P₄O₁₀', type: 'acidic' },
+            { name: 'SO₂', type: 'acidic' },
+            { name: 'SO₃', type: 'acidic' }
+        ];
+
+        let score = 0;
+        let lives = 3;
+        let activeOxides = [];
+        let gameSpeed = 1.5;
+        let gameInProgress = true;
+        let oxideInterval;
+        
+        let draggedBasket = null;
+        let isDragging = false;
+        let offsetX = 0, offsetY = 0;
+
+        function init() {
+            baskets.forEach(basket => {
+                basket.addEventListener('mousedown', onDragStart);
+                basket.addEventListener('touchstart', onDragStart, { passive: false });
+            });
+
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('touchmove', onDrag, { passive: false });
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchend', onDragEnd);
+            
+            restartButton.addEventListener('click', restartGame);
+
+            startGame();
+        }
+        
+        function startGame() {
+            score = 0;
+            lives = 3;
+            gameInProgress = true;
+            activeOxides.forEach(oxide => oxide.element.remove());
+            activeOxides = [];
+            
+            updateScore();
+            updateLives();
+            
+            gameOverScreen.style.display = 'none';
+            
+            oxideInterval = setInterval(createFallingOxide, 2500);
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function restartGame() {
+            if (!gameInProgress) {
+                 startGame();
+            }
+        }
+
+        function onDragStart(e) {
+            if (!gameInProgress) return;
+            e.preventDefault();
+            
+            draggedBasket = e.target.closest('.basket');
+            if (!draggedBasket) return;
+
+            isDragging = true;
+            draggedBasket.classList.add('dragging');
+            
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            
+            const rect = draggedBasket.getBoundingClientRect();
+            offsetX = clientX - rect.left;
+            offsetY = clientY - rect.top;
+        }
+
+        function onDrag(e) {
+            if (!isDragging || !draggedBasket) return;
+            e.preventDefault();
+
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+            let newX = clientX - offsetX;
+            let newY = clientY - offsetY;
+
+            const containerRect = gameContainer.getBoundingClientRect();
+            const basketRect = draggedBasket.getBoundingClientRect();
+
+            newX = Math.max(0, newX);
+            newX = Math.min(containerRect.width - basketRect.width, newX);
+            newY = Math.max(0, newY);
+            newY = Math.min(containerRect.height - basketRect.height, newY);
+
+            draggedBasket.style.left = `${newX}px`;
+            draggedBasket.style.top = `${newY}px`;
+        }
+
+        function onDragEnd() {
+            if (draggedBasket) {
+                draggedBasket.classList.remove('dragging');
+            }
+            isDragging = false;
+            draggedBasket = null;
+        }
+
+        function createFallingOxide() {
+            if (!gameInProgress) return;
+            
+            const oxideData = period3Oxides[Math.floor(Math.random() * period3Oxides.length)];
+            const oxideElement = document.createElement('div');
+            oxideElement.className = 'oxide';
+            oxideElement.textContent = oxideData.name;
+            
+            const oxide = {
+                element: oxideElement,
+                type: oxideData.type,
+                x: Math.random() * (window.innerWidth - 100),
+                y: -60,
+                speed: Math.random() * 1 + gameSpeed,
+            };
+            
+            oxide.element.style.left = `${oxide.x}px`;
+            oxide.element.style.top = `${oxide.y}px`;
+            
+            gameContainer.appendChild(oxideElement);
+            activeOxides.push(oxide);
+        }
+        
+        function handleMistake() {
+            lives--;
+            updateLives();
+            if (lives <= 0) {
+                endGame();
+            }
+        }
+        
+        function endGame() {
+            gameInProgress = false;
+            clearInterval(oxideInterval);
+            finalScoreElement.textContent = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        function gameLoop() {
+            if (!gameInProgress) return;
+
+            for (let i = activeOxides.length - 1; i >= 0; i--) {
+                const oxide = activeOxides[i];
+                
+                oxide.y += oxide.speed;
+                oxide.element.style.top = `${oxide.y}px`;
+                
+                let caught = false;
+                baskets.forEach(basket => {
+                    if (isColliding(oxide.element, basket)) {
+                        caught = true;
+                        if (oxide.type === basket.dataset.type) {
+                            score++;
+                            updateScore();
+                            showMessage('Correct!', '#4CAF50');
+                            createFeedbackEffect(basket, 'gold');
+                        } else {
+                            showMessage('Wrong!', '#f44336');
+                            createFeedbackEffect(basket, 'rgba(255, 0, 0, 0.7)');
+                            handleMistake();
+                        }
+                        oxide.element.remove();
+                        activeOxides.splice(i, 1);
+                    }
+                });
+
+                if (caught) continue;
+                
+                if (oxide.y > window.innerHeight) {
+                    showMessage('Missed!', '#d32f2f');
+                    handleMistake();
+                    oxide.element.remove();
+                    activeOxides.splice(i, 1);
+                }
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function isColliding(el1, el2) {
+            const rect1 = el1.getBoundingClientRect();
+            const rect2 = el2.getBoundingClientRect();
+            return !(
+                rect1.right < rect2.left ||
+                rect1.left > rect2.right ||
+                rect1.bottom < rect2.top ||
+                rect1.top > rect2.bottom
+            );
+        }
+        
+        function updateScore() {
+            scoreElement.textContent = `Score: ${score}`;
+        }
+        
+        function updateLives() {
+            livesElement.textContent = `Lives: ${lives}`;
+        }
+
+        function showMessage(text, color) {
+            messageElement.textContent = text;
+            messageElement.style.color = color;
+            messageElement.classList.add('show');
+            setTimeout(() => messageElement.classList.remove('show'), 1200);
+        }
+        
+        function createFeedbackEffect(element, color) {
+            const rect = element.getBoundingClientRect();
+            for (let i = 0; i < 15; i++) {
+                const feedback = document.createElement('div');
+                feedback.className = 'feedback';
+                feedback.style.backgroundColor = color;
+                const size = Math.random() * 10 + 5;
+                feedback.style.width = `${size}px`;
+                feedback.style.height = `${size}px`;
+                feedback.style.left = `${rect.left + rect.width / 2 - size / 2}px`;
+                feedback.style.top = `${rect.top + rect.height / 2 - size / 2}px`;
+                
+                const angle = Math.random() * 360;
+                const distance = Math.random() * 80 + 40;
+                const endX = Math.cos(angle * Math.PI / 180) * distance;
+                const endY = Math.sin(angle * Math.PI / 180) * distance;
+
+                const keyframes = [
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${endX}px, ${endY}px) scale(0)`, opacity: 1 }
+                ];
+                feedback.animate(keyframes, { duration: 600, easing: 'ease-out' });
+                
+                gameContainer.appendChild(feedback);
+                setTimeout(() => feedback.remove(), 600);
+            }
+        }
+
+        init();
+    });
+</script>
+
+</body>
+</html>

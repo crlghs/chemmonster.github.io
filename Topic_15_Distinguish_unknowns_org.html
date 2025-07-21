@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Virtual Lab: Distinguish the Unknowns</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tone.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #dbeafe, #eef2ff);
+            color: #334155;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .lab-container {
+            display: grid;
+            grid-template-columns: 2fr 5fr 3fr;
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .panel {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+        
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #4338ca;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #4338ca, #4f46e5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #475569;
+        }
+
+        .reagent-shelf {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .reagent {
+            text-align: center;
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.75rem;
+            background-color: #f8fafc;
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .reagent:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .reagent:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        
+        .reagent.dragging {
+            position: absolute;
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 1000;
+            transform: scale(1.1);
+        }
+
+        .reagent img {
+            margin: 0 auto;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .reagent .reagent-name {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            margin-bottom: 0;
+            line-height: 1.2;
+            color: #1e293b;
+            word-wrap: break-word; /* Ensure long names wrap */
+        }
+
+        .lab-bench {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .test-tube-area {
+            display: flex;
+            gap: 3rem;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+        }
+        
+        .test-tube-wrapper {
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .test-tube-wrapper:hover {
+            transform: translateY(-5px);
+        }
+
+        .test-tube {
+            height: 200px;
+            width: 80px;
+            background-color: #f0f9ff;
+            border: 3px solid #60a5fa;
+            border-top: none;
+            border-radius: 0 0 40px 40px;
+            position: relative;
+            transition: all 0.4s ease;
+            overflow: hidden;
+            margin: 0 auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .test-tube::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -5px;
+            right: -5px;
+            height: 20px;
+            background-color: #93c5fd;
+            border-radius: 50% / 100%;
+            border: 3px solid #60a5fa;
+        }
+
+        .test-tube.drag-over {
+            border-color: #1d4ed8; 
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.6); 
+            transform: scale(1.05); 
+        }
+
+        .observation-area {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .observation-box {
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.75rem;
+            min-height: 60px;
+            font-size: 0.9rem;
+            text-align: center;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .observation-box.active {
+            background-color: #dbeafe;
+            border-color: #93c5fd;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            width: 100%;
+            justify-content: center;
+        }
+
+        button {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            padding: 0.85rem 1.75rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .btn-warm { background: linear-gradient(to right, #ef4444, #dc2626); color: white; }
+        .btn-warm:hover { background: linear-gradient(to right, #dc2626, #b91c1c); }
+
+        .btn-fresh { background: linear-gradient(to right, #3b82f6, #2563eb); color: white; }
+        .btn-fresh:hover { background: linear-gradient(to right, #2563eb, #1d4ed8); }
+
+        .btn-submit { 
+            width: 100%; 
+            background: linear-gradient(to right, #16a34a, #15803d); 
+            color: white; 
+            padding: 1rem;
+            justify-content: center;
+        }
+        .btn-submit:hover { background: linear-gradient(to right, #15803d, #166534); }
+        .btn-submit:disabled { background: #9ca3af; cursor: not-allowed; }
+
+        .btn-reset { 
+            width: 100%; 
+            margin-top: 0.75rem; 
+            background: linear-gradient(to right, #6b7280, #4b5563); 
+            color: white; 
+            padding: 1rem;
+            justify-content: center;
+        }
+        .btn-reset:hover { background: linear-gradient(to right, #4b5563, #374151); }
+
+        .conclusion-panel form {
+            margin-bottom: 1rem;
+        }
+        .conclusion-panel .form-group {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.75rem;
+        }
+        .conclusion-panel .form-group p {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+        }
+        .conclusion-panel .radio-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .conclusion-panel .radio-group label:hover {
+            background-color: #e2e8f0;
+        }
+        
+        .conclusion-panel .radio-group input {
+            margin-right: 0.75rem;
+        }
+
+        .silver-mirror { background: linear-gradient(135deg, #e5e7eb, #9ca3af, #d1d5db, #6b7280); }
+        .orange-to-green { background: linear-gradient(to bottom, #16a34a, #15803d); }
+        .reagent-orange { background: linear-gradient(to bottom, #fb923c, #ea580c); }
+        .dnp-precipitate {
+            background-color: #fef3c7;
+            background-image: radial-gradient(#fde047 20%, transparent 20%), radial-gradient(#fde047 20%, transparent 20%);
+            background-size: 10px 10px;
+            background-position: 0 0, 5px 5px;
+        }
+        .bubbles { position: absolute; bottom: 0; width: 100%; height: 100%; }
+        .bubble { position: absolute; background-color: rgba(255, 255, 255, 0.8); border-radius: 50%; animation: rise 2s infinite ease-in; }
+        @keyframes rise {
+            0% { bottom: -10px; opacity: 1; }
+            100% { bottom: 100%; opacity: 0; }
+        }
+        
+        .highlight {
+            animation: highlight 1.5s ease;
+        }
+        
+        @keyframes highlight {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        @media (max-width: 1199px) {
+            .lab-container { grid-template-columns: 1fr 1fr; }
+            .instructions-panel { grid-column: 1 / -1; }
+        }
+        @media (max-width: 767px) {
+            .lab-container { grid-template-columns: 1fr; }
+            .reagent-shelf { grid-template-columns: repeat(3, 1fr); }
+            .test-tube-area { gap: 1.5rem; }
+            .observation-area { gap: 1.5rem; }
+            h1 { font-size: 1.5rem; }
+            h2 { font-size: 1.125rem; }
+            .button-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="lab-container">
+        <!-- Instructions & Reagent Shelf Panel -->
+        <div class="instructions-panel panel">
+            <h1>Distinguish the Unknowns</h1>
+            <p id="challenge-text">Your challenge is to distinguish between two unknown organic compounds. Drag a reagent to a test tube and find out what happens.</p>
+            
+            <h2>Reagent Shelf</h2>
+            <div id="reagent-shelf" class="reagent-shelf">
+                <div class="reagent" draggable="true" data-reagent="Acidified K₂Cr₂O₇">
+                    <img src="https://placehold.co/80x80/fed7aa/b45309?text=K₂Cr₂O₇" alt="Oxidizing Agent">
+                    <p class="reagent-name">Acidified K<sub>2</sub>Cr<sub>2</sub>O<sub>7</sub></p>
+                </div>
+                <div class="reagent" draggable="true" data-reagent="Tollen's Reagent">
+                    <img src="https://placehold.co/80x80/e0e7ff/4338ca?text=Tollen" alt="Tollen's Reagent">
+                    <p class="reagent-name">Tollen's Reagent</p>
+                </div>
+                <div class="reagent" draggable="true" data-reagent="NaHCO₃">
+                    <img src="https://placehold.co/80x80/dcfce7/15803d?text=NaHCO₃" alt="Sodium Bicarbonate">
+                    <p class="reagent-name">NaHCO<sub>3</sub></p>
+                </div>
+                <div class="reagent" draggable="true" data-reagent="Br₂">
+                    <img src="https://placehold.co/80x80/feefc7/f59e0b?text=Br₂" alt="Bromine">
+                    <p class="reagent-name">Br<sub>2</sub></p>
+                </div>
+                 <div class="reagent" draggable="true" data-reagent="2,4-DNPH">
+                    <img src="https://placehold.co/80x80/fef9c3/ca8a04?text=2,4-DNPH" alt="2,4-DNPH">
+                    <p class="reagent-name">2,4-DNPH</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lab Bench Panel -->
+        <div class="lab-bench panel">
+            <div class="test-tube-area">
+                <div class="test-tube-wrapper">
+                    <div id="test-tube-a" class="test-tube"></div>
+                    <p>Sample A</p>
+                </div>
+                <div class="test-tube-wrapper">
+                    <div id="test-tube-b" class="test-tube"></div>
+                    <p>Sample B</p>
+                </div>
+            </div>
+            <div class="observation-area">
+                 <div class="text-center">
+                    <p>Observation A</p>
+                    <div id="feedback-area-a" class="observation-box">No reagent added</div>
+                </div>
+                <div class="text-center">
+                    <p>Observation B</p>
+                    <div id="feedback-area-b" class="observation-box">No reagent added</div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button id="fresh-samples-btn" class="btn-fresh">Use Fresh Samples 🧪</button>
+                <button id="warm-button" class="btn-warm">Warm Gently 🔥</button>
+            </div>
+        </div>
+
+        <!-- Conclusion Panel -->
+        <div class="conclusion-panel panel">
+            <h2>Final Analysis</h2>
+            <form id="conclusion-form">
+                <div class="form-group">
+                    <p>Sample A is:</p>
+                    <div id="choices-a" class="radio-group"></div>
+                </div>
+                <div class="form-group">
+                    <p>Sample B is:</p>
+                    <div id="choices-b" class="radio-group"></div>
+                </div>
+                <button id="submit-answer-btn" type="submit" class="btn-submit">Confirm Identification</button>
+            </form>
+            <div id="explanation-box"></div>
+            <button id="reset-btn" class="btn-reset">New Challenge</button>
+        </div>
+    </div>
+
+    <script>
+        // --- SOUND SETUP ---
+        let soundsReady = false;
+        const dropSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination();
+        const fizzSound = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.1 } }).toDestination();
+        const correctSound = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+        
+        function playDrop() { if (soundsReady) dropSound.triggerAttackRelease('C4', '8n'); }
+        function playFizz() { if (soundsReady) fizzSound.triggerAttackRelease('4n'); }
+        function playCorrect() { if (soundsReady) { correctSound.triggerAttackRelease('G5', '8n', Tone.now()); correctSound.triggerAttackRelease('E6', '8n', Tone.now() + 0.1); } }
+
+        // Define reagent initial colors
+        const reagentInitialColors = {
+            "Br₂": "reagent-orange",
+            "Acidified K₂Cr₂O₇": "reagent-orange"
+        };
+
+        // --- DATA ---
+        const challenges = [
+            {
+                pair: ["Propanal", "Propanone"],
+                reactions: {
+                    "Propanal": { 
+                        "Tollen's Reagent": { result: "silver-mirror", warm: true, observation: "A silver mirror forms." }, 
+                        "Acidified K₂Cr₂O₇": { result: "orange-to-green", warm: true, observation: "Solution turns green." }, 
+                        "2,4-DNPH": { result: "dnp-precipitate", warm: false, observation: "Orange precipitate forms." } 
+                    },
+                    "Propanone": { 
+                        "Tollen's Reagent": { result: "no-reaction", warm: true, observation: "No visible reaction." }, 
+                        "Acidified K₂Cr₂O₇": { result: "no-reaction", warm: true, observation: "Solution remains orange." }, 
+                        "2,4-DNPH": { result: "dnp-precipitate", warm: false, observation: "Orange precipitate forms." } 
+                    }
+                },
+                explanation: "Both form a precipitate with <strong>2,4-DNPH</strong>, confirming they are carbonyls. To distinguish them, adding <strong>Tollen's Reagent</strong> and warming oxidizes the aldehyde (Propanal) to form a silver mirror, while the ketone (Propanone) does not react."
+            },
+            {
+                pair: ["But-1-ene", "Butane"],
+                reactions: {
+                    "But-1-ene": { "Br₂": { result: "colorless", warm: false, observation: "The orange solution becomes colorless." } },
+                    "Butane": { "Br₂": { result: "no-reaction", warm: false, observation: "No visible reaction." } }
+                },
+                explanation: "The key test is adding <strong>Br₂</strong>. An alkene (But-1-ene) undergoes an addition reaction with bromine, rapidly turning the orange solution colorless. An alkane (Butane) does not react."
+            },
+            {
+                pair: ["Ethanol", "Propanone"],
+                reactions: {
+                    "Ethanol": { 
+                        "2,4-DNPH": { result: "no-reaction", warm: false, observation: "No visible reaction." },
+                        "Br₂": { result: "no-reaction", warm: false, observation: "No visible reaction." }
+                    },
+                    "Propanone": { 
+                        "2,4-DNPH": { result: "dnp-precipitate", warm: false, observation: "Orange precipitate forms." },
+                        "Br₂": { result: "no-reaction", warm: false, observation: "No visible reaction." }
+                    }
+                },
+                explanation: "The key test is adding <strong>2,4-dinitrophenylhydrazine</strong>. A ketone (Propanone) will form an orange precipitate, while an alcohol (Ethanol) will not react."
+            },
+            {
+                pair: ["Ethanol", "Ethanoic Acid"],
+                reactions: {
+                    "Ethanol": { 
+                        "Acidified K₂Cr₂O₇": { result: "orange-to-green", warm: true, observation: "Solution turns green." }, 
+                        "NaHCO₃": { result: "no-reaction", warm: false, observation: "No visible reaction." },
+                        "Br₂": { result: "no-reaction", warm: false, observation: "No visible reaction." }
+                    },
+                    "Ethanoic Acid": { 
+                        "Acidified K₂Cr₂O₇": { result: "no-reaction", warm: true, observation: "Solution remains orange." }, 
+                        "NaHCO₃": { result: "bubbles", warm: false, observation: "Effervescence occurs." },
+                        "Br₂": { result: "no-reaction", warm: false, observation: "No visible reaction." }
+                    }
+                },
+                explanation: "Two tests can distinguish them. 1) Adding <strong>NaHCO₃</strong> causes effervescence (CO₂ bubbles) with the carboxylic acid (Ethanoic Acid), but not with the alcohol (Ethanol). 2) Alternatively, adding <strong>Acidified K₂Cr₂O₇</strong> and warming oxidizes the alcohol (orange to green), but does not react with the carboxylic acid."
+            },
+            {
+                pair: ["Hexane", "Hexan-1-ol"],
+                reactions: {
+                    "Hexane": { 
+                        "Acidified K₂Cr₂O₇": { result: "no-reaction", warm: true, observation: "Solution remains orange." },
+                        "Br₂": { result: "no-reaction", warm: false, observation: "No visible reaction." }
+                    },
+                    "Hexan-1-ol": { 
+                        "Acidified K₂Cr₂O₇": { result: "orange-to-green", warm: true, observation: "Solution turns green." },
+                        "Br₂": { result: "no-reaction", warm: false, observation: "No visible reaction." }
+                    }
+                },
+                explanation: "The key test is adding <strong>Acidified K₂Cr₂O₇</strong> and warming. A primary alcohol (Hexan-1-ol) is oxidized, turning the solution from orange to green. An alkane (Hexane) does not react."
+            }
+        ];
+
+        // --- STATE ---
+        let currentChallenge = {};
+        let sampleA_identity = '';
+        let sampleB_identity = '';
+        let draggedReagent = null;
+        let tubeA_state = { reagent: null, reacted: false };
+        let tubeB_state = { reagent: null, reacted: false };
+
+        // --- DOM ELEMENTS ---
+        const challengeText = document.getElementById('challenge-text');
+        const feedbackAreaA = document.getElementById('feedback-area-a');
+        const feedbackAreaB = document.getElementById('feedback-area-b');
+        const tubeA = document.getElementById('test-tube-a');
+        const tubeB = document.getElementById('test-tube-b');
+        const conclusionForm = document.getElementById('conclusion-form');
+        const choicesA = document.getElementById('choices-a');
+        const choicesB = document.getElementById('choices-b');
+        const explanationBox = document.getElementById('explanation-box');
+        
+        // --- DRAG & DROP LOGIC (MOUSE) ---
+        document.querySelectorAll('.reagent').forEach(reagent => {
+            reagent.addEventListener('dragstart', e => {
+                draggedReagent = e.target.closest('.reagent').dataset.reagent;
+            });
+        });
+
+        [tubeA, tubeB].forEach(tube => {
+            tube.addEventListener('dragover', e => { 
+                e.preventDefault(); 
+                tube.classList.add('drag-over'); 
+            });
+            tube.addEventListener('dragleave', () => tube.classList.remove('drag-over'));
+            tube.addEventListener('drop', e => {
+                e.preventDefault();
+                tube.classList.remove('drag-over');
+                if (!draggedReagent) return;
+                handleDrop(tube, draggedReagent);
+            });
+        });
+        
+        // --- MOBILE TOUCH DRAG & DROP LOGIC ---
+        let touchDragElement = null;
+        let touchClone = null;
+
+        document.querySelectorAll('.reagent').forEach(reagent => {
+            reagent.addEventListener('touchstart', e => {
+                e.preventDefault();
+                touchDragElement = e.target.closest('.reagent');
+                draggedReagent = touchDragElement.dataset.reagent;
+                
+                touchClone = touchDragElement.cloneNode(true);
+                touchClone.classList.add('dragging');
+                document.body.appendChild(touchClone);
+                
+                const touch = e.targetTouches[0];
+                moveClone(touch.clientX, touch.clientY);
+            }, { passive: false });
+        });
+
+        document.addEventListener('touchmove', e => {
+            if (!touchDragElement) return;
+            e.preventDefault();
+            const touch = e.targetTouches[0];
+            moveClone(touch.clientX, touch.clientY);
+
+            [tubeA, tubeB].forEach(tube => {
+                const rect = tube.getBoundingClientRect();
+                if (touch.clientX > rect.left && touch.clientX < rect.right &&
+                    touch.clientY > rect.top && touch.clientY < rect.bottom) {
+                    tube.classList.add('drag-over');
+                } else {
+                    tube.classList.remove('drag-over');
+                }
+            });
+
+        }, { passive: false });
+
+        document.addEventListener('touchend', e => {
+            if (!touchDragElement) return;
+            
+            const touch = e.changedTouches[0];
+            const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (dropTarget && (dropTarget.id === 'test-tube-a' || dropTarget.id === 'test-tube-b')) {
+                handleDrop(dropTarget, draggedReagent);
+            }
+            
+            document.body.removeChild(touchClone);
+            touchDragElement = null;
+            touchClone = null;
+            draggedReagent = null;
+            [tubeA, tubeB].forEach(tube => tube.classList.remove('drag-over'));
+        });
+
+        function moveClone(x, y) {
+            if (!touchClone) return;
+            touchClone.style.left = `${x - touchClone.offsetWidth / 2}px`;
+            touchClone.style.top = `${y - touchClone.offsetHeight / 2}px`;
+        }
+
+        // --- SHARED DROP HANDLER ---
+        function handleDrop(tube, reagentData) {
+            const tubeId = tube.id.split('-')[2];
+            const tubeState = tubeId === 'a' ? tubeA_state : tubeB_state;
+            const observationBox = tubeId === 'a' ? feedbackAreaA : feedbackAreaB;
+
+            if (tubeState.reagent) {
+                observationBox.textContent = `Already contains a reagent.`;
+                observationBox.classList.add('active');
+                setTimeout(() => observationBox.classList.remove('active'), 1000);
+                return;
+            }
+            
+            playDrop();
+            tubeState.reagent = reagentData;
+            const identity = tubeId === 'a' ? sampleA_identity : sampleB_identity;
+            const reaction = currentChallenge.reactions[identity]?.[reagentData];
+            const needsWarming = (reagentData === "Acidified K₂Cr₂O₇" || reagentData === "Tollen's Reagent");
+            
+            // Set initial color for reagents that have one
+            if (reagentInitialColors[reagentData]) {
+                tube.className = 'test-tube';
+                tube.classList.add(reagentInitialColors[reagentData]);
+            }
+            
+            observationBox.textContent = `Reagent added...`;
+            observationBox.classList.add('active');
+            
+            if (needsWarming) {
+                if (reagentData === "Acidified K₂Cr₂O₇") {
+                    tube.className = 'test-tube';
+                    tube.classList.add('reagent-orange');
+                }
+            } else {
+                const finalReaction = reaction || { 
+                    result: "no-reaction", 
+                    warm: false, 
+                    observation: `No visible reaction.`,
+                    initialColor: reagentInitialColors[reagentData]
+                };
+                
+                setTimeout(() => {
+                    runReaction(tube, identity, finalReaction);
+                    tubeState.reacted = true;
+                }, 1000);
+            }
+        }
+
+        // --- REACTION LOGIC ---
+        function runReaction(tube, identity, reaction) {
+            const tubeId = tube.id.split('-')[2];
+            const tubeState = tubeId === 'a' ? tubeA_state : tubeB_state;
+            const observationBox = tubeId === 'a' ? feedbackAreaA : feedbackAreaB;
+            const reagent = tubeState.reagent;
+            
+            observationBox.textContent = reaction.observation;
+            observationBox.classList.add('active');
+            tube.innerHTML = '';
+            tube.className = 'test-tube';
+            
+            // Preserve initial color for no-reaction
+            if (reagentInitialColors[reagent] && reaction.result === "no-reaction") {
+                tube.classList.add(reagentInitialColors[reagent]);
+            }
+            
+            switch(reaction.result) {
+                case 'silver-mirror': 
+                    tube.classList.add('silver-mirror'); 
+                    break;
+                case 'orange-to-green': 
+                    tube.classList.add('orange-to-green'); 
+                    break;
+                case 'colorless': 
+                    tube.style.backgroundColor = '#f0f9ff'; 
+                    break;
+                case 'dnp-precipitate': 
+                    tube.classList.add('dnp-precipitate'); 
+                    break;
+                case 'bubbles':
+                    playFizz();
+                    for(let i=0; i<15; i++) {
+                        const bubble = document.createElement('div');
+                        bubble.className = 'bubble';
+                        bubble.style.width = bubble.style.height = `${Math.random() * 10 + 5}px`;
+                        bubble.style.left = `${Math.random() * 80}%`;
+                        bubble.style.animationDuration = `${Math.random() * 1 + 1}s`;
+                        tube.appendChild(bubble);
+                    }
+                    break;
+                case 'no-reaction': 
+                    // Initial color already set above
+                    break;
+            }
+        }
+
+        document.getElementById('warm-button').addEventListener('click', () => {
+            [tubeA, tubeB].forEach(tube => {
+                const tubeId = tube.id.split('-')[2];
+                const tubeState = tubeId === 'a' ? tubeA_state : tubeB_state;
+                if (tubeState.reagent && !tubeState.reacted) {
+                    const identity = tubeId === 'a' ? sampleA_identity : sampleB_identity;
+                    let reaction = currentChallenge.reactions[identity]?.[tubeState.reagent];
+                    
+                    // Create default reaction for bromine if needed
+                    if (!reaction && tubeState.reagent === "Br₂") {
+                        reaction = {
+                            result: "no-reaction",
+                            warm: true,
+                            observation: "No visible reaction."
+                        };
+                    }
+                    
+                    if (reaction && reaction.warm) {
+                        runReaction(tube, identity, reaction);
+                        tubeState.reacted = true;
+                    }
+                }
+            });
+        });
+
+        // --- GAME SETUP & CONCLUSION ---
+        function setupGame() {
+            conclusionForm.style.display = 'block';
+            explanationBox.innerHTML = '';
+            document.getElementById('submit-answer-btn').disabled = false;
+
+            currentChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+            const [compound1, compound2] = currentChallenge.pair;
+            
+            if (Math.random() > 0.5) {
+                sampleA_identity = compound1;
+                sampleB_identity = compound2;
+            } else {
+                sampleA_identity = compound2;
+                sampleB_identity = compound1;
+            }
+
+            challengeText.innerHTML = `Your challenge is to distinguish between <strong>${compound1}</strong> and <strong>${compound2}</strong>. Drag a reagent to a test tube and find out what happens.`;
+            
+            useFreshSamples(); 
+
+            choicesA.innerHTML = '';
+            choicesB.innerHTML = '';
+            currentChallenge.pair.forEach(name => {
+                choicesA.innerHTML += `<div><label><input type="radio" name="sampleA" value="${name}" required> ${name}</label></div>`;
+                choicesB.innerHTML += `<div><label><input type="radio" name="sampleB" value="${name}" required> ${name}</label></div>`;
+            });
+            
+            // Highlight bromine for demonstration
+            const bromineReagent = document.querySelector('[data-reagent="Br₂"]');
+            bromineReagent.classList.add('highlight');
+            setTimeout(() => bromineReagent.classList.remove('highlight'), 1500);
+        }
+        
+        function useFreshSamples() {
+            tubeA_state = { reagent: null, reacted: false };
+            tubeB_state = { reagent: null, reacted: false };
+            tubeA.className = 'test-tube';
+            tubeB.className = 'test-tube';
+            tubeA.innerHTML = '';
+            tubeB.innerHTML = '';
+            feedbackAreaA.textContent = 'No reagent added';
+            feedbackAreaB.textContent = 'No reagent added';
+            feedbackAreaA.classList.remove('active');
+            feedbackAreaB.classList.remove('active');
+        }
+        
+        conclusionForm.addEventListener('change', e => {
+            if (e.target.type === 'radio') {
+                const selectedName = e.target.name; 
+                const selectedValue = e.target.value;
+
+                const [compound1, compound2] = currentChallenge.pair;
+                const otherCompound = (selectedValue === compound1) ? compound2 : compound1;
+
+                if (selectedName === 'sampleA') {
+                    const otherRadioButton = document.querySelector(`#choices-b input[value="${otherCompound}"]`);
+                    if (otherRadioButton) otherRadioButton.checked = true;
+                } else if (selectedName === 'sampleB') {
+                    const otherRadioButton = document.querySelector(`#choices-a input[value="${otherCompound}"]`);
+                    if (otherRadioButton) otherRadioButton.checked = true;
+                }
+            }
+        });
+
+        conclusionForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const formData = new FormData(conclusionForm);
+            const guessA = formData.get('sampleA');
+            const guessB = formData.get('sampleB');
+            
+            const explanationContent = `<div style="margin-top: 1.5rem; padding: 1.25rem; background-color: #fefce8; border-left: 4px solid #facc15; color: #854d0e; text-align: left; border-radius: 0 0.75rem 0.75rem 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                                        <p style="font-weight: 700; margin-bottom: 0.75rem;">The Chemistry Explained:</p>
+                                        <p style="font-size: 0.95rem; line-height: 1.6;">${currentChallenge.explanation}</p>
+                                     </div>`;
+
+            let resultHTML = '';
+            if (guessA === sampleA_identity && guessB === sampleB_identity) {
+                playCorrect();
+                resultHTML = `<div style="color: #166534; font-weight: 700; font-size: 1.25rem; text-align: center; padding: 1rem; background-color: #dcfce7; border-radius: 0.75rem; margin-bottom: 1rem;">Correct! 🎉</div> 
+                              <p style="text-align: center;">Sample A was <strong>${sampleA_identity}</strong> and Sample B was <strong>${sampleB_identity}</strong>.</p>`;
+            } else {
+                resultHTML = `<div style="color: #991b1b; font-weight: 700; font-size: 1.25rem; text-align: center; padding: 1rem; background-color: #fee2e2; border-radius: 0.75rem; margin-bottom: 1rem;">Incorrect. Try again!</div> 
+                              <p style="text-align: center;">The correct answer was: Sample A is <strong>${sampleA_identity}</strong> and Sample B is <strong>${sampleB_identity}</strong>.</p>`;
+            }
+            
+            conclusionForm.style.display = 'none';
+            explanationBox.innerHTML = resultHTML + explanationContent;
+            document.getElementById('submit-answer-btn').disabled = true;
+        });
+        
+        document.getElementById('reset-btn').addEventListener('click', setupGame);
+        document.getElementById('fresh-samples-btn').addEventListener('click', useFreshSamples);
+
+        // --- INITIALIZATION ---
+        document.body.addEventListener('click', () => {
+            if (!soundsReady) {
+                Tone.start();
+                soundsReady = true;
+            }
+        }, { once: true });
+
+        window.onload = setupGame;
+    </script>
+</body>
+</html>

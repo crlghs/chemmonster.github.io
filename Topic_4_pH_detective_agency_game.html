@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pH Detective Agency</title>
+    <style>
+        :root {
+            --primary-color: #4a5568; /* Slate Gray */
+            --secondary-color: #a0aec0; /* Light Slate */
+            --background-color: #f7fafc;
+            --text-color: #2d3748;
+            --border-color: #e2e8f0;
+            --success-color: #48bb78;
+            --warning-color: #f6e05e;
+            --info-color: #4299e1;
+            --error-color: #e53e3e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 1em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2em;
+            overflow: hidden;
+            position: relative; /* For confetti positioning */
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--primary-color);
+        }
+        h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); }
+        h2 { font-size: clamp(1.2rem, 3vw, 1.5rem); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5em; margin-top: 2em; margin-bottom: 1em; }
+        
+        .intro-text {
+            text-align: center;
+            margin: -1em auto 1.5em;
+            padding: 1em 1.5em;
+            background-color: var(--info-color);
+            color: white;
+            border-radius: 8px;
+            max-width: 85%;
+            line-height: 1.5;
+        }
+        .intro-text p {
+            margin: 0.25em 0;
+        }
+        .intro-text strong {
+            font-size: 1.1em;
+        }
+        
+        .test-tube-rack {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 1em;
+            padding-bottom: 10px;
+            border-bottom: 4px solid #8d6e63;
+        }
+
+        .test-tube {
+            width: 40px;
+            height: 150px;
+            border: 2px solid var(--secondary-color);
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            position: relative;
+            background-color: rgba(226, 232, 240, 0.5);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .test-tube:hover {
+            transform: translateY(-5px);
+        }
+        .test-tube .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80%;
+            background-color: #cbd5e0;
+            border-radius: 0 0 13px 13px;
+            transition: background-color 0.3s;
+        }
+        .test-tube .label {
+            position: absolute;
+            bottom: -25px;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+        }
+        .test-tube.mystery .label {
+            color: var(--info-color);
+        }
+
+        .indicator-palette {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 1.5em;
+        }
+        .indicator-btn {
+            padding: 0.8em 1.2em;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .indicator-btn.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .deduction-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5em;
+            margin-top: 2em;
+        }
+        #deduction-area {
+            width: 100%;
+            max-width: 500px;
+            padding: 1em;
+            background: #edf2f7;
+            border-radius: 8px;
+            text-align: center;
+        }
+        #deduction-area select {
+            padding: 0.5em;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 2px solid var(--border-color);
+        }
+        #deduction-area button {
+            padding: 0.6em 1.5em;
+            border: none;
+            background: var(--success-color);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 10px;
+        }
+
+        #feedback-log {
+            width: 100%;
+            max-width: 500px;
+            padding: 1em;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            height: 80px;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+        #feedback-log p { margin: 0 0 0.5em; }
+
+        #new-case-btn {
+             padding: 0.8em 2em;
+             border: none;
+             background: var(--info-color);
+             color: white;
+             border-radius: 8px;
+             cursor: pointer;
+             font-size: 1.1em;
+             width: 100%;
+             max-width: 524px;
+        }
+        
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background: #f00;
+            top: -20px;
+            opacity: 0;
+            animation: confetti-fall 3s linear forwards;
+        }
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotateZ(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(120vh) rotateZ(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="game-container">
+        <h1>🕵️‍♀️ pH Detective Agency</h1>
+        <div class="intro-text">
+            <p><strong>Welcome, Detective! Your mission is to identify the pH of a mystery solution.</strong></p>
+        </div>
+        
+        <section id="step1">
+            <h2>Step 1: Select an Indicator</h2>
+            <div class="indicator-palette" id="indicator-palette">
+                <!-- Indicator buttons will be generated here -->
+            </div>
+        </section>
+
+        <section id="step2">
+            <h2>Step 2: Test the Solutions by Clicking the Test Tubes</h2>
+            <div class="test-tube-rack" id="test-tube-rack">
+                <!-- All test tubes will be generated here -->
+            </div>
+        </section>
+
+        <section id="step3">
+            <h2>Step 3: Solve the Case</h2>
+            <div class="deduction-section">
+                <div id="deduction-area">
+                    <label for="ph-guess">My Deduction:</label>
+                    <select id="ph-guess">
+                        <option value="3">pH 3</option>
+                        <option value="5">pH 5</option>
+                        <option value="7">pH 7</option>
+                        <option value="9">pH 9</option>
+                        <option value="11">pH 11</option>
+                    </select>
+                    <button id="solve-btn">Solve Case</button>
+                </div>
+                <div id="feedback-log"></div>
+                <button id="new-case-btn">Start New Case</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const gameContainer = document.getElementById('game-container');
+        const testTubeRack = document.getElementById('test-tube-rack');
+        const indicatorPalette = document.getElementById('indicator-palette');
+        const feedbackLog = document.getElementById('feedback-log');
+        const solveBtn = document.getElementById('solve-btn');
+        const newCaseBtn = document.getElementById('new-case-btn');
+        const phGuessSelect = document.getElementById('ph-guess');
+
+        let selectedIndicator = null;
+        let mysteryPH = 0;
+        let previousMysteryPH = -1;
+        
+        const labSolutions = [
+            { name: 'pH 3', ph: 3 }, { name: 'pH 5', ph: 5 }, { name: 'pH 7', ph: 7 }, { name: 'pH 9', ph: 9 }, { name: 'pH 11', ph: 11 }
+        ];
+        const possibleMysteryPHs = [3, 5, 7, 9, 11];
+
+        // FIX: Added Bromothymol Blue to the indicators object
+        const indicators = {
+            'Methyl Orange': {
+                getColor: (ph) => {
+                    if (ph < 3.1) return '#ff4d4d'; // Red
+                    if (ph > 4.4) return '#ffff66'; // Yellow
+                    return '#ffc65c'; // Orange
+                }
+            },
+            'Litmus': {
+                getColor: (ph) => {
+                    if (ph < 5) return '#ff4d4d'; // Red
+                    if (ph > 8) return '#4d4dff'; // Blue
+                    return '#c080c0'; // Purple
+                }
+            },
+            'Phenolphthalein': {
+                getColor: (ph) => {
+                    if (ph < 8.3) return '#e0e0e0'; // Colorless
+                    if (ph > 10) return '#ff69b4'; // Pink
+                    return '#ffc0cb'; // Pale Pink
+                }
+            },
+            'Bromothymol Blue': {
+                getColor: (ph) => {
+                    if (ph < 6.0) return '#ffff66'; // Yellow
+                    if (ph > 7.6) return '#4d4dff'; // Blue
+                    return '#48bb78'; // Green
+                }
+            }
+        };
+
+        // --- Initialization ---
+        function init() {
+            // Create indicator buttons
+            indicatorPalette.innerHTML = '';
+            Object.keys(indicators).forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'indicator-btn';
+                btn.textContent = name;
+                btn.dataset.indicator = name;
+                btn.addEventListener('click', () => {
+                    const allTubes = document.querySelectorAll('.test-tube .liquid');
+                    allTubes.forEach(liquid => {
+                        liquid.style.backgroundColor = '#cbd5e0';
+                    });
+
+                    selectedIndicator = name;
+                    document.querySelectorAll('.indicator-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                });
+                indicatorPalette.appendChild(btn);
+            });
+
+            startNewCase();
+        }
+
+        function createTestTube(name, ph, isMystery = false) {
+            const tubeDiv = document.createElement('div');
+            tubeDiv.className = 'test-tube';
+            if (isMystery) {
+                tubeDiv.classList.add('mystery');
+                tubeDiv.id = 'mystery-tube';
+            }
+            tubeDiv.dataset.ph = ph;
+            tubeDiv.innerHTML = `<div class="liquid"></div><div class="label">${name}</div>`;
+            return tubeDiv;
+        }
+
+        function setupTestTubes() {
+            testTubeRack.innerHTML = '';
+            // Create lab test tubes
+            labSolutions.forEach(sol => {
+                const tube = createTestTube(sol.name, sol.ph);
+                tube.addEventListener('click', () => {
+                    if (selectedIndicator) {
+                        const color = indicators[selectedIndicator].getColor(sol.ph);
+                        tube.querySelector('.liquid').style.backgroundColor = color;
+                    }
+                });
+                testTubeRack.appendChild(tube);
+            });
+            // Create and add the mystery tube
+            const mysteryTube = createTestTube('Mystery', mysteryPH, true);
+            mysteryTube.addEventListener('click', testMysterySolution);
+            testTubeRack.appendChild(mysteryTube);
+        }
+
+        function startNewCase() {
+            previousMysteryPH = mysteryPH;
+            let newMysteryPH;
+            do {
+                newMysteryPH = possibleMysteryPHs[Math.floor(Math.random() * possibleMysteryPHs.length)];
+            } while (newMysteryPH === previousMysteryPH);
+            mysteryPH = newMysteryPH;
+
+            console.log(`New Case! Mystery pH is: ${mysteryPH}`);
+            
+            setupTestTubes(); 
+
+            solveBtn.disabled = false;
+            phGuessSelect.disabled = false;
+            feedbackLog.innerHTML = '';
+            logFeedback('A new case has arrived! Test the solutions to find out the pH of the mystery solution.', 'info');
+        }
+
+        function logFeedback(message, type = 'normal') {
+            const p = document.createElement('p');
+            p.innerHTML = message;
+            const rootStyles = getComputedStyle(document.documentElement);
+            if (type === 'success') {
+                p.style.color = rootStyles.getPropertyValue('--success-color').trim();
+            }
+            if (type === 'error') {
+                p.style.color = rootStyles.getPropertyValue('--error-color').trim();
+            }
+            if (type === 'info') {
+                p.style.color = rootStyles.getPropertyValue('--info-color').trim();
+            }
+            feedbackLog.prepend(p);
+        }
+
+        function testMysterySolution() {
+            if (!selectedIndicator) {
+                feedbackLog.innerHTML = ''; // Clear previous messages
+                logFeedback('Select an indicator from the palette first!', 'error');
+                return;
+            }
+            
+            const color = indicators[selectedIndicator].getColor(mysteryPH);
+            document.querySelector('#mystery-tube .liquid').style.backgroundColor = color;
+        }
+
+        function showConfetti() {
+            const confettiCount = 100;
+            const confettiColors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800'];
+            for (let i = 0; i < confettiCount; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = `${Math.random() * 100}%`;
+                piece.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                piece.style.animationDelay = `${Math.random() * 3}s`;
+                piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+                gameContainer.appendChild(piece);
+
+                setTimeout(() => {
+                    piece.remove();
+                }, 3000);
+            }
+        }
+
+        solveBtn.addEventListener('click', () => {
+            feedbackLog.innerHTML = ''; 
+            const guess = parseInt(phGuessSelect.value);
+            const isCorrect = mysteryPH === guess;
+
+            if (isCorrect) {
+                logFeedback(`Case Solved! Excellent work, Detective! The actual pH was ${mysteryPH}.`, 'success');
+                showConfetti();
+            } else {
+                logFeedback(`Good try, Detective! That's not quite it. The actual pH was ${mysteryPH}. Click 'Start New Case' to try again!`, 'error');
+            }
+            solveBtn.disabled = true;
+            phGuessSelect.disabled = true;
+        });
+
+        newCaseBtn.addEventListener('click', startNewCase);
+
+        init();
+    });
+    </script>
+</body>
+</html>

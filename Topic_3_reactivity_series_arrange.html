@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metal Reactivity Series Sorter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .metal-item {
+            touch-action: none; /* Recommended for better drag-and-drop on touch devices */
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .metal-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .drop-zone {
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drag-over {
+            background-color: #c7d2fe; /* indigo-200 */
+            border-color: #6366f1; /* indigo-500 */
+        }
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+        }
+        .feedback-correct {
+            border-color: #22c55e; /* green-500 */
+        }
+        .feedback-incorrect {
+            border-color: #ef4444; /* red-500 */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-8">
+        
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Metal Reactivity Series</h1>
+            <p class="mt-2 text-slate-600">Drag and drop the metals to arrange them from most reactive to least reactive.</p>
+        </div>
+
+        <!-- Reactivity Series Drop Area -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-green-600">Most Reactive</span>
+                <span class="font-semibold text-red-600">Least Reactive</span>
+            </div>
+            <div id="reactivity-series-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-11 gap-2 p-4 bg-slate-50 rounded-lg border-2 border-dashed border-slate-300">
+                <!-- Drop zones will be generated here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Unordered Metals Pool -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-3 text-center text-slate-700">Unordered Metals</h2>
+            <div id="metals-pool" class="flex flex-wrap items-center justify-center gap-3 p-4 bg-slate-50 rounded-lg min-h-[6rem]">
+                <!-- Metal items will be generated here by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Action Buttons & Feedback Message -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button id="check-button" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Check My Answer</button>
+            <button id="reset-button" class="w-full sm:w-auto bg-slate-500 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-slate-600 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400">Reset</button>
+        </div>
+        <div id="feedback-message" class="mt-6 text-center text-lg font-medium h-8"></div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            // Metals are ordered by reactivity (index 0 is most reactive)
+            const metals = [
+                { symbol: 'K', name: 'Potassium', order: 0 },
+                { symbol: 'Na', name: 'Sodium', order: 1 },
+                { symbol: 'Ca', name: 'Calcium', order: 2 },
+                { symbol: 'Mg', name: 'Magnesium', order: 3 },
+                { symbol: 'Al', name: 'Aluminium', order: 4 },
+                { symbol: 'Zn', name: 'Zinc', order: 5 },
+                { symbol: 'Fe', name: 'Iron', order: 6 },
+                { symbol: 'Pb', name: 'Lead', order: 7 },
+                { symbol: 'Cu', name: 'Copper', order: 8 },
+                { symbol: 'Ag', name: 'Silver', order: 9 },
+                { symbol: 'Au', name: 'Gold', order: 10 }
+            ];
+
+            // --- DOM ELEMENTS ---
+            const metalsPool = document.getElementById('metals-pool');
+            const reactivitySeriesContainer = document.getElementById('reactivity-series-container');
+            const checkButton = document.getElementById('check-button');
+            const resetButton = document.getElementById('reset-button');
+            const feedbackMessage = document.getElementById('feedback-message');
+
+            let draggedItem = null;
+
+            // --- FUNCTIONS ---
+
+            /**
+             * Shuffles an array in place.
+             * @param {Array} array The array to shuffle.
+             */
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            /**
+             * Initializes the game board, shuffling metals and creating drop zones.
+             */
+            function initializeBoard() {
+                // Clear existing elements
+                metalsPool.innerHTML = '';
+                reactivitySeriesContainer.innerHTML = '';
+                feedbackMessage.textContent = '';
+                feedbackMessage.className = 'mt-6 text-center text-lg font-medium h-8';
+
+                // Create and shuffle metals
+                const shuffledMetals = [...metals];
+                shuffleArray(shuffledMetals);
+
+                shuffledMetals.forEach(metal => {
+                    const metalEl = createMetalElement(metal);
+                    metalsPool.appendChild(metalEl);
+                });
+
+                // Create drop zones
+                for (let i = 0; i < metals.length; i++) {
+                    const dropZone = document.createElement('div');
+                    dropZone.classList.add('drop-zone', 'w-16', 'h-16', 'md:w-20', 'md:h-20', 'bg-slate-200', 'rounded-lg', 'flex', 'items-center', 'justify-center', 'border-2', 'border-transparent');
+                    dropZone.dataset.expectedOrder = i;
+                    addDropZoneEventListeners(dropZone);
+                    reactivitySeriesContainer.appendChild(dropZone);
+                }
+            }
+
+            /**
+             * Creates a draggable metal element.
+             * @param {object} metal - The metal object {symbol, name, order}.
+             * @returns {HTMLElement} The created metal element.
+             */
+            function createMetalElement(metal) {
+                const metalEl = document.createElement('div');
+                metalEl.id = `metal-${metal.symbol}`;
+                metalEl.classList.add('metal-item', 'w-16', 'h-16', 'md:w-20', 'md:h-20', 'bg-white', 'rounded-lg', 'shadow', 'flex', 'items-center', 'justify-center', 'cursor-grab', 'font-bold', 'text-2xl', 'md:text-3xl', 'text-slate-800');
+                metalEl.draggable = true;
+                metalEl.textContent = metal.symbol;
+                metalEl.dataset.order = metal.order;
+                metalEl.title = metal.name; // Tooltip for the full name
+                addDraggableEventListeners(metalEl);
+                return metalEl;
+            }
+
+            /**
+             * Adds event listeners for a draggable item.
+             * @param {HTMLElement} item - The element to make draggable.
+             */
+            function addDraggableEventListeners(item) {
+                item.addEventListener('dragstart', (e) => {
+                    draggedItem = item;
+                    setTimeout(() => item.classList.add('dragging'), 0);
+                    e.dataTransfer.setData('text/plain', item.id);
+                });
+
+                item.addEventListener('dragend', () => {
+                    draggedItem.classList.remove('dragging');
+                    draggedItem = null;
+                });
+            }
+
+            /**
+             * Adds event listeners for a drop zone.
+             * @param {HTMLElement} zone - The element to make a drop zone.
+             */
+            function addDropZoneEventListeners(zone) {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // Necessary to allow dropping
+                    zone.classList.add('drag-over');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('drag-over');
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+
+                    if (!draggedItem) return;
+
+                    // If the drop zone is empty, append the item.
+                    if (zone.children.length === 0) {
+                        zone.appendChild(draggedItem);
+                    } 
+                    // If the drop zone is not empty, swap the items.
+                    else {
+                        const existingItem = zone.firstElementChild;
+                        const originalParent = draggedItem.parentElement;
+                        
+                        // Move existing item to the dragged item's original spot
+                        originalParent.appendChild(existingItem);
+                        
+                        // Move dragged item to the new spot
+                        zone.appendChild(draggedItem);
+                    }
+                });
+            }
+            
+            // Add drop listeners to the pool as well to allow returning items
+            addDropZoneEventListeners(metalsPool);
+
+            /**
+             * Checks the user's arrangement against the correct order.
+             */
+            function checkOrder() {
+                let allCorrect = true;
+                let itemsPlaced = 0;
+
+                const dropZones = reactivitySeriesContainer.querySelectorAll('.drop-zone');
+                
+                // First, clear previous feedback
+                dropZones.forEach(zone => {
+                    zone.classList.remove('feedback-correct', 'feedback-incorrect');
+                });
+
+                dropZones.forEach(zone => {
+                    const expectedOrder = parseInt(zone.dataset.expectedOrder, 10);
+                    const metalItem = zone.querySelector('.metal-item');
+
+                    if (metalItem) {
+                        itemsPlaced++;
+                        const actualOrder = parseInt(metalItem.dataset.order, 10);
+                        if (actualOrder === expectedOrder) {
+                            zone.classList.add('feedback-correct');
+                        } else {
+                            zone.classList.add('feedback-incorrect');
+                            allCorrect = false;
+                        }
+                    } else {
+                        // An empty slot means the order cannot be fully correct
+                        allCorrect = false;
+                    }
+                });
+                
+                if (itemsPlaced < metals.length) {
+                    allCorrect = false;
+                }
+
+                if (allCorrect) {
+                    feedbackMessage.textContent = 'Excellent! The order is perfect.';
+                    feedbackMessage.className = 'mt-6 text-center text-lg font-medium h-8 text-green-600';
+                } else {
+                    feedbackMessage.textContent = 'Not quite right. Keep trying!';
+                    feedbackMessage.className = 'mt-6 text-center text-lg font-medium h-8 text-red-600';
+                }
+            }
+
+            // --- EVENT LISTENERS ---
+            checkButton.addEventListener('click', checkOrder);
+            resetButton.addEventListener('click', initializeBoard);
+
+            // --- INITIALIZATION ---
+            initializeBoard();
+        });
+    </script>
+</body>
+</html>

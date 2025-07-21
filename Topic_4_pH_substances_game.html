@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive pH Drag-and-Drop Game</title>
+    <style>
+        /* CSS for layout and styling */
+        :root {
+            --primary-bg: #f0f4f8;
+            --header-bg: #0077b6;
+            --item-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+            --correct-color: #2b9348;
+            --incorrect-color: #d00000;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+            /* Prevent pull-to-refresh on mobile */
+            overscroll-behavior-y: contain;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        main {
+            padding: 1rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+        
+        .game-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--item-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        #score {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        #reset-btn {
+            background-color: var(--header-bg);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #reset-btn:hover {
+            background-color: #023e8a;
+        }
+
+        .instructions {
+            background: var(--item-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .substances-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            min-height: 100px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+        }
+
+        .substance {
+            background: var(--item-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            text-align: center;
+            box-shadow: var(--shadow);
+            user-select: none; /* Prevents text selection while dragging */
+            touch-action: none; /* Recommended for draggable elements */
+        }
+
+        .substance.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        
+        #feedback {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-style: italic;
+            font-size: 1.1rem;
+            font-weight: bold;
+            min-height: 24px;
+            padding-bottom: 1rem;
+        }
+
+        .ph-scale {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 5px;
+            padding: 1rem;
+            background: var(--item-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .ph-box {
+            height: 60px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        
+        .ph-box.drag-over {
+            border-color: var(--header-bg);
+            transform: scale(1.1);
+        }
+
+        /* pH color gradient */
+        .ph-box[data-ph="0"] { background-color: #d00000; }
+        .ph-box[data-ph="1"] { background-color: #dc2f02; }
+        .ph-box[data-ph="2"] { background-color: #e85d04; }
+        .ph-box[data-ph="3"] { background-color: #f48c06; }
+        .ph-box[data-ph="4"] { background-color: #faa307; }
+        .ph-box[data-ph="5"] { background-color: #ffb703; }
+        .ph-box[data-ph="6"] { background-color: #ffd000; }
+        .ph-box[data-ph="7"] { background-color: #aacc00; }
+        .ph-box[data-ph="8"] { background-color: #80b918; }
+        .ph-box[data-ph="9"] { background-color: #55a630; }
+        .ph-box[data-ph="10"] { background-color: #2b9348; }
+        .ph-box[data-ph="11"] { background-color: #007f5f; }
+        .ph-box[data-ph="12"] { background-color: #0072b2; }
+        .ph-box[data-ph="13"] { background-color: #023e8a; }
+        .ph-box[data-ph="14"] { background-color: #03045e; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🧪 Interactive pH Drag-and-Drop Game</h1>
+    </header>
+
+    <main>
+        <div class="game-controls">
+            <div id="score">Score: 0</div>
+            <button id="reset-btn">Reset Game</button>
+        </div>
+        <div class="instructions">
+            <p>Drag a substance from the top box and drop it onto the correct pH value in the scale below!</p>
+        </div>
+
+        <div class="substances-container">
+            <!-- Substances will be dynamically inserted here -->
+        </div>
+
+        <p id="feedback"></p>
+
+        <div class="ph-scale">
+            <!-- pH boxes will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialSubstances = [
+                { name: 'HCl (0.1M)', ph: 1 },
+                { name: 'Lemon Juice', ph: 2 },
+                { name: 'Vinegar', ph: 3 },
+                { name: 'Black Coffee', ph: 5 },
+                { name: 'Milk', ph: 6 },
+                { name: 'Pure Water', ph: 7 },
+                { name: 'Baking Soda', ph: 9 },
+                { name: 'Liquid Soap', ph: 10 },
+                { name: 'Ammonia', ph: 11 },
+                { name: 'Oven Cleaner', ph: 13 }
+            ];
+
+            let substances = [...initialSubstances];
+            let score = 0;
+            let draggedItem = null;
+
+            const substancesContainer = document.querySelector('.substances-container');
+            const phScaleContainer = document.querySelector('.ph-scale');
+            const scoreDisplay = document.getElementById('score');
+            const feedback = document.getElementById('feedback');
+            const resetButton = document.getElementById('reset-btn');
+
+            function initializeGame() {
+                score = 0;
+                substances = [...initialSubstances];
+                updateScore();
+                feedback.textContent = '';
+                substancesContainer.innerHTML = '';
+                phScaleContainer.innerHTML = '';
+                populateSubstances();
+                populatePhScale();
+            }
+
+            function updateScore() {
+                scoreDisplay.textContent = `Score: ${score}`;
+            }
+
+            // Function to handle the drop logic, used by both desktop and mobile events
+            function handleDrop(targetBox) {
+                if (draggedItem && targetBox) {
+                    const substancePh = parseInt(draggedItem.dataset.ph);
+                    const targetPh = parseInt(targetBox.dataset.ph);
+
+                    if (substancePh === targetPh) {
+                        feedback.textContent = `Correct! The pH of ${draggedItem.textContent} is ${substancePh}.`;
+                        feedback.style.color = 'var(--correct-color)';
+                        score++;
+                        updateScore();
+                        draggedItem.remove(); // Remove original item
+                        targetBox.textContent = draggedItem.textContent; // Place text in box
+                    } else {
+                        feedback.textContent = `Not quite! The pH of ${draggedItem.textContent} is ${substancePh}, not ${targetPh}.`;
+                        feedback.style.color = 'var(--incorrect-color)';
+                    }
+                }
+            }
+
+            function populateSubstances() {
+                substances.forEach(sub => {
+                    const substanceEl = document.createElement('div');
+                    substanceEl.classList.add('substance');
+                    substanceEl.textContent = sub.name;
+                    substanceEl.dataset.ph = sub.ph;
+                    substanceEl.draggable = true;
+
+                    // --- Desktop Drag Events ---
+                    substanceEl.addEventListener('dragstart', (e) => {
+                        draggedItem = substanceEl;
+                        setTimeout(() => substanceEl.classList.add('dragging'), 0);
+                    });
+
+                    substanceEl.addEventListener('dragend', () => {
+                        draggedItem.classList.remove('dragging');
+                        draggedItem = null;
+                    });
+
+                    // --- Mobile Touch Events ---
+                    let lastTouchTarget = null;
+                    substanceEl.addEventListener('touchstart', (e) => {
+                         // Prevent scrolling while dragging
+                        e.preventDefault();
+                        draggedItem = substanceEl;
+                        draggedItem.classList.add('dragging');
+                    });
+
+                    substanceEl.addEventListener('touchmove', (e) => {
+                        e.preventDefault();
+                        if (!draggedItem) return;
+                        
+                        // Get the element under the finger
+                        const touch = e.touches[0];
+                        const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+
+                        // Remove highlight from the last target
+                        if (lastTouchTarget && lastTouchTarget !== elementUnderTouch) {
+                            lastTouchTarget.classList.remove('drag-over');
+                        }
+
+                        // Add highlight to the new target if it's a ph-box
+                        if (elementUnderTouch && elementUnderTouch.classList.contains('ph-box')) {
+                            elementUnderTouch.classList.add('drag-over');
+                            lastTouchTarget = elementUnderTouch;
+                        } else {
+                            lastTouchTarget = null;
+                        }
+                    });
+
+                    substanceEl.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        if (!draggedItem) return;
+
+                        draggedItem.classList.remove('dragging');
+                        
+                        // Find the drop target
+                        const touch = e.changedTouches[0];
+                        const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+                        
+                        if (lastTouchTarget) {
+                            lastTouchTarget.classList.remove('drag-over');
+                        }
+
+                        if (dropTarget && dropTarget.classList.contains('ph-box')) {
+                            handleDrop(dropTarget);
+                        }
+                        
+                        draggedItem = null;
+                        lastTouchTarget = null;
+                    });
+
+                    substancesContainer.appendChild(substanceEl);
+                });
+            }
+
+            function populatePhScale() {
+                for (let i = 0; i <= 14; i++) {
+                    const phBox = document.createElement('div');
+                    phBox.classList.add('ph-box');
+                    phBox.dataset.ph = i;
+                    phBox.textContent = i;
+
+                    // --- Desktop Drop Events ---
+                    phBox.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        phBox.classList.add('drag-over');
+                    });
+
+                    phBox.addEventListener('dragleave', () => {
+                        phBox.classList.remove('drag-over');
+                    });
+
+                    phBox.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        phBox.classList.remove('drag-over');
+                        handleDrop(phBox);
+                    });
+                    phScaleContainer.appendChild(phBox);
+                }
+            }
+            
+            resetButton.addEventListener('click', initializeGame);
+
+            // Initial setup
+            initializeGame();
+        });
+    </script>
+
+</body>
+</html>

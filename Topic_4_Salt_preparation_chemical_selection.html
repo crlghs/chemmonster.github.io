@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemical Selection for Salt Preparation</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .setup-screen, .question-screen, .results-screen {
+            display: none;
+        }
+        .active-screen {
+            display: block;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .option {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option:hover {
+            background-color: #f0f0f0;
+        }
+        .option.selected {
+            border-color: #3498db;
+            background-color: #e3f2fd;
+        }
+        .option.correct {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .option.incorrect {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .submit-btn {
+            background-color: #3498db;
+            color: white;
+            margin-top: 15px;
+        }
+        .next-btn {
+            background-color: #9b59b6;
+            color: white;
+            margin-top: 20px;
+            display: none;
+        }
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            background-color: #f0f8ff;
+        }
+        .progress {
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .current-score {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 16px;
+        }
+        .setup-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .setup-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 25px;
+            font-size: 18px;
+            min-width: 120px;
+        }
+        .restart-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 25px;
+            font-size: 18px;
+            margin-top: 25px;
+        }
+        .results {
+            font-size: 20px;
+            margin-bottom: 25px;
+        }
+        .score {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        .feedback {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            min-height: 27px;
+        }
+        .positive-feedback {
+            color: #28a745;
+        }
+        .negative-feedback {
+            color: #dc3545;
+        }
+        .rules-summary {
+            background-color: #e7f5fe;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 25px;
+            text-align: left;
+        }
+        .rules-summary h3 {
+            margin-top: 0;
+            color: #2980b9;
+            border-bottom: 2px solid #a5d8ff;
+            padding-bottom: 8px;
+        }
+        .mistake-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 4px solid #dc3545;
+            background-color: #f8f9fa;
+        }
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="celebration" id="celebration"></div>
+    
+    <h1>Chemical Selection for Salt Preparation</h1>
+    
+    <div class="quiz-container">
+        <div class="setup-screen active-screen" id="setupScreen">
+            <p style="font-size: 18px;">How many questions would you like to attempt?</p>
+            <div class="setup-options">
+                <button class="setup-btn" onclick="startQuiz(5)">5 Questions</button>
+                <button class="setup-btn" onclick="startQuiz(10)">10 Questions</button>
+                <button class="setup-btn" onclick="startQuiz(15)">15 Questions</button>
+            </div>
+            
+            <div class="rules-summary">
+                <h3>Key Concepts for Chemical Selection</h3>
+                <p>When choosing chemicals to prepare salts:</p>
+                <ol>
+                    <li><strong>For soluble salts:</strong>
+                        <ul>
+                            <li>Use acid + metal/insoluble base/insoluble carbonate (excess solid can be filtered)</li>
+                            <li>For group I/ammonium salts: use titration (acid + alkali/soluble carbonate)</li>
+                        </ul>
+                    </li>
+                    <li><strong>For insoluble salts:</strong> Mix solutions containing the required ions (precipitation)</li>
+                    <li><strong>Key considerations:</strong>
+                        <ul>
+                            <li>Reactants must provide the correct ions</li>
+                            <li>Method must allow for separation/purification</li>
+                            <li>Safety (avoid violent reactions)</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="question-screen" id="questionScreen">
+            <div class="progress">
+                <span id="progressText">Question 1 of 10</span>
+                <span class="current-score" id="currentScore">Score: 0</span>
+            </div>
+            <div class="question" id="currentQuestion">
+                <p id="questionText" style="font-size: 20px; font-weight: bold;">Which pair of chemicals would be suitable for preparing zinc chloride?</p>
+                <div class="options" id="optionsContainer">
+                    <div class="option" data-index="0">A. Zinc metal and sodium chloride solution</div>
+                    <div class="option" data-index="1">B. Zinc oxide and hydrochloric acid</div>
+                    <div class="option" data-index="2">C. Zinc carbonate and sulphuric acid</div>
+                    <div class="option" data-index="3">D. Zinc nitrate and potassium chloride solution</div>
+                </div>
+                <div class="feedback" id="feedback"></div>
+                <div class="explanation" id="explanation">
+                    <strong>Correct Answer:</strong> B<br>
+                    <strong>Explanation:</strong> Zinc chloride can be prepared by reacting zinc oxide (an insoluble base) with hydrochloric acid. The excess zinc oxide can be filtered off, and the solution can be evaporated to obtain crystals. The other options either wouldn't react or would produce different salts.
+                </div>
+                <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">Submit Answer</button>
+                <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question ➔</button>
+            </div>
+        </div>
+        
+        <div class="results-screen" id="resultsScreen">
+            <h2>Quiz Results</h2>
+            <div class="results">
+                <p>You answered <span class="score" id="finalScore">8</span> out of <span id="totalQuestions">10</span> correctly!</p>
+                <p id="performanceComment">Great job! You understand chemical selection well.</p>
+            </div>
+            
+            <div id="mistakesContainer">
+                <h3>Review Your Mistakes</h3>
+                <div id="mistakesList"></div>
+            </div>
+            
+            <div class="rules-summary">
+                <h3>Key Points to Remember</h3>
+                <ul>
+                    <li>For <strong>chloride salts</strong>, use hydrochloric acid with appropriate base/carbonate/metal</li>
+                    <li>For <strong>sulphate salts</strong>, use sulphuric acid with appropriate reactants</li>
+                    <li>For <strong>nitrate salts</strong>, use nitric acid with appropriate reactants</li>
+                    <li>For <strong>phosphate salts</strong>, use phosphoric acid</li>
+                    <li>For <strong>carbonate salts</strong>, use carbonates or CO₂ with appropriate bases</li>
+                    <li>Always consider whether the method allows for <strong>separation of excess reactants</strong> and <strong>purification</strong> of the product</li>
+                </ul>
+            </div>
+            
+            <button class="restart-btn" onclick="returnToSetup()">Take Another Quiz</button>
+        </div>
+    </div>
+    
+    <script>
+        // Quiz data - focused on chemical selection only
+        const questions = [
+            {
+                question: "Which pair of chemicals would be suitable for preparing zinc chloride?",
+                options: [
+                    "Zinc metal and sodium chloride solution",
+                    "Zinc oxide and hydrochloric acid",
+                    "Zinc carbonate and sulphuric acid",
+                    "Zinc nitrate and potassium chloride solution"
+                ],
+                correctIndex: 1,
+                explanation: "Zinc chloride can be prepared by reacting zinc oxide (an insoluble base) with hydrochloric acid. The excess zinc oxide can be filtered off, and the solution can be evaporated to obtain crystals. The other options either wouldn't react or would produce different salts."
+            },
+            {
+                question: "Which combination would NOT be suitable for preparing potassium nitrate?",
+                options: [
+                    "Potassium hydroxide and nitric acid",
+                    "Potassium carbonate and nitric acid",
+                    "Potassium hydrogencarbonate and silver nitrate",
+                    "Potassium sulphate and barium nitrate"
+                ],
+                correctIndex: 3,
+                explanation: "Potassium sulphate and barium nitrate would produce barium sulphate (insoluble) and potassium nitrate, but this is not a practical method as it's difficult to separate the potassium nitrate from the barium sulphate precipitate."
+            },
+            {
+                question: "Which acid would be most suitable for preparing calcium phosphate?",
+                options: [
+                    "Hydrochloric acid",
+                    "Sulphuric acid",
+                    "Nitric acid",
+                    "Phosphoric acid"
+                ],
+                correctIndex: 3,
+                explanation: "Phosphoric acid (H₃PO₄) is needed to provide the phosphate (PO₄³⁻) ions required to make calcium phosphate. The other acids would produce different calcium salts (chloride, sulphate, or nitrate)."
+            },
+            {
+                question: "Which pair would be most suitable for preparing copper(II) sulphate?",
+                options: [
+                    "Copper metal and dilute sulphuric acid",
+                    "Copper(II) oxide and sulphuric acid",
+                    "Copper(II) nitrate and sodium sulphate solutions",
+                    "Copper(II) carbonate and hydrochloric acid"
+                ],
+                correctIndex: 1,
+                explanation: "Copper(II) oxide (insoluble base) reacts with sulphuric acid to produce copper(II) sulphate. The excess oxide can be filtered off. Copper metal doesn't react with dilute sulphuric acid, and the other options would produce different salts or mixtures."
+            },
+            {
+                question: "Which combination would be suitable for preparing sodium chloride?",
+                options: [
+                    "Sodium hydrogencarbonate and hydrochloric acid",
+                    "Sodium hydroxide and hydrochloric acid",
+                    "Sodium carbonate and hydrochloric acid",
+                    "All of the above"
+                ],
+                correctIndex: 3,
+                explanation: "All these methods can produce sodium chloride: 1) Direct combination of elements, 2) Acid-base neutralization, 3) Reaction of carbonate with acid. The best method depends on the desired purity and safety considerations."
+            },
+            {
+                question: "Which pair would NOT be suitable for preparing iron(III) chloride?",
+                options: [
+                    "Iron(III) oxide and hydrochloric acid",
+                    "Iron metal and hydrochloric acid",
+                    "Iron(III) hydroxide and hydrochloric acid",
+                    "Iron(III) carbonate and hydrochloric acid"
+                ],
+                correctIndex: 1,
+                explanation: "Iron metal reacts with hydrochloric acid to produce iron(II) chloride, not iron(III) chloride. The other options all contain iron in the +3 oxidation state and would produce iron(III) chloride."
+            },
+            {
+                question: "Which acid is needed to prepare lead(II) sulphate?",
+                options: [
+                    "Hydrochloric acid",
+                    "Nitric acid",
+                    "Sulphuric acid",
+                    "Any of these acids would work"
+                ],
+                correctIndex: 2,
+                explanation: "Sulphuric acid is needed to provide the sulphate (SO₄²⁻) ions required to make lead(II) sulphate. The other acids would produce different lead salts (chloride or nitrate)."
+            },
+            {
+                question: "Which combination would be suitable for preparing ammonium nitrate?",
+                options: [
+                    "Ammonia solution and nitric acid",
+                    "Ammonium chloride and silver nitrate",
+                    "Ammonium sulphate and barium nitrate",
+                    "All of the above"
+                ],
+                correctIndex: 0,
+                explanation: "Ammonia solution reacting with nitric acid is the most practical method. The other options would produce mixtures that are difficult to separate (forming other insoluble salts)."
+            },
+            {
+                question: "Which metal compound would react with hydrochloric acid to produce magnesium chloride?",
+                options: [
+                    "Magnesium oxide",
+                    "Magnesium carbonate",
+                    "Magnesium hydroxide",
+                    "All of the above"
+                ],
+                correctIndex: 3,
+                explanation: "All these magnesium compounds (oxide, carbonate, hydroxide) will react with hydrochloric acid to produce magnesium chloride. The choice depends on availability and reaction conditions."
+            },
+            {
+                question: "Which pair would be suitable for preparing aluminium sulphate?",
+                options: [
+                    "Aluminium metal and sulphuric acid",
+                    "Aluminium oxide and sulphuric acid",
+                    "Aluminium hydroxide and sulphuric acid",
+                    "All of the above"
+                ],
+                correctIndex: 3,
+                explanation: "All these combinations can produce aluminium sulphate. Aluminium metal reacts slowly with dilute sulphuric acid, while the oxide and hydroxide react more readily."
+            },
+            {
+                question: "Which combination would NOT produce pure silver chloride?",
+                options: [
+                    "Silver nitrate solution and sodium chloride solution",
+                    "Silver metal and hydrochloric acid",
+                    "Silver oxide and hydrochloric acid",
+                    "Silver carbonate and hydrochloric acid"
+                ],
+                correctIndex: 1,
+                explanation: "Silver metal doesn't react with hydrochloric acid. The other options all provide silver ions (Ag⁺) and chloride ions (Cl⁻) that will precipitate silver chloride."
+            },
+            {
+                question: "Which acid is needed to prepare calcium sulphate?",
+                options: [
+                    "Hydrochloric acid",
+                    "Sulphuric acid",
+                    "Nitric acid",
+                    "Any strong acid would work"
+                ],
+                correctIndex: 1,
+                explanation: "Sulphuric acid is needed to provide the sulphate (SO₄²⁻) ions required to make calcium sulphate. The other acids would produce different calcium salts."
+            },
+            {
+                question: "Which pair would be suitable for preparing potassium sulphate?",
+                options: [
+                    "Potassium hydroxide and sulphuric acid",
+                    "Potassium carbonate and sulphuric acid",
+                    "Potassium chloride and silver sulphate",
+                    "Both A and B"
+                ],
+                correctIndex: 3,
+                explanation: "Both potassium hydroxide and potassium carbonate will react with sulphuric acid to produce potassium sulphate. The chloride option would produce a mixture difficult to separate."
+            },
+            {
+                question: "Which combination would be suitable for preparing barium nitrate?",
+                options: [
+                    "Barium metal and nitric acid",
+                    "Barium oxide and nitric acid",
+                    "Barium carbonate and nitric acid",
+                    "All of the above"
+                ],
+                correctIndex: 3,
+                explanation: "All these barium compounds will react with nitric acid to produce barium nitrate. The metal reacts vigorously, while the oxide and carbonate react more controllably."
+            },
+            {
+                question: "Which pair would NOT be suitable for preparing sodium sulphate?",
+                options: [
+                    "Sodium hydroxide and sulphuric acid",
+                    "Sodium carbonate and sulphuric acid",
+                    "Sodium chloride and silver sulphate",
+                    "Sodium hydrogencarbonate and sulphuric acid"
+                ],
+                correctIndex: 2,
+                explanation: "Sodium chloride and silver sulphate would produce silver chloride precipitate and sodium sulphate, but the mixture would be difficult to separate. The other options all directly produce sodium sulphate."
+            }
+        ];
+
+        // Quiz variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let totalQuestions = 10;
+        let quizQuestions = [];
+        let selectedOption = null;
+        let mistakes = [];
+        
+        // DOM elements
+        const setupScreen = document.getElementById('setupScreen');
+        const questionScreen = document.getElementById('questionScreen');
+        const resultsScreen = document.getElementById('resultsScreen');
+        const progressText = document.getElementById('progressText');
+        const currentScore = document.getElementById('currentScore');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const explanation = document.getElementById('explanation');
+        const feedback = document.getElementById('feedback');
+        const submitBtn = document.getElementById('submitBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const finalScore = document.getElementById('finalScore');
+        const totalQuestionsElement = document.getElementById('totalQuestions');
+        const performanceComment = document.getElementById('performanceComment');
+        const mistakesList = document.getElementById('mistakesList');
+        const celebration = document.getElementById('celebration');
+        
+        // Start the quiz
+        function startQuiz(numQuestions) {
+            totalQuestions = numQuestions;
+            currentQuestionIndex = 0;
+            score = 0;
+            mistakes = [];
+            
+            // Select random questions
+            quizQuestions = [...questions];
+            shuffleArray(quizQuestions);
+            quizQuestions = quizQuestions.slice(0, totalQuestions);
+            
+            // Show first question
+            showQuestion();
+            
+            // Switch screens
+            setupScreen.classList.remove('active-screen');
+            questionScreen.classList.add('active-screen');
+            resultsScreen.classList.remove('active-screen');
+            
+            // Update score display
+            updateScore();
+        }
+        
+        // Show current question
+        function showQuestion() {
+            const question = quizQuestions[currentQuestionIndex];
+            questionText.textContent = question.question;
+            
+            // Clear previous options and selections
+            optionsContainer.innerHTML = '';
+            selectedOption = null;
+            
+            // Create new options
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = String.fromCharCode(65 + index) + '. ' + option;
+                optionElement.dataset.index = index;
+                optionElement.addEventListener('click', selectOption);
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // Reset UI elements
+            explanation.style.display = 'none';
+            feedback.textContent = '';
+            feedback.className = 'feedback';
+            submitBtn.style.display = 'inline-block';
+            nextBtn.style.display = 'none';
+            
+            // Update progress
+            progressText.textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
+        }
+        
+        // Select an option
+        function selectOption(e) {
+            // Remove selected class from all options
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            e.target.classList.add('selected');
+            selectedOption = parseInt(e.target.dataset.index);
+        }
+        
+        // Check the answer
+        function checkAnswer() {
+            if (selectedOption === null) {
+                feedback.textContent = 'Please select an answer!';
+                feedback.className = 'feedback negative-feedback';
+                return;
+            }
+            
+            const question = quizQuestions[currentQuestionIndex];
+            const isCorrect = selectedOption === question.correctIndex;
+            
+            // Show explanation
+            explanation.style.display = 'block';
+            explanation.innerHTML = `<strong>Correct Answer:</strong> ${String.fromCharCode(65 + question.correctIndex)}. ${question.options[question.correctIndex]}<br>
+                                    <strong>Explanation:</strong> ${question.explanation}`;
+            
+            // Highlight correct and incorrect options
+            document.querySelectorAll('.option').forEach((opt, index) => {
+                if (index === question.correctIndex) {
+                    opt.classList.add('correct');
+                } else if (index === selectedOption && !isCorrect) {
+                    opt.classList.add('incorrect');
+                }
+            });
+            
+            // Disable further selection
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.style.cursor = 'default';
+                opt.removeEventListener('click', selectOption);
+            });
+            
+            // Update score and feedback
+            if (isCorrect) {
+                score++;
+                feedback.textContent = getRandomPositiveFeedback();
+                feedback.className = 'feedback positive-feedback';
+            } else {
+                feedback.textContent = getRandomNegativeFeedback();
+                feedback.className = 'feedback negative-feedback';
+                
+                // Record mistake
+                mistakes.push({
+                    question: question.question,
+                    yourAnswer: question.options[selectedOption],
+                    correctAnswer: question.options[question.correctIndex],
+                    explanation: question.explanation
+                });
+            }
+            
+            updateScore();
+            
+            // Show next button
+            submitBtn.style.display = 'none';
+            nextBtn.style.display = 'inline-block';
+            
+            // Celebrate if correct
+            if (isCorrect) {
+                celebrate();
+            }
+        }
+        
+        // Move to next question
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < totalQuestions) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+        
+        // Show results
+        function showResults() {
+            questionScreen.classList.remove('active-screen');
+            resultsScreen.classList.add('active-screen');
+            
+            finalScore.textContent = score;
+            totalQuestionsElement.textContent = totalQuestions;
+            
+            // Calculate percentage
+            const percentage = Math.round((score / totalQuestions) * 100);
+            
+            // Add performance comment
+            if (percentage >= 90) {
+                performanceComment.textContent = "Excellent! You've mastered chemical selection for salt preparation!";
+                bigCelebration();
+            } else if (percentage >= 70) {
+                performanceComment.textContent = "Good job! You understand most chemical combinations well.";
+            } else if (percentage >= 50) {
+                performanceComment.textContent = "Not bad! Review the mistakes and try again.";
+            } else {
+                performanceComment.textContent = "Keep practicing! Review the key concepts and try again.";
+            }
+            
+            // Display mistakes
+            displayMistakes();
+        }
+        
+        // Display mistakes in results screen
+        function displayMistakes() {
+            mistakesList.innerHTML = '';
+            
+            if (mistakes.length === 0) {
+                mistakesList.innerHTML = '<p>Perfect! No mistakes.</p>';
+                return;
+            }
+            
+            mistakes.forEach(mistake => {
+                const mistakeElement = document.createElement('div');
+                mistakeElement.className = 'mistake-item';
+                mistakeElement.innerHTML = `
+                    <p><strong>Question:</strong> ${mistake.question}</p>
+                    <p><strong>Your answer:</strong> ${mistake.yourAnswer}</p>
+                    <p><strong>Correct answer:</strong> ${mistake.correctAnswer}</p>
+                    <p><strong>Explanation:</strong> ${mistake.explanation}</p>
+                `;
+                mistakesList.appendChild(mistakeElement);
+            });
+        }
+        
+        // Return to setup screen
+        function returnToSetup() {
+            resultsScreen.classList.remove('active-screen');
+            questionScreen.classList.remove('active-screen');
+            setupScreen.classList.add('active-screen');
+        }
+        
+        // Update score display
+        function updateScore() {
+            currentScore.textContent = `Score: ${score}/${totalQuestions}`;
+        }
+        
+        // Celebration effects
+        function celebrate() {
+            // Small animation for correct answers
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => {
+                opt.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    opt.style.transform = 'scale(1)';
+                }, 300);
+            });
+        }
+        
+        function bigCelebration() {
+            // Create confetti effect
+            celebration.style.display = 'block';
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = -10 + 'px';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                const size = Math.random() * 10 + 5;
+                confetti.style.width = size + 'px';
+                confetti.style.height = size + 'px';
+                
+                celebration.appendChild(confetti);
+                
+                // Animate
+                const animation = confetti.animate([
+                    { top: '-10px', opacity: 1 },
+                    { top: '100vh', opacity: 0 }
+                ], {
+                    duration: Math.random() * 3000 + 2000,
+                    easing: 'cubic-bezier(0.1,0.2,0.7,1)'
+                });
+                
+                animation.onfinish = () => {
+                    confetti.remove();
+                };
+            }
+            
+            setTimeout(() => {
+                celebration.style.display = 'none';
+                celebration.innerHTML = '';
+            }, 3000);
+        }
+        
+        // Helper functions
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        function getRandomPositiveFeedback() {
+            const feedbacks = [
+                "🎉 Correct! Well done!",
+                "🌟 Excellent answer!",
+                "💯 Perfect! You know your chemistry!",
+                "👍 Great job!",
+                "👏 That's exactly right!"
+            ];
+            return feedbacks[Math.floor(Math.random() * feedbacks.length)];
+        }
+        
+        function getRandomNegativeFeedback() {
+            const feedbacks = [
+                "😕 Not quite right.",
+                "🤔 Close! Review this concept.",
+                "📚 Let's review this one.",
+                "🔍 Check the explanation carefully.",
+                "💡 Remember the key concepts for next time."
+            ];
+            return feedbacks[Math.floor(Math.random() * feedbacks.length)];
+        }
+    </script>
+</body>
+</html>
