@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acid-Base Reaction Quiz</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: #e0f2f7; /* Fallback background color */
+        }
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: linear-gradient(135deg, #e0f2f7 0%, #cce7f0 100%);
+        }
+        /* Style for the flag button */
+        .flag-btn.flagged {
+            background-color: #fef08a; /* yellow-200 */
+            color: #a16207; /* yellow-700 */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <canvas id="bgCanvas"></canvas>
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Modal for Reaction Summary -->
+    <div id="summary-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl transform scale-95">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 class="text-2xl font-bold text-slate-700">Reactions Summary</h2>
+                <button id="close-modal-btn" class="text-slate-500 hover:text-slate-800">&times;</button>
+            </div>
+            <div class="space-y-3 text-slate-600 max-h-[70vh] overflow-y-auto">
+                <p><strong>1. Acid + Metal</strong> → Salt + Hydrogen Gas</p>
+                <p><strong>2. Acid + Carbonate</strong> → Salt + Carbon Dioxide + Water</p>
+                <p><strong>3. Acid + Hydrogencarbonate</strong> → Salt + Carbon Dioxide + Water</p>
+                <div>
+                    <p><strong>4. Acid + Base (Neutralization)</strong> → Salt + Water</p>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Acid + Metal Oxide → Salt + Water</li>
+                        <li>Acid + Metal Hydroxide → Salt + Water</li>
+                    </ul>
+                </div>
+                 <p><strong>5. Acid + Ammonia</strong> → Ammonium Salt</p>
+                <p><strong>6. Alkali + Ammonium Compound</strong> → Salt + Ammonia + Water</p>
+                <p><strong>7. Alkali + Metal Salt Solution</strong> → Insoluble Metal Hydroxide + Salt</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8 relative z-10">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-700">Acid-Base Reaction Quiz</h1>
+            <p class="text-slate-500 mt-1">Time to test your chemistry knowledge! 🧪</p>
+        </header>
+
+        <main class="max-w-4xl mx-auto">
+            
+            <div id="scoreboard" class="bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-md mb-6 flex justify-between items-center hidden">
+                <h2 class="text-xl font-bold text-blue-600">Score</h2>
+                <div id="score-display" class="text-2xl font-bold bg-blue-100 text-blue-700 px-4 py-1 rounded-full">0 / 5</div>
+            </div>
+
+            <div id="quiz-panel" class="bg-white/80 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-md flex flex-col">
+                <!-- Dynamic quiz content will be loaded here -->
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // --- DATA STRUCTURE (29 QUESTIONS) ---
+        const reactions = [
+            { id: 'acid_reactive_metal_zn', category: 'Acid + Metal', questionText: 'What happens when you add Zn(s) to H<sub>2</sub>SO<sub>4</sub>(aq)?', correctObservations: ['Effervescence (gas bubbles) was observed.', 'The metal dissolves.'], observationDistractors: ['A white precipitate forms.', 'The solution turns yellow.'], correctProducts: ['ZnSO<sub>4</sub>', 'H<sub>2</sub>'], productDistractors: ['H<sub>2</sub>O', 'ZnO'], feedback: { observation: { correct: 'Correct! Pattern: <strong>Acid + Reactive Metal → Salt + Hydrogen Gas</strong>.', incorrect: 'Hint: Remember the general pattern for <strong>Acid + Reactive Metal</strong>.' }, product: { correct: 'Correct! Pattern: <strong>Acid + Reactive Metal → Salt + Hydrogen Gas</strong>.', incorrect: 'Hint: What are the two products formed when a reactive metal reacts with an acid?' } } },
+            { id: 'acid_unreactive_metal_ag', category: 'Acid + Metal', questionText: 'What happens when you add Ag(s) to HCl(aq)?', correctObservations: ['No reaction occurs.'], observationDistractors: ['Effervescence is observed.', 'A white precipitate forms.', 'The metal dissolves.'], correctProducts: ['No reaction occurs.'], productDistractors: ['AgCl', 'H<sub>2</sub>', 'H<sub>2</sub>O'], feedback: { observation: { correct: 'Correct! Silver is an unreactive metal and does not react with non-oxidizing acids like HCl.', incorrect: 'Hint: Consider the reactivity of Silver. Is it reactive enough to displace hydrogen from an acid?' }, product: { correct: 'That\'s right! Since there is no reaction, no new products are formed.', incorrect: 'Hint: If there is no reaction, are any new products formed?' } } },
+            { id: 'acid_carbonate_na', category: 'Acid + Carbonate', questionText: 'What happens when you add Na<sub>2</sub>CO<sub>3</sub>(s) to HNO<sub>3</sub>(aq)?', correctObservations: ['Vigorous effervescence (gas bubbles) was observed.', 'The white solid dissolves.'], observationDistractors: ['A pungent gas is released.', 'The solution turns green.'], correctProducts: ['NaNO<sub>3</sub>', 'CO<sub>2</sub>', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'Na<sub>2</sub>O'], feedback: { observation: { correct: 'Correct! Pattern: <strong>Acid + Carbonate → Salt + CO₂ + Water</strong>. The CO₂ causes the fizzing.', incorrect: 'Hint: The general pattern is: <strong>Acid + Carbonate → Salt + Carbon Dioxide + Water</strong>. What would you observe?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Carbonate → Salt + CO₂ + Water</strong>.', incorrect: 'Hint: An acid and a carbonate react to form three products. What are they?' } } },
+            { id: 'alkali_ammonium_strong', category: 'Alkali + Ammonium Salt', questionText: 'What happens when you gently warm NaOH(aq) with NH<sub>4</sub>Cl(s)?', correctObservations: ['A pungent smelling gas is produced.', 'The gas turns moist red litmus paper blue.'], observationDistractors: ['Effervescence is observed.', 'A white precipitate forms.'], correctProducts: ['NaCl', 'NH<sub>3</sub>', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'NO<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Pattern: <strong>Strong Alkali + Ammonium Salt → Salt + Ammonia + Water</strong>. Ammonia gas is pungent and alkaline.', incorrect: 'Hint: The general pattern is: <strong>Strong Alkali + Ammonium Salt → Salt + Ammonia + Water</strong>. What are the properties of ammonia gas?' }, product: { correct: 'Correct! Pattern: <strong>Strong Alkali + Ammonium Salt → Salt + Ammonia + Water</strong>.', incorrect: 'Hint: What three products are formed when a strong alkali is warmed with an ammonium salt?' } } },
+            { id: 'alkali_metalsalt_precipitate_fe2', category: 'Precipitation', questionText: 'What happens when you add a few drops of NaOH(aq) to FeCl<sub>2</sub>(aq)?', correctObservations: ['A dirty green precipitate is formed.'], observationDistractors: ['The solution turns colorless.', 'Gas bubbles are produced.', 'A reddish-brown precipitate is formed.'], correctProducts: ['Fe(OH)<sub>2</sub>', 'NaCl'], productDistractors: ['FeO', 'Cl<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Pattern: <strong>Alkali + Metal Salt → Insoluble Metal Hydroxide + Salt</strong>. Iron(II) hydroxide is a dirty green precipitate.', incorrect: 'Hint: The general pattern is: <strong>Alkali + Metal Salt → Insoluble Metal Hydroxide + Salt</strong>. What is the color of the precipitate containing Iron(II) ions?' }, product: { correct: 'Correct! Pattern: <strong>Alkali + Metal Salt → Insoluble Metal Hydroxide + Salt</strong>.', incorrect: 'Hint: This is a precipitation reaction. What is the insoluble hydroxide and the soluble salt formed?' } } },
+            { id: 'acid_metaloxide_fe3', category: 'Neutralization', questionText: 'What happens when you add Fe<sub>2</sub>O<sub>3</sub>(s) to H<sub>2</sub>SO<sub>4</sub>(aq)?', correctObservations: ['The reddish-brown solid dissolves.', 'The solution turns yellow/brown.'], observationDistractors: ['Effervescence is observed.', 'A white precipitate forms.'], correctProducts: ['Fe<sub>2</sub>(SO<sub>4</sub>)<sub>3</sub>', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'SO<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Pattern: <strong>Acid + Base → Salt + Water</strong>. The color comes from aqueous Iron(III) ions.', incorrect: 'Hint: The general pattern is: <strong>Acid + Base (Metal Oxide) → Salt + Water</strong>. What happens to the solid?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Base → Salt + Water</strong>. This is a neutralization reaction.', incorrect: 'Hint: This is a neutralization reaction. What are the two products?' } } },
+            { id: 'acid_alkali_weak', category: 'Neutralization', questionText: 'What happens when you add CH<sub>3</sub>COOH(aq) to KOH(aq)?', correctObservations: ['The solution remains colorless.', 'The solution may get slightly warmer.'], observationDistractors: ['A white precipitate forms.', 'Effervescence is observed.'], correctProducts: ['CH<sub>3</sub>COOK', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'CO<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Pattern: <strong>Acid + Alkali → Salt + Water</strong>. Since all substances are soluble and colorless, there is no visible change.', incorrect: 'Hint: The general pattern is: <strong>Acid + Alkali → Salt + Water</strong>. Are the products colored or insoluble?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Alkali → Salt + Water</strong>. This is a classic neutralization.', incorrect: 'Hint: What are the products of any acid-alkali neutralization?' } } },
+            { id: 'alkali_precipitate_zn', category: 'Precipitation', questionText: 'What happens when you add a few drops of NaOH(aq) to Zn(NO<sub>3</sub>)<sub>2</sub>(aq)?', correctObservations: ['A white precipitate is formed.'], observationDistractors: ['Gas bubbles are produced.', 'A blue precipitate forms.'], correctProducts: ['Zn(OH)<sub>2</sub>', 'NaNO<sub>3</sub>'], productDistractors: ['ZnO', 'NO<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Pattern: <strong>Alkali + Metal Salt → Insoluble Metal Hydroxide + Salt</strong>. Zinc hydroxide is a white precipitate.', incorrect: 'Hint: The question asks for what happens with just a few drops. The general rule for precipitation applies here.' }, product: { correct: 'Correct! The products are the insoluble hydroxide and the spectator salt.', incorrect: 'Hint: This is a standard precipitation reaction.' } } },
+            { id: 'acid_v_reactive_metal_ca', category: 'Acid + Metal', questionText: 'What happens when you add Ca(s) to HCl(aq)?', correctObservations: ['Vigorous effervescence (gas bubbles) was observed.', 'The metal dissolves quickly.'], observationDistractors: ['A white precipitate forms.', 'The solution turns green.'], correctProducts: ['CaCl<sub>2</sub>', 'H<sub>2</sub>'], productDistractors: ['H<sub>2</sub>O', 'CaO'], feedback: { observation: { correct: 'Correct! Calcium is a very reactive metal, so its reaction with acid is vigorous.', incorrect: 'Hint: Calcium is more reactive than Zinc. What would you expect to see?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Reactive Metal → Salt + Hydrogen Gas</strong>.', incorrect: 'Hint: The products are the same type as any other reactive metal with acid.' } } },
+            { id: 'acid_hydrogencarbonate', category: 'Acid + Hydrogencarbonate', questionText: 'What happens when you add NaHCO<sub>3</sub>(s) to HCl(aq)?', correctObservations: ['Vigorous effervescence (gas bubbles) was observed.', 'The white solid dissolves.'], observationDistractors: ['A pungent gas is released.', 'The solution turns milky.'], correctProducts: ['NaCl', 'CO<sub>2</sub>', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'NaOH'], feedback: { observation: { correct: 'Correct! Pattern: <strong>Acid + Hydrogencarbonate → Salt + CO₂ + Water</strong>.', incorrect: 'Hint: The reaction is very similar to an acid with a carbonate.' }, product: { correct: 'Correct! Pattern: <strong>Acid + Hydrogencarbonate → Salt + CO₂ + Water</strong>.', incorrect: 'Hint: The products are identical to an acid + carbonate reaction.' } } },
+            { id: 'ammonia_precipitate_cu', category: 'Precipitation', questionText: 'What happens when you add a few drops of NH<sub>3</sub>(aq) to CuSO<sub>4</sub>(aq)?', correctObservations: ['A light blue precipitate is formed.'], observationDistractors: ['A dirty green precipitate forms.', 'The solution turns colorless.'], correctProducts: ['Cu(OH)<sub>2</sub>', '(NH<sub>4</sub>)<sub>2</sub>SO<sub>4</sub>'], productDistractors: ['CuO', 'N<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Aqueous ammonia is a weak alkali and provides hydroxide ions to precipitate the blue Copper(II) Hydroxide.', incorrect: 'Hint: Aqueous ammonia acts as a weak alkali. What happens when you add an alkali to a Copper(II) salt solution?' }, product: { correct: 'Correct! A precipitation reaction occurs.', incorrect: 'Hint: The weak alkali provides OH⁻ ions for precipitation.' } } },
+            { id: 'ammonia_precipitate_ag', category: 'Precipitation', questionText: 'What happens when you add a few drops of NH<sub>3</sub>(aq) to AgNO<sub>3</sub>(aq)?', correctObservations: ['A brown precipitate is formed.'], observationDistractors: ['A white precipitate forms.', 'The solution turns colorless.'], correctProducts: ['Ag<sub>2</sub>O', 'NH<sub>4</sub>NO<sub>3</sub>'], productDistractors: ['Ag', 'AgOH', 'N<sub>2</sub>'], feedback: { observation: { correct: 'Correct! With a few drops of ammonia, a brown precipitate of Silver(I) Oxide is formed.', incorrect: 'Hint: Silver ions form a precipitate with hydroxide ions from aqueous ammonia. Note that Silver Hydroxide is unstable and decomposes.' }, product: { correct: 'Correct! The precipitate is Silver(I) Oxide, not Silver Hydroxide, which is unstable.', incorrect: 'Hint: A complex ion would only form in *excess* ammonia.' } } },
+            { id: 'acid_reactive_metal_fe', category: 'Acid + Metal', questionText: 'What happens when you add Fe(s) to HCl(aq)?', correctObservations: ['Effervescence (gas bubbles) was observed.', 'The metal dissolves slowly.', 'A pale green solution is formed.'], observationDistractors: ['A white precipitate forms.', 'The solution turns yellow.'], correctProducts: ['FeCl<sub>2</sub>', 'H<sub>2</sub>'], productDistractors: ['FeCl<sub>3</sub>', 'H<sub>2</sub>O'], feedback: { observation: { correct: 'Correct! Iron reacts with HCl to produce H₂ gas and a pale green solution of Iron(II) ions.', incorrect: 'Hint: Iron is a reactive metal, but less so than Zinc. What color are Iron(II) ions in solution?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Reactive Metal → Salt + Hydrogen Gas</strong>. Note that Iron forms the +2 ion here.', incorrect: 'Hint: With HCl, iron forms the +2 oxidation state salt.' } } },
+            { id: 'acid_weak_metal_mg', category: 'Acid + Metal', questionText: 'What happens when you add Mg(s) to CH<sub>3</sub>COOH(aq)?', correctObservations: ['Effervescence (gas bubbles) was observed.', 'The metal dissolves.'], observationDistractors: ['The reaction is explosive.', 'A white precipitate forms.'], correctProducts: ['(CH<sub>3</sub>COO)<sub>2</sub>Mg', 'H<sub>2</sub>'], productDistractors: ['H<sub>2</sub>O', 'CO<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Even though ethanoic acid is weak, it still reacts with a reactive metal like magnesium, just slower than a strong acid would.', incorrect: 'Hint: A weak acid still behaves like an acid with a very reactive metal.' }, product: { correct: 'Correct! The pattern <strong>Acid + Reactive Metal → Salt + Hydrogen Gas</strong> still applies.', incorrect: 'Hint: The salt formed is the salt of ethanoic acid.' } } },
+            { id: 'acid_insoluble_carbonate_cu', category: 'Acid + Carbonate', questionText: 'What happens when you add CuCO<sub>3</sub>(s) to HNO<sub>3</sub>(aq)?', correctObservations: ['Effervescence (gas bubbles) was observed.', 'The green solid dissolves.', 'A blue solution is formed.'], observationDistractors: ['A pungent gas is released.', 'A white precipitate forms.'], correctProducts: ['Cu(NO<sub>3</sub>)<sub>2</sub>', 'CO<sub>2</sub>', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'CuO'], feedback: { observation: { correct: 'Correct! The solid carbonate reacts to form CO₂ gas and a blue solution of Copper(II) ions.', incorrect: 'Hint: This is an acid reacting with a carbonate. What gas is produced, and what color are aqueous copper ions?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Carbonate → Salt + CO₂ + Water</strong>.', incorrect: 'Hint: The products are a salt, water, and carbon dioxide.' } } },
+            { id: 'acid_insoluble_base_mg', category: 'Neutralization', questionText: 'What happens when you add MgO(s) to HCl(aq)?', correctObservations: ['The white solid dissolves.', 'The solution remains colorless.'], observationDistractors: ['Effervescence is observed.', 'A white precipitate forms.'], correctProducts: ['MgCl<sub>2</sub>', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'Cl<sub>2</sub>'], feedback: { observation: { correct: 'Correct! The insoluble base neutralizes the acid, dissolving to form a colorless salt solution.', incorrect: 'Hint: This is a neutralization reaction. Does it produce gas?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Base → Salt + Water</strong>.', incorrect: 'Hint: What are the two products of neutralization?' } } },
+            { id: 'acid_insoluble_base_cu', category: 'Neutralization', questionText: 'What happens when you add CuO(s) to HNO<sub>3</sub>(aq)?', correctObservations: ['The black solid dissolves.', 'A blue solution is formed.'], observationDistractors: ['Effervescence is observed.', 'A green precipitate forms.'], correctProducts: ['Cu(NO<sub>3</sub>)<sub>2</sub>', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'NO<sub>2</sub>'], feedback: { observation: { correct: 'Correct! The black basic oxide dissolves in the acid to form a blue solution of copper(II) ions.', incorrect: 'Hint: What happens when a black, insoluble base reacts with an acid? What color are copper solutions?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Base → Salt + Water</strong>.', incorrect: 'Hint: This is a neutralization reaction.' } } },
+            { id: 'alkali_metalsalt_precipitate_fe3', category: 'Precipitation', questionText: 'What happens when you add a few drops of NaOH(aq) to FeCl<sub>3</sub>(aq)?', correctObservations: ['A reddish-brown precipitate is formed.'], observationDistractors: ['A dirty green precipitate is formed.', 'Gas bubbles are produced.'], correctProducts: ['Fe(OH)<sub>3</sub>', 'NaCl'], productDistractors: ['Fe(OH)<sub>2</sub>', 'Cl<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Iron(III) ions form a characteristic reddish-brown precipitate of Iron(III) hydroxide.', incorrect: 'Hint: What is the color of the precipitate containing Iron(III) ions (think of rust)?' }, product: { correct: 'Correct! Pattern: <strong>Alkali + Metal Salt → Insoluble Metal Hydroxide + Salt</strong>.', incorrect: 'Hint: The salt formed contains Iron in the +3 oxidation state.' } } },
+            { id: 'alkali_metalsalt_precipitate_mg', category: 'Precipitation', questionText: 'What happens when you add a few drops of NH<sub>3</sub>(aq) to MgCl<sub>2</sub>(aq)?', correctObservations: ['A white precipitate is formed.'], observationDistractors: ['Gas bubbles are produced.'], correctProducts: ['Mg(OH)<sub>2</sub>', 'NH<sub>4</sub>Cl'], productDistractors: ['MgO', 'N<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Aqueous ammonia provides enough hydroxide ions to precipitate white Magnesium Hydroxide.', incorrect: 'Hint: Aqueous ammonia is a weak alkali. Will it cause precipitation with magnesium ions?' }, product: { correct: 'Correct! A simple precipitation reaction occurs.', incorrect: 'Hint: The products are the insoluble hydroxide and the corresponding ammonium salt.' } } },
+            { id: 'strong_acid_weak_base', category: 'Neutralization', questionText: 'What happens when you add H<sub>2</sub>SO<sub>4</sub>(aq) to NH<sub>3</sub>(aq)?', correctObservations: ['The solution remains colorless.', 'The solution gets warmer.'], observationDistractors: ['A pungent gas is produced.', 'A white precipitate forms.'], correctProducts: ['(NH<sub>4</sub>)<sub>2</sub>SO<sub>4</sub>'], productDistractors: ['H<sub>2</sub>O', 'N<sub>2</sub>', 'H<sub>2</sub>'], feedback: { observation: { correct: 'Correct! This is a neutralization reaction. Since the product is soluble, the only sign is a temperature change.', incorrect: 'Hint: This is a neutralization reaction between a strong acid and a weak base.' }, product: { correct: 'Correct! Pattern: <strong>Acid + Alkali → Salt</strong>. Water is not shown as a separate product as the reactants are aqueous.', incorrect: 'Hint: An acid and a weak base combine to form a salt.' } } },
+            { id: 'alkali_metalsalt_precipitate_al', category: 'Precipitation', questionText: 'What happens when you add a few drops of NH<sub>3</sub>(aq) to AlCl<sub>3</sub>(aq)?', correctObservations: ['A white precipitate is formed.'], observationDistractors: ['A blue precipitate forms.', 'Gas bubbles are produced.'], correctProducts: ['Al(OH)<sub>3</sub>', 'NH<sub>4</sub>Cl'], productDistractors: ['Al<sub>2</sub>O<sub>3</sub>', 'N<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Aqueous ammonia precipitates Aluminum Hydroxide. Unlike with strong alkalis, this precipitate is insoluble in excess weak alkali.', incorrect: 'Hint: Aluminum hydroxide is amphoteric, but is aqueous ammonia a strong enough alkali to make it redissolve?' }, product: { correct: 'Correct! A precipitation reaction occurs.', incorrect: 'Hint: The products are the insoluble hydroxide and the ammonium salt.' } } },
+            { id: 'acid_v_reactive_metal_na', category: 'Acid + Metal', questionText: 'What happens when you add Na(s) to CH<sub>3</sub>COOH(aq)?', correctObservations: ['Very vigorous effervescence (gas bubbles) was observed.', 'The metal dissolves very quickly.'], observationDistractors: ['The reaction is calm and slow.', 'A white precipitate forms.'], correctProducts: ['CH<sub>3</sub>COONa', 'H<sub>2</sub>'], productDistractors: ['H<sub>2</sub>O', 'Na<sub>2</sub>O'], feedback: { observation: { correct: 'Correct! Sodium is an extremely reactive metal and reacts very rapidly even with a weak acid.', incorrect: 'Hint: Sodium is in Group 1. How does its reactivity compare to Zinc or Calcium?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Reactive Metal → Salt + Hydrogen Gas</strong>.', incorrect: 'Hint: The products are the sodium salt of the acid, and hydrogen gas.' } } },
+            { id: 'acid_hydrogencarbonate_k', category: 'Acid + Hydrogencarbonate', questionText: 'What happens when you add KHCO<sub>3</sub>(s) to H<sub>2</sub>SO<sub>4</sub>(aq)?', correctObservations: ['Vigorous effervescence (gas bubbles) was observed.', 'The white solid dissolves.'], observationDistractors: ['A purple solution is formed.', 'A white precipitate forms.'], correctProducts: ['K<sub>2</sub>SO<sub>4</sub>', 'CO<sub>2</sub>', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'K<sub>2</sub>O'], feedback: { observation: { correct: 'Correct! Hydrogencarbonates react just like carbonates with acids to produce CO₂.', incorrect: 'Hint: The reaction of an acid with a hydrogencarbonate is almost identical to its reaction with a carbonate.' }, product: { correct: 'Correct! Pattern: <strong>Acid + Hydrogencarbonate → Salt + CO₂ + Water</strong>.', incorrect: 'Hint: The products are a salt, water, and carbon dioxide.' } } },
+            { id: 'ammonia_precipitate_fe3', category: 'Precipitation', questionText: 'What happens when you add a few drops of NH<sub>3</sub>(aq) to Fe(NO<sub>3</sub>)<sub>3</sub>(aq)?', correctObservations: ['A reddish-brown precipitate is formed.'], observationDistractors: ['A dirty green precipitate is formed.', 'Gas bubbles are produced.'], correctProducts: ['Fe(OH)<sub>3</sub>', 'NH<sub>4</sub>NO<sub>3</sub>'], productDistractors: ['Fe(OH)<sub>2</sub>', 'N<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Aqueous ammonia is a weak alkali but is strong enough to precipitate Iron(III) Hydroxide.', incorrect: 'Hint: What is the characteristic color of an Iron(III) precipitate?' }, product: { correct: 'Correct! A precipitation reaction occurs.', incorrect: 'Hint: The weak alkali provides OH⁻ ions for precipitation with the Fe³⁺ ions.' } } },
+            { id: 'acid_unreactive_metal_au', category: 'Acid + Metal', questionText: 'What happens when you add Au(s) to HNO<sub>3</sub>(aq)?', correctObservations: ['No reaction occurs.'], observationDistractors: ['The metal dissolves.', 'Brown fumes are produced.'], correctProducts: ['No reaction occurs.'], productDistractors: ['Au(NO<sub>3</sub>)<sub>3</sub>', 'H<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Gold is extremely unreactive and does not react even with strong oxidizing acids like nitric acid alone.', incorrect: 'Hint: Gold is one of the least reactive metals. Does it react with single acids?' }, product: { correct: 'Correct! No reaction means no products.', incorrect: 'Hint: If there is no reaction, are any new products formed?' } } },
+            { id: 'alkali_precipitate_pb', category: 'Precipitation', questionText: 'What happens when you add a few drops of NaOH(aq) to Pb(NO<sub>3</sub>)<sub>2</sub>(aq)?', correctObservations: ['A white precipitate is formed.'], observationDistractors: ['Effervescence is observed.', 'A grey precipitate forms.'], correctProducts: ['Pb(OH)<sub>2</sub>', 'NaNO<sub>3</sub>'], productDistractors: ['PbO', 'N<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Lead(II) hydroxide is a white precipitate.', incorrect: 'Hint: Lead(II) ions form a white precipitate with hydroxide ions.' }, product: { correct: 'Correct! Pattern: <strong>Alkali + Metal Salt → Insoluble Metal Hydroxide + Salt</strong>.', incorrect: 'Hint: The products are the insoluble hydroxide and the spectator salt.' } } },
+            { id: 'ammonia_precipitate_zn', category: 'Precipitation', questionText: 'What happens when you add a few drops of NH<sub>3</sub>(aq) to ZnSO<sub>4</sub>(aq)?', correctObservations: ['A white precipitate is formed.'], observationDistractors: ['A blue precipitate forms.'], correctProducts: ['Zn(OH)<sub>2</sub>', '(NH<sub>4</sub>)<sub>2</sub>SO<sub>4</sub>'], productDistractors: ['ZnO', 'N<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Aqueous ammonia provides enough hydroxide ions to precipitate white Zinc Hydroxide.', incorrect: 'Hint: Zinc hydroxide is a white precipitate. Does it react with excess weak alkali?' }, product: { correct: 'Correct! A precipitation reaction occurs.', incorrect: 'Hint: The products are the insoluble hydroxide and the corresponding ammonium salt.' } } },
+            { id: 'acid_hydroxide_insoluble', category: 'Neutralization', questionText: 'What happens when you add Mg(OH)<sub>2</sub>(s) to HNO<sub>3</sub>(aq)?', correctObservations: ['The white solid dissolves.', 'The solution remains colorless.'], observationDistractors: ['Effervescence is observed.', 'A white precipitate forms.'], correctProducts: ['Mg(NO<sub>3</sub>)<sub>2</sub>', 'H<sub>2</sub>O'], productDistractors: ['H<sub>2</sub>', 'NO<sub>2</sub>'], feedback: { observation: { correct: 'Correct! This is a simple neutralization where the insoluble base dissolves in the acid.', incorrect: 'Hint: This is an acid reacting with an insoluble base. Does this produce a gas?' }, product: { correct: 'Correct! Pattern: <strong>Acid + Base → Salt + Water</strong>.', incorrect: 'Hint: What are the two products of any neutralization reaction?' } } },
+            { id: 'alkali_precipitate_ca', category: 'Precipitation', questionText: 'What happens when you add a few drops of NaOH(aq) to CaCl<sub>2</sub>(aq)?', correctObservations: ['A white precipitate is formed.'], observationDistractors: ['No reaction occurs.', 'Effervescence is observed.'], correctProducts: ['Ca(OH)<sub>2</sub>', 'NaCl'], productDistractors: ['CaO', 'Cl<sub>2</sub>'], feedback: { observation: { correct: 'Correct! Calcium hydroxide is only slightly soluble, so it readily forms a white precipitate.', incorrect: 'Hint: Although Calcium Hydroxide is sometimes considered a strong alkali, it is not very soluble. Will a precipitate form?' }, product: { correct: 'Correct! Pattern: <strong>Alkali + Metal Salt → Insoluble Metal Hydroxide + Salt</strong>.', incorrect: 'Hint: The products are the precipitate and the soluble salt.' } } }
+        ];
+
+        // --- STATE & UI MANAGEMENT ---
+        let score = 0;
+        let questionsAttempted = 0;
+        let fullQuestionOrder = [];
+        let currentQuizQuestions = [];
+        let currentQuestionPointer = 0;
+        let hasTriedOnce = false;
+        let flaggedQuestions = [];
+        let userAnswers = {};
+        let isReviewing = false;
+        let reviewPointer = 0;
+
+        const quizPanel = document.getElementById('quiz-panel');
+        const scoreDisplay = document.getElementById('score-display');
+        const scoreboard = document.getElementById('scoreboard');
+        const confettiCanvas = document.getElementById('confetti-canvas');
+        const ctx = confettiCanvas.getContext('2d');
+        let confettiParticles = [];
+
+        // --- AUDIO ---
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!audioContext) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+            
+            if (type === 'correct') {
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.1);
+            } else { // incorrect
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
+            }
+            
+            oscillator.start(audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.2);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        // --- CONFETTI ---
+        function triggerConfetti() {
+            confettiParticles = [];
+            const particleCount = 200;
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722'];
+            for (let i = 0; i < particleCount; i++) {
+                confettiParticles.push({
+                    x: confettiCanvas.width / 2,
+                    y: confettiCanvas.height / 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    radius: Math.random() * 5 + 2,
+                    vx: Math.random() * 10 - 5,
+                    vy: Math.random() * -15 - 5,
+                    alpha: 1
+                });
+            }
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            
+            confettiParticles.forEach((p, i) => {
+                p.vy += 0.2;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.01;
+
+                if (p.alpha <= 0) {
+                    confettiParticles.splice(i, 1);
+                } else {
+                    ctx.globalAlpha = p.alpha;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                }
+            });
+
+            if (confettiParticles.length > 0) {
+                requestAnimationFrame(animateConfetti);
+            } else {
+                ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            }
+        }
+        
+        // --- AUTOSAVE & STATE MANAGEMENT ---
+        function saveState() {
+            const state = {
+                score,
+                questionsAttempted,
+                fullQuestionOrder,
+                currentQuizQuestions,
+                currentQuestionPointer,
+                hasTriedOnce,
+                flaggedQuestions,
+                userAnswers,
+                isReviewing,
+                reviewPointer,
+            };
+            localStorage.setItem('chemistryQuizState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const savedState = localStorage.getItem('chemistryQuizState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                score = state.score;
+                questionsAttempted = state.questionsAttempted;
+                fullQuestionOrder = state.fullQuestionOrder;
+                currentQuizQuestions = state.currentQuizQuestions;
+                currentQuestionPointer = state.currentQuestionPointer;
+                hasTriedOnce = state.hasTriedOnce;
+                flaggedQuestions = state.flaggedQuestions;
+                userAnswers = state.userAnswers;
+                isReviewing = state.isReviewing;
+                reviewPointer = state.reviewPointer;
+                return true;
+            }
+            return false;
+        }
+
+        function clearState() {
+            localStorage.removeItem('chemistryQuizState');
+        }
+
+        // --- QUIZ LOGIC ---
+        function showWelcomeScreen() {
+            scoreboard.classList.add('hidden');
+            const hasSavedState = localStorage.getItem('chemistryQuizState') !== null;
+            
+            quizPanel.innerHTML = `
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold mb-4">Welcome to the Chemistry Challenge!</h2>
+                    <p class="text-slate-600 mb-6">This quiz will test your knowledge on predicting the outcomes of various acid-base reactions.</p>
+                    <div class="text-left mb-6 bg-slate-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-lg mb-2">Objectives:</h3>
+                        <ul class="list-disc list-inside text-slate-700 space-y-1">
+                            <li>Predict the correct observations for a given reaction.</li>
+                            <li>Identify the products formed in the reaction.</li>
+                            <li>Reinforce your understanding of general reaction patterns.</li>
+                        </ul>
+                    </div>
+                    <p class="text-lg font-semibold mb-6">You will be asked 5 random questions. Are you ready?</p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <button id="revise-btn" class="w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 px-6 rounded-lg transition-colors">Revise Reactions Summary</button>
+                        <button id="start-btn" class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors text-xl">Start Challenge!</button>
+                        ${hasSavedState ? `<button id="resume-btn" class="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">Resume Quiz</button>` : ''}
+                    </div>
+                </div>
+            `;
+            document.getElementById('start-btn').addEventListener('click', initQuiz);
+            if (hasSavedState) {
+                document.getElementById('resume-btn').addEventListener('click', resumeQuiz);
+            }
+            document.getElementById('revise-btn').addEventListener('click', showModal);
+            document.getElementById('close-modal-btn').addEventListener('click', hideModal);
+            document.getElementById('summary-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'summary-modal') hideModal();
+            });
+        }
+
+        function showModal() {
+            const modal = document.getElementById('summary-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.modal-content').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function hideModal() {
+            const modal = document.getElementById('summary-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function initQuiz() {
+            clearState();
+            score = 0;
+            questionsAttempted = 0;
+            fullQuestionOrder = [...reactions.keys()].sort(() => Math.random() - 0.5);
+            currentQuizQuestions = fullQuestionOrder.slice(0, 5);
+            currentQuestionPointer = 0;
+            hasTriedOnce = false;
+            flaggedQuestions = [];
+            userAnswers = {};
+            isReviewing = false;
+            reviewPointer = 0;
+            
+            scoreboard.classList.remove('hidden');
+            updateScore();
+            loadNextQuestion();
+        }
+        
+        function resumeQuiz() {
+            if (loadState()) {
+                scoreboard.classList.remove('hidden');
+                updateScore();
+                if (isReviewing) {
+                    startReview();
+                } else if (currentQuestionPointer >= currentQuizQuestions.length) {
+                    showFinalScore();
+                } else {
+                    loadNextQuestion();
+                }
+            }
+        }
+
+        function loadNextQuestion() {
+            if (currentQuestionPointer >= currentQuizQuestions.length) {
+                showFinalScore();
+                return;
+            }
+            hasTriedOnce = false;
+            const questionIndex = currentQuizQuestions[currentQuestionPointer];
+            loadQuestion(questionIndex);
+        }
+
+        function toggleFlag(questionIndex) {
+            const flagBtn = document.getElementById('flag-btn');
+            const indexInFlagged = flaggedQuestions.indexOf(questionIndex);
+            if (indexInFlagged > -1) {
+                flaggedQuestions.splice(indexInFlagged, 1);
+                flagBtn.classList.remove('flagged');
+                flagBtn.innerHTML = '🚩 Flag for Review';
+            } else {
+                flaggedQuestions.push(questionIndex);
+                flagBtn.classList.add('flagged');
+                flagBtn.innerHTML = '🏁 Flagged';
+            }
+            saveState();
+        }
+
+        function loadQuestion(index, reviewMode = false) {
+            const reaction = reactions[index];
+            const allObservations = [...reaction.correctObservations, ...reaction.observationDistractors].sort(() => Math.random() - 0.5);
+            const allProducts = [...reaction.correctProducts, ...reaction.productDistractors].sort(() => Math.random() - 0.5);
+            const isFlagged = flaggedQuestions.includes(index);
+
+            let questionNumberText = `Question ${currentQuestionPointer + 1} of ${currentQuizQuestions.length}`;
+            if(reviewMode) {
+                 questionNumberText = `Reviewing Flagged Question ${reviewPointer + 1} of ${flaggedQuestions.length}`;
+            }
+
+            const content = `
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-xl mb-1">${questionNumberText}</h3>
+                    <button id="flag-btn" class="flag-btn text-sm py-1 px-3 rounded-full border border-slate-300 hover:bg-slate-100 transition-colors ${isFlagged ? 'flagged' : ''}" onclick="toggleFlag(${index})">
+                        ${isFlagged ? '🏁 Flagged' : '🚩 Flag for Review'}
+                    </button>
+                </div>
+                <p class="text-slate-700 text-lg mb-6">${reaction.questionText}</p>
+
+                <div class="grid md:grid-cols-2 md:gap-8">
+                    <div id="products-panel">
+                        <p class="font-semibold mb-2 text-slate-800">Predict the Products Formed:</p>
+                        <div id="products-list" class="space-y-2">
+                            ${allProducts.map(prod => `<label class="flex items-center p-3 bg-slate-50 rounded-lg hover:bg-slate-200 cursor-pointer"><input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="${prod}" ${reviewMode ? 'disabled' : ''}><span class="ml-3 text-slate-700">${prod}</span></label>`).join('')}
+                        </div>
+                    </div>
+                    <div id="observations-panel">
+                        <p class="font-semibold mb-2 text-slate-800">Predict the Key Observations:</p>
+                        <div id="observations-list" class="space-y-2">
+                            ${allObservations.map(obs => `<label class="flex items-center p-3 bg-slate-50 rounded-lg hover:bg-slate-200 cursor-pointer"><input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="${obs}" ${reviewMode ? 'disabled' : ''}><span class="ml-3 text-slate-700">${obs}</span></label>`).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <div id="feedback-area" class="min-h-[4rem] text-sm mb-4"></div>
+                    <div id="button-area"></div>
+                </div>
+            `;
+            quizPanel.innerHTML = content;
+            
+            // Restore previous answers if they exist
+            if (userAnswers[index]) {
+                userAnswers[index].prod.forEach(answer => {
+                    const checkbox = document.querySelector(`#products-list input[value="${answer}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                userAnswers[index].obs.forEach(answer => {
+                    const checkbox = document.querySelector(`#observations-list input[value="${answer}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+            
+            const buttonArea = document.getElementById('button-area');
+            if (reviewMode) {
+                buttonArea.innerHTML = `
+                    <div class="flex justify-between">
+                        <button id="prev-review-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Previous</button>
+                        <button id="next-review-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Next</button>
+                    </div>
+                `;
+                document.getElementById('prev-review-btn').addEventListener('click', navigateReview);
+                document.getElementById('next-review-btn').addEventListener('click', navigateReview);
+                if (reviewPointer === 0) document.getElementById('prev-review-btn').disabled = true;
+                if (reviewPointer === flaggedQuestions.length - 1) document.getElementById('next-review-btn').textContent = 'Finish Review';
+                
+                // Show feedback immediately in review mode
+                checkAnswer(true);
+
+            } else {
+                buttonArea.innerHTML = `<button id="submit-btn" data-action="check" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Submit Answer</button>`;
+                document.getElementById('submit-btn').addEventListener('click', handleQuizAction);
+            }
+        }
+        
+        function handleQuizAction(event) {
+            const button = event.currentTarget;
+            if (button.dataset.action === 'next') {
+                loadNextQuestion();
+            } else {
+                checkAnswer();
+            }
+        }
+
+        function checkAnswer(reviewMode = false) {
+            const questionIndex = isReviewing ? flaggedQuestions[reviewPointer] : currentQuizQuestions[currentQuestionPointer];
+            const reaction = reactions[questionIndex];
+            const feedbackArea = document.getElementById('feedback-area');
+            
+            const selectedObs = Array.from(document.querySelectorAll('#observations-list input:checked')).map(cb => cb.value);
+            const selectedProd = Array.from(document.querySelectorAll('#products-list input:checked')).map(cb => cb.value);
+
+            if (!reviewMode) {
+                userAnswers[questionIndex] = { obs: selectedObs, prod: selectedProd };
+            }
+
+            const correctObs = reaction.correctObservations;
+            const obsAreCorrect = correctObs.length === selectedObs.length && correctObs.every(ans => selectedObs.includes(ans));
+
+            const correctProd = reaction.correctProducts;
+            const prodAreCorrect = correctProd.length === selectedProd.length && correctProd.every(ans => selectedProd.includes(ans));
+
+            let productFeedbackHTML = '';
+            if (prodAreCorrect) {
+                productFeedbackHTML = `<div class="p-3 rounded-lg bg-green-100 text-green-800"><p class="font-bold">✅ Products: Correct!</p><p>${reaction.feedback.product.correct}</p></div>`;
+            } else {
+                productFeedbackHTML = `<div class="p-3 rounded-lg bg-red-100 text-red-800"><p class="font-bold">🤔 Products: Incorrect.</p><p>${reaction.feedback.product.incorrect}</p></div>`;
+            }
+
+            let observationFeedbackHTML = '';
+            if (obsAreCorrect) {
+                observationFeedbackHTML = `<div class="p-3 rounded-lg bg-green-100 text-green-800"><p class="font-bold">✅ Observations: Correct!</p><p>${reaction.feedback.observation.correct}</p></div>`;
+            } else {
+                observationFeedbackHTML = `<div class="p-3 rounded-lg bg-red-100 text-red-800"><p class="font-bold">🤔 Observations: Incorrect.</p><p>${reaction.feedback.observation.incorrect}</p></div>`;
+            }
+            
+            feedbackArea.innerHTML = `<div class="grid md:grid-cols-2 md:gap-8">${productFeedbackHTML}${observationFeedbackHTML}</div>`;
+
+            if (reviewMode) return;
+
+            const submitButton = document.getElementById('submit-btn');
+            if (obsAreCorrect && prodAreCorrect) {
+                playSound('correct');
+                if (!hasTriedOnce) {
+                    score++;
+                    triggerConfetti();
+                }
+                currentQuestionPointer++;
+                submitButton.textContent = 'Next Question →';
+                submitButton.dataset.action = 'next';
+            } else {
+                playSound('incorrect');
+                if (!hasTriedOnce) {
+                    hasTriedOnce = true;
+                }
+                submitButton.textContent = 'Try Again';
+                submitButton.dataset.action = 'check';
+            }
+            if (!hasTriedOnce) questionsAttempted++;
+            updateScore();
+            saveState();
+        }
+        
+        function updateScore() {
+            scoreDisplay.textContent = `${score} / 5`;
+        }
+
+        function showFinalScore() {
+            clearState();
+            let message = '';
+            const percentage = 5 > 0 ? (score / 5) * 100 : 0;
+            if (percentage === 100) {
+                message = `🎉 Perfect Score! You're a chemistry superstar! 🎉`;
+                triggerConfetti();
+            } else if (percentage >= 80) {
+                message = `⭐ Excellent work! You have a great understanding of these reactions. ⭐`;
+            } else if (percentage >= 60) {
+                message = `👍 Good job! Keep reviewing and you'll master it. 👍`;
+            } else {
+                message = `Keep trying! Every chemist starts with the basics. Don't give up! 💪`;
+            }
+
+            quizPanel.innerHTML = `
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold mb-4">Quiz Round Complete!</h2>
+                    <p class="text-lg mb-2">Your final score is:</p>
+                    <p class="text-5xl font-bold text-blue-600 mb-6">${score} / ${currentQuizQuestions.length}</p>
+                    <p class="text-lg font-semibold mb-8">${message}</p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <button id="restart-btn" class="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Take Another Quiz</button>
+                        ${flaggedQuestions.length > 0 ? `<button id="review-btn" class="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Review Flagged (${flaggedQuestions.length})</button>` : ''}
+                    </div>
+                </div>
+            `;
+            document.getElementById('restart-btn').addEventListener('click', initQuiz);
+            if (flaggedQuestions.length > 0) {
+                document.getElementById('review-btn').addEventListener('click', startReview);
+            }
+        }
+        
+        function startReview() {
+            isReviewing = true;
+            reviewPointer = 0;
+            loadQuestion(flaggedQuestions[reviewPointer], true);
+            saveState();
+        }
+        
+        function navigateReview(event) {
+            if (event.target.id === 'next-review-btn') {
+                reviewPointer++;
+                if (reviewPointer >= flaggedQuestions.length) {
+                    isReviewing = false;
+                    showFinalScore();
+                } else {
+                    loadQuestion(flaggedQuestions[reviewPointer], true);
+                }
+            } else if (event.target.id === 'prev-review-btn') {
+                reviewPointer--;
+                loadQuestion(flaggedQuestions[reviewPointer], true);
+            }
+            saveState();
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = showWelcomeScreen;
+
+        // --- BACKGROUND ANIMATION ---
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgParticles = [];
+        const bgParticleCount = 70;
+        const bgColors = ['rgba(209, 237, 251, 0.7)', 'rgba(161, 218, 250, 0.7)', 'rgba(112, 199, 248, 0.7)', 'rgba(52, 152, 219, 0.7)'];
+
+        function resizeCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        
+        class BgParticle {
+            constructor(x, y, radius, color, velocity) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                this.velocity = velocity;
+                this.alpha = 0.5 + Math.random() * 0.5;
+            }
+            draw() {
+                bgCtx.save();
+                bgCtx.globalAlpha = this.alpha;
+                bgCtx.beginPath();
+                bgCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                bgCtx.fillStyle = this.color;
+                bgCtx.fill();
+                bgCtx.restore();
+            }
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                if (this.x - this.radius > bgCanvas.width || this.x + this.radius < 0 || this.y - this.radius > bgCanvas.height) {
+                    this.reset();
+                }
+            }
+            reset() {
+                this.x = Math.random() * bgCanvas.width;
+                this.y = bgCanvas.height + this.radius;
+                this.velocity.y = - (Math.random() * 0.5 + 0.2);
+            }
+        }
+
+        function initBgParticles() {
+            bgParticles = [];
+            for (let i = 0; i < bgParticleCount; i++) {
+                const radius = Math.random() * 15 + 10;
+                const x = Math.random() * bgCanvas.width;
+                const y = Math.random() * bgCanvas.height;
+                const color = bgColors[Math.floor(Math.random() * bgColors.length)];
+                const velocity = {
+                    x: (Math.random() - 0.5) * 0.2,
+                    y: - (Math.random() * 0.5 + 0.2)
+                };
+                bgParticles.push(new BgParticle(x, y, radius, color, velocity));
+            }
+        }
+
+        function animateBgCanvas() {
+            requestAnimationFrame(animateBgCanvas);
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgParticles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+        }
+        
+        resizeCanvas();
+        initBgParticles();
+        animateBgCanvas();
+
+    </script>
+</body>
+</html>

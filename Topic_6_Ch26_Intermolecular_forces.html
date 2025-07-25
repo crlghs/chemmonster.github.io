@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz: Intermolecular Forces</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Sound and Confetti Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #89f7fe 0%, #66a6ff 100%);
+            color: #4a4a4a;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .btn {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+        #flag-question-btn {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        #flag-question-btn.flagged {
+            background-color: #fef9c3;
+            border-color: #facc15;
+            color: #713f12;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            transition: width 0.3s ease-in-out;
+        }
+        .option-btn {
+            border: 1px solid #d1d5db;
+            transition: all 0.2s ease-in-out;
+            height: 100%;
+            text-align: left;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .option-btn:hover {
+            border-color: #0072ff;
+            transform: translateY(-2px);
+        }
+        .option-btn.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen p-4">
+    <div class="quiz-container card w-full max-w-3xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">Intermolecular Forces Quiz</h1>
+            <p class="text-lg text-gray-600 mt-2">Explore the attractions that hold molecules together!</p>
+        </header>
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="text-center">
+            <i class="fas fa-wind text-6xl text-cyan-500 mb-4"></i>
+            <h2 class="text-3xl font-bold mb-4">Welcome to the Intermolecular Forces Challenge!</h2>
+            <p class="text-gray-600 mb-6">Let's dive into the weak attractions that have a huge impact on the properties of matter.</p>
+            <div class="text-left mb-6 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-bullseye text-cyan-500 mr-3"></i>Quiz Objectives</h3>
+                <ul class="list-disc list-inside text-gray-700 space-y-2 pl-5">
+                    <li>Differentiate between van der Waals' forces and hydrogen bonds.</li>
+                    <li>Understand the conditions required for hydrogen bonding.</li>
+                    <li>Relate the strength of intermolecular forces to physical properties like boiling point.</li>
+                    <li>Address common misconceptions about intermolecular forces.</li>
+                </ul>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                     <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-info-circle text-cyan-500 mr-3"></i>Learning Tips</h3>
+                     <div class="pl-5 space-y-2 text-gray-700">
+                        <p>Use the <span class="font-bold">"🚩 Flag for Review"</span> button to mark tricky questions for later.</p>
+                        <p>Revisit this quiz to reinforce your learning through spaced repetition!</p>
+                     </div>
+                </div>
+            </div>
+            <p class="text-xl font-semibold mb-6">Are you ready to test your knowledge?</p>
+            <button id="proceed-to-setup-btn" class="w-full btn btn-primary">Let's Go!</button>
+        </div>
+
+        <!-- Setup Screen -->
+        <div id="setup-screen" class="hidden text-center">
+            <h2 class="text-2xl font-bold mb-4">Quiz Setup</h2>
+            <div class="text-left mb-6">
+                <label for="num-questions" class="block mb-2 font-medium text-center">Number of Questions:</label>
+                <select id="num-questions" class="p-2 border rounded-lg w-full bg-white">
+                    <option value="5">5 Questions</option>
+                    <option value="10" selected>10 Questions</option>
+                    <option value="20">20 Questions</option>
+                    <option value="35">35 Questions</option>
+                </select>
+            </div>
+            <div id="start-buttons-container" class="space-y-2">
+               <button id="start-quiz-btn" class="w-full btn btn-primary">Start New Quiz</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-bold">Question <span id="question-number"></span>/<span id="total-questions"></span></h2>
+                 <div class="flex items-center gap-4">
+                    <div class="text-lg font-bold bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full">Score: <span id="score">0</span></div>
+                    <button id="flag-question-btn" title="Flag this question for review"></button>
+                 </div>
+            </div>
+            <p id="question-text" class="text-xl mb-6 bg-gray-100 p-4 rounded-lg"></p>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="feedback-container" class="hidden mt-4"></div>
+            <button id="next-question-btn" class="hidden w-full mt-4 btn bg-gray-700 text-white hover:bg-gray-800">Next Question</button>
+        </div>
+        
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden text-center">
+            <canvas id="confetti-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
+            <h2 id="results-title" class="text-3xl font-bold mb-2">Quiz Complete!</h2>
+            <p id="results-message" class="text-lg text-gray-600 mb-4"></p>
+            <p class="text-xl mb-2">Your final score is:</p>
+            <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500 mb-6" id="final-score"></p>
+            <div id="review-buttons-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <button id="review-incorrect-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-times-circle mr-2"></i>Review Incorrect</button>
+                <button id="review-flagged-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-flag mr-2"></i>Review Flagged</button>
+            </div>
+            <button id="restart-quiz-btn" class="w-full btn btn-primary">Try Again</button>
+        </div>
+
+        <!-- Review Screen -->
+        <div id="review-screen" class="hidden">
+            <h2 id="review-title" class="text-2xl font-bold mb-4">Reviewing Questions</h2>
+            <div id="review-content" class="space-y-4"></div>
+            <div class="flex justify-between items-center mt-6">
+                <button id="review-prev-btn" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Prev</button>
+                <span id="review-counter" class="font-semibold"></span>
+                <button id="review-next-btn" class="btn btn-secondary">Next<i class="fas fa-arrow-right ml-2"></i></button>
+            </div>
+             <button id="back-to-results-btn" class="w-full btn btn-primary mt-4">Back to Results</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const questionBank = [
+                { question: "True or False: Van der Waals' forces exist only between non-polar molecules.", answer: "False", options: ["True", "False"], explanation: "Van der Waals' forces exist between ALL molecules, both polar and non-polar." },
+                { question: "The temporary, random movement of electrons in a non-polar molecule can create a(n)...", answer: "Instantaneous dipole", options: ["Permanent dipole", "Ionic bond", "Covalent bond", "Instantaneous dipole"], explanation: "The random motion of electrons can lead to a temporary, uneven distribution of charge, known as an instantaneous dipole." },
+                { question: "Which of the following substances has the strongest van der Waals' forces?", answer: "Butane (C₄H₁₀)", options: ["Methane (CH₄)", "Ethane (C₂H₆)", "Propane (C₃H₈)", "Butane (C₄H₁₀)"], explanation: "As the molecular size (and number of electrons) increases, the electron cloud is more easily distorted, leading to stronger instantaneous dipoles and stronger van der Waals' forces." },
+                { question: "Pentane (C₅H₁₂) has a higher boiling point than its isomer, 2,2-dimethylpropane. Why?", answer: "Pentane molecules have a larger surface area of contact.", options: ["Pentane is a polar molecule.", "2,2-dimethylpropane has fewer electrons.", "Pentane molecules have a larger surface area of contact.", "2,2-dimethylpropane has stronger covalent bonds."], explanation: "The elongated shape of pentane allows for more points of contact between molecules compared to the more spherical shape of 2,2-dimethylpropane, resulting in stronger van der Waals' forces." },
+                { question: "Which factor is most important in determining the strength of van der Waals' forces between noble gas atoms?", answer: "The number of electrons", options: ["The nuclear charge", "The number of valence electrons", "The number of electrons", "The electronegativity"], explanation: "A greater number of electrons leads to a larger, more polarizable electron cloud, resulting in stronger van der Waals' forces." },
+                { question: "True or False: For molecules of similar size, polar molecules generally have stronger van der Waals' forces than non-polar molecules.", answer: "True", explanation: "Polar molecules have permanent dipoles, which lead to stronger dipole-dipole attractions in addition to the instantaneous dipoles present in all molecules." },
+                { question: "Arrange the halogens F₂, Cl₂, Br₂ in order of increasing boiling point.", answer: "F₂ < Cl₂ < Br₂", options: ["F₂ < Cl₂ < Br₂", "Br₂ < Cl₂ < F₂", "Cl₂ < F₂ < Br₂", "F₂ < Br₂ < Cl₂"], explanation: "The number of electrons increases down the group (F₂ < Cl₂ < Br₂), leading to stronger van der Waals' forces and higher boiling points." },
+                { question: "The attraction between the permanent dipole of a polar molecule and an induced dipole in a non-polar molecule is a type of...", answer: "Van der Waals' force", options: ["Hydrogen bond", "Covalent bond", "Ionic bond", "Van der Waals' force"], explanation: "This interaction is a form of dipole-induced dipole attraction, which falls under the category of van der Waals' forces." },
+                { question: "Which of the following is NOT a necessary condition for forming a hydrogen bond?", answer: "The molecule must be non-polar.", options: ["A hydrogen atom bonded to N, O, or F.", "A lone pair of electrons on another N, O, or F atom.", "The molecule must be non-polar.", "A significant partial positive charge (δ+) on the hydrogen atom."], explanation: "Hydrogen bonding is a feature of highly polar molecules; being non-polar would prevent it." },
+                { question: "True or False: A hydrogen bond is a type of strong covalent bond.", answer: "False", explanation: "This is a common misconception. A hydrogen bond is an intermolecular force, which is much weaker than an intramolecular covalent bond." },
+                { question: "In which of the following substances can hydrogen bonds form between its molecules?", answer: "Ethanol (CH₃CH₂OH)", options: ["Methane (CH₄)", "Hydrogen Sulphide (H₂S)", "Fluoromethane (CH₃F)", "Ethanol (CH₃CH₂OH)"], explanation: "Only ethanol has a hydrogen atom directly bonded to a highly electronegative oxygen atom. In CH₃F, the hydrogen atoms are bonded to carbon, not fluorine." },
+                { question: "Why can't hydrogen bonds form between molecules of methoxymethane (CH₃OCH₃)?", answer: "There are no hydrogen atoms directly bonded to the oxygen atom.", options: ["The molecule is non-polar.", "It does not contain any hydrogen atoms.", "There are no hydrogen atoms directly bonded to the oxygen atom.", "Oxygen is not electronegative enough."], explanation: "To form a hydrogen bond, a molecule must have a hydrogen atom attached to an N, O, or F atom to act as a donor. Methoxymethane lacks this feature." },
+                { question: "A hydrogen bond is the electrostatic attraction between a δ+ hydrogen atom on one molecule and...", answer: "a lone pair of electrons on an N, O, or F atom of another molecule.", options: ["a δ- carbon atom on another molecule.", "the nucleus of an adjacent atom.", "a lone pair of electrons on an N, O, or F atom of another molecule.", "another δ+ hydrogen atom."], explanation: "The δ+ hydrogen is attracted to the high electron density of a lone pair on a highly electronegative atom." },
+                { question: "True or False: Hydrogen bonds can exist within a single large molecule, such as a protein.", answer: "True", explanation: "Hydrogen bonds play a crucial role in determining the 3D shape of large biological molecules like proteins and DNA by forming between different parts of the same molecule." },
+                { question: "How many hydrogen bonds can a single water (H₂O) molecule form on average?", answer: "2", options: ["1", "2", "3", "4"], explanation: "Each water molecule has two δ+ hydrogen atoms and two lone pairs on the oxygen atom. On average, each molecule participates in 2 hydrogen bonds in liquid water." },
+                { question: "Why can ammonia (NH₃) only form one hydrogen bond per molecule on average, despite having three H atoms?", answer: "It only has one lone pair of electrons.", options: ["The N-H bond is not polar enough.", "It only has one lone pair of electrons.", "Nitrogen is too large.", "The molecule is flat."], explanation: "The formation of hydrogen bonds is limited by the number of available lone pairs to act as acceptors. Ammonia has only one lone pair." },
+                { question: "Which type of force is the strongest?", answer: "Covalent bond", options: ["Van der Waals' force", "Hydrogen bond", "Covalent bond", "Dipole-dipole force"], explanation: "Covalent bonds (intramolecular forces) are fundamentally stronger than any type of intermolecular force." },
+                { question: "Which type of intermolecular force is generally the strongest?", answer: "Hydrogen bond", options: ["Van der Waals' force (non-polar)", "Van der Waals' force (polar)", "Hydrogen bond", "Ionic bond"], explanation: "Of the intermolecular forces listed, hydrogen bonding is the strongest type." },
+                { question: "The boiling point of H₂O is much higher than that of H₂S. This is best explained by...", answer: "the presence of hydrogen bonds between H₂O molecules.", options: ["the larger molecular size of H₂S.", "the stronger covalent bonds in H₂O.", "the presence of hydrogen bonds between H₂O molecules.", "H₂S being a non-polar molecule."], explanation: "Water molecules are held together by strong hydrogen bonds, which require much more energy to overcome than the weaker van der Waals' forces between H₂S molecules." },
+                { question: "Which substance is expected to have the highest boiling point?", answer: "CH₃CH₂OH", options: ["CH₃OCH₃", "CH₃CH₂CH₃", "CH₃CH₂F", "CH₃CH₂OH"], explanation: "CH₃CH₂OH is the only substance in the list that can form hydrogen bonds, which are significantly stronger than the van der Waals' forces in the other molecules of similar size." },
+                { question: "True or False: The boiling point of HI is higher than that of HCl.", answer: "True", explanation: "Although the HCl molecule is more polar, the much larger size and greater number of electrons in the HI molecule lead to significantly stronger van der Waals' forces, which is the dominant factor here." },
+                { question: "Why is the boiling point of HF anomalously high compared to HCl, HBr, and HI?", answer: "HF molecules form hydrogen bonds.", options: ["HF has the strongest van der Waals' forces.", "HF molecules form hydrogen bonds.", "Fluorine is a gas.", "The H-F covalent bond is very weak."], explanation: "HF is the only hydrogen halide capable of forming hydrogen bonds, which are much stronger than the van der Waals' forces in HCl, HBr, and HI." },
+                { question: "Which property is NOT directly affected by the strength of intermolecular forces?", answer: "Reactivity with acids", options: ["Boiling point", "Viscosity", "Surface tension", "Reactivity with acids"], explanation: "Reactivity is determined by the strength of chemical bonds within a molecule (intramolecular forces), not the forces between molecules." },
+                { question: "A liquid with strong intermolecular forces would be expected to have...", answer: "high viscosity and high surface tension.", options: ["low viscosity and low surface tension.", "high viscosity and low surface tension.", "low viscosity and high surface tension.", "high viscosity and high surface tension."], explanation: "Strong intermolecular forces make it harder for molecules to move past each other (high viscosity) and create a stronger pull inward at the surface (high surface tension)." },
+                { question: "Why is ammonia (NH₃) very soluble in water?", answer: "It can form hydrogen bonds with water molecules.", options: ["It is a gas at room temperature.", "It is a non-polar molecule.", "It can form hydrogen bonds with water molecules.", "It has a similar molecular mass to water."], explanation: "Substances that can form hydrogen bonds with water are typically very soluble in it. 'Like dissolves like'." },
+                { question: "Which of the hydrides of Group 14 (CH₄, SiH₄, GeH₄) has the lowest boiling point?", answer: "CH₄", options: ["CH₄", "SiH₄", "GeH₄", "They all have the same boiling point."], explanation: "None of these can form hydrogen bonds. The boiling point trend is determined by the strength of van der Waals' forces, which increases with molecular size. CH₄ is the smallest molecule and has the weakest forces." },
+                { question: "The boiling point of H₂O is higher than that of HF because...", answer: "on average, each H₂O molecule can form more hydrogen bonds than each HF molecule.", options: ["the O-H bond is more polar than the H-F bond.", "on average, each H₂O molecule can form more hydrogen bonds than each HF molecule.", "H₂O has stronger van der Waals' forces.", "H₂O is a liquid and HF is a gas."], explanation: "A water molecule can form an average of 2 H-bonds, while an HF molecule can only form 1 on average, leading to a stronger intermolecular network in water." },
+                { question: "Which of the following would you expect to have the highest boiling point?", answer: "KF", options: ["F₂", "HF", "CH₃F", "KF"], explanation: "KF is an ionic compound. The electrostatic attraction between ions (ionic bonds) in a giant ionic lattice is much stronger than any intermolecular forces." },
+                { question: "True or False: Breaking hydrogen bonds is a chemical reaction.", answer: "False", explanation: "Breaking intermolecular forces is a physical change, such as boiling or melting. A chemical reaction involves the breaking and forming of covalent bonds." },
+                { question: "Viscosity is a measure of a liquid's resistance to flow. Which liquid would be most viscous?", answer: "Glycerol (C₃H₅(OH)₃)", options: ["Water (H₂O)", "Ethanol (CH₃CH₂OH)", "Methane (CH₄)", "Glycerol (C₃H₅(OH)₃)"], explanation: "Glycerol has three -OH groups per molecule, allowing it to form an extensive network of strong hydrogen bonds, making it very viscous." },
+                { question: "True or False: In CH₃Cl, hydrogen bonds can form between the H atoms and the Cl atom of another molecule.", answer: "False", explanation: "For a hydrogen bond to form, the hydrogen must be directly bonded to N, O, or F. Here, the hydrogens are bonded to carbon. Also, chlorine is not electronegative enough to form significant hydrogen bonds." },
+                { question: "Which statement correctly compares the forces in liquid chlorine (Cl₂)?", answer: "The covalent bonds between Cl atoms are strong; the van der Waals' forces between Cl₂ molecules are weak.", options: ["Both the covalent bonds and the van der Waals' forces are strong.", "Both the covalent bonds and the van der Waals' forces are weak.", "The covalent bonds between Cl atoms are weak; the van der Waals' forces between Cl₂ molecules are strong.", "The covalent bonds between Cl atoms are strong; the van der Waals' forces between Cl₂ molecules are weak."], explanation: "Intramolecular covalent bonds are always much stronger than the weak intermolecular van der Waals' forces." },
+                { question: "The boiling point of CH₃SH is much lower than that of CH₃OH. Why?", answer: "CH₃OH can form hydrogen bonds, while CH₃SH cannot.", options: ["Sulphur is more electronegative than oxygen.", "CH₃SH has weaker van der Waals' forces.", "CH₃OH can form hydrogen bonds, while CH₃SH cannot.", "The C-S bond is stronger than the C-O bond."], explanation: "Oxygen is highly electronegative, allowing for H-bonding in methanol. Sulphur is not electronegative enough, so CH₃SH molecules are held together by weaker van der Waals' forces only." },
+                { question: "Which of the following is NOT an intermolecular force?", answer: "Covalent bond", options: ["Van der Waals' force", "Hydrogen bond", "Covalent bond", "Dipole-dipole attraction"], explanation: "A covalent bond is an intramolecular force, meaning it holds atoms together within a molecule. The others are forces between separate molecules." },
+                { question: "True or False: A larger molecule always has a higher boiling point than a smaller molecule.", answer: "False", explanation: "While molecular size is a key factor for van der Waals' forces, the presence of stronger hydrogen bonds in a smaller molecule (like H₂O) can give it a much higher boiling point than a larger molecule without H-bonds (like H₂S)." }
+            ];
+            
+            const correctSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+            const incorrectSound = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.2 } }).toDestination();
+
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const setupScreen = document.getElementById('setup-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            const reviewScreen = document.getElementById('review-screen');
+            const proceedToSetupBtn = document.getElementById('proceed-to-setup-btn');
+            const startQuizBtn = document.getElementById('start-quiz-btn');
+            const restartQuizBtn = document.getElementById('restart-quiz-btn');
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+            const flagQuestionBtn = document.getElementById('flag-question-btn');
+            const reviewIncorrectBtn = document.getElementById('review-incorrect-btn');
+            const reviewFlaggedBtn = document.getElementById('review-flagged-btn');
+            const backToResultsBtn = document.getElementById('back-to-results-btn');
+            const reviewPrevBtn = document.getElementById('review-prev-btn');
+            const reviewNextBtn = document.getElementById('review-next-btn');
+
+            const questionNumberEl = document.getElementById('question-number');
+            const totalQuestionsEl = document.getElementById('total-questions');
+            const scoreEl = document.getElementById('score');
+            const questionTextEl = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const finalScoreEl = document.getElementById('final-score');
+            const resultsTitleEl = document.getElementById('results-title');
+            const resultsMessageEl = document.getElementById('results-message');
+            const numQuestionsSelect = document.getElementById('num-questions');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const progressBar = document.getElementById('progress-bar');
+            const reviewContent = document.getElementById('review-content');
+            const reviewCounter = document.getElementById('review-counter');
+            const reviewTitle = document.getElementById('review-title');
+            
+            let questions = [];
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let flaggedQuestions = [];
+            let incorrectlyAnswered = [];
+            let reviewList = [];
+            let currentReviewIndex = 0;
+            let quizInProgress = false;
+            let correctlyAnsweredQuestions = new Set();
+
+            const correctMessages = ["Great job! 👍", "Excellent! 🎉", "You've got it! ✨", "Correct! ✅", "Awesome! 🤩"];
+            const incorrectMessages = ["Not quite. 🤔", "Keep trying! 💪", "That's a common mistake.", "Almost there! 🧐"];
+
+            function saveState() {
+                if (!quizInProgress) return;
+                const state = { questions, currentQuestionIndex, score, flaggedQuestions, incorrectlyAnswered, quizInProgress, correctlyAnswered: Array.from(correctlyAnsweredQuestions) };
+                localStorage.setItem('intermolecularForcesQuizState', JSON.stringify(state));
+            }
+
+            function loadState() {
+                const savedState = localStorage.getItem('intermolecularForcesQuizState');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    questions = state.questions;
+                    currentQuestionIndex = state.currentQuestionIndex;
+                    score = state.score;
+                    flaggedQuestions = state.flaggedQuestions;
+                    incorrectlyAnswered = state.incorrectlyAnswered;
+                    quizInProgress = state.quizInProgress;
+                    correctlyAnsweredQuestions = new Set(state.correctlyAnswered);
+                    return true;
+                }
+                return false;
+            }
+
+            function clearState() {
+                localStorage.removeItem('intermolecularForcesQuizState');
+            }
+
+            function showSetupScreen() {
+                welcomeScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+                
+                const startButtonsContainer = document.getElementById('start-buttons-container');
+                const existingResumeBtn = document.getElementById('resume-quiz-btn');
+                if (existingResumeBtn) existingResumeBtn.remove();
+
+                if (loadState() && quizInProgress) {
+                    const resumeBtn = document.createElement('button');
+                    resumeBtn.id = 'resume-quiz-btn';
+                    resumeBtn.textContent = 'Resume Previous Quiz';
+                    resumeBtn.className = 'w-full btn btn-secondary';
+                    startButtonsContainer.appendChild(resumeBtn);
+                    resumeBtn.addEventListener('click', resumeQuiz);
+                }
+            }
+
+            function resumeQuiz() {
+                setupScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                totalQuestionsEl.textContent = questions.length;
+                scoreEl.textContent = score;
+                displayQuestion();
+            }
+            
+            function startQuiz() {
+                Tone.start();
+                clearState();
+                quizInProgress = true;
+                const numQuestions = parseInt(numQuestionsSelect.value);
+                score = 0;
+                currentQuestionIndex = 0;
+                flaggedQuestions = [];
+                incorrectlyAnswered = [];
+                
+                let availableQuestions = questionBank.filter(q => !correctlyAnsweredQuestions.has(q.question));
+                if (availableQuestions.length < numQuestions) {
+                    availableQuestions = [...questionBank]; 
+                }
+                questions = availableQuestions.sort(() => 0.5 - Math.random()).slice(0, numQuestions);
+
+                setupScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                
+                totalQuestionsEl.textContent = questions.length;
+                scoreEl.textContent = score;
+                displayQuestion();
+                saveState();
+            }
+
+            function displayQuestion() {
+                if (currentQuestionIndex >= questions.length) {
+                    quizInProgress = false;
+                    showResults();
+                    saveState();
+                    return;
+                }
+                feedbackContainer.classList.add('hidden');
+                nextQuestionBtn.classList.add('hidden');
+                
+                const question = questions[currentQuestionIndex];
+                questionNumberEl.textContent = currentQuestionIndex + 1;
+                questionTextEl.innerHTML = question.question;
+                
+                optionsContainer.innerHTML = '';
+                
+                progressBar.style.width = `${((currentQuestionIndex) / questions.length) * 100}%`;
+                
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                
+                const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
+                shuffledOptions.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.innerHTML = optionText;
+                    button.className = 'option-btn btn w-full';
+                    button.onclick = () => checkAnswer(optionText, question.answer, button, question.explanation);
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            function checkAnswer(selectedAnswer, correctAnswer, button, explanation) {
+                optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+                
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                    scoreEl.textContent = score;
+                    button.classList.add('correct');
+                    correctSound.triggerAttackRelease('C5', '8n', Tone.now());
+                    feedbackContainer.className = 'p-4 rounded-lg mt-4 bg-green-100 border-l-4 border-green-500';
+                    feedbackContainer.innerHTML = `<p class="font-bold text-green-800 mb-2">${correctMessages[Math.floor(Math.random() * correctMessages.length)]}</p><p class="text-green-700">${explanation}</p>`;
+                    correctlyAnsweredQuestions.add(questions[currentQuestionIndex].question);
+                } else {
+                    button.classList.add('incorrect');
+                    incorrectSound.triggerAttackRelease('A2', '8n', Tone.now());
+                    optionsContainer.querySelectorAll('.option-btn').forEach(btn => {
+                        if (btn.innerHTML === correctAnswer) btn.classList.add('correct');
+                    });
+                    incorrectlyAnswered.push({ ...questions[currentQuestionIndex], userAnswer: selectedAnswer });
+                    feedbackContainer.className = 'p-4 rounded-lg mt-4 bg-red-100 border-l-4 border-red-500';
+                    feedbackContainer.innerHTML = `<p class="font-bold text-red-800 mb-2">${incorrectMessages[Math.floor(Math.random() * incorrectMessages.length)]}</p><p class="text-red-700">${explanation}</p>`;
+                }
+                
+                feedbackContainer.classList.remove('hidden');
+                nextQuestionBtn.classList.remove('hidden');
+                progressBar.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+                saveState();
+            }
+
+            function showResults() {
+                quizInProgress = false;
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                const finalPercentage = questions.length > 0 ? score / questions.length : 0;
+                finalScoreEl.textContent = `${score} / ${questions.length}`;
+
+                if (finalPercentage >= 0.8) {
+                    resultsTitleEl.textContent = "Excellent Work! 🌟";
+                    resultsMessageEl.textContent = "You have a strong grasp of intermolecular forces!";
+                    const confettiCanvas = document.getElementById('confetti-canvas');
+                    const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+                    myConfetti({ particleCount: 200, spread: 160, origin: { y: 0.6 } });
+                } else if (finalPercentage >= 0.5) {
+                    resultsTitleEl.textContent = "Good Job! 👍";
+                    resultsMessageEl.textContent = "You're well on your way to mastering these concepts.";
+                } else {
+                    resultsTitleEl.textContent = "Keep Going! 💪";
+                    resultsMessageEl.textContent = "Practice makes perfect. Give it another try!";
+                }
+
+                reviewIncorrectBtn.classList.toggle('hidden', incorrectlyAnswered.length === 0);
+                reviewFlaggedBtn.classList.toggle('hidden', flaggedQuestions.length === 0);
+                saveState(); 
+            }
+
+            function startReview(mode) {
+                currentReviewIndex = 0;
+                if (mode === 'incorrect') {
+                    reviewList = incorrectlyAnswered;
+                    reviewTitle.textContent = "Reviewing Incorrect Answers";
+                } else {
+                    reviewList = flaggedQuestions.map(index => {
+                        const question = questions[index];
+                        const incorrectAttempt = incorrectlyAnswered.find(item => item.question === question.question);
+                        return incorrectAttempt ? incorrectAttempt : question;
+                    });
+                    reviewTitle.textContent = "Reviewing Flagged Questions";
+                }
+                
+                if (reviewList.length > 0) {
+                    resultsScreen.classList.add('hidden');
+                    reviewScreen.classList.remove('hidden');
+                    displayReviewQuestion();
+                }
+            }
+
+            function displayReviewQuestion() {
+                const item = reviewList[currentReviewIndex];
+                reviewContent.innerHTML = `
+                    <div class="p-4 bg-gray-100 rounded-lg">
+                        <p class="font-bold text-lg">${item.question}</p>
+                    </div>
+                    ${item.userAnswer ? `<p class="text-red-600"><strong>Your Answer:</strong> ${item.userAnswer}</p>` : ''}
+                    <p class="text-green-600"><strong>Correct Answer:</strong> ${item.answer}</p>
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                        <p><strong>Explanation:</strong> ${item.explanation}</p>
+                    </div>
+                `;
+                reviewCounter.textContent = `${currentReviewIndex + 1} / ${reviewList.length}`;
+                reviewPrevBtn.disabled = currentReviewIndex === 0;
+                reviewNextBtn.disabled = currentReviewIndex === reviewList.length - 1;
+            }
+
+            flagQuestionBtn.addEventListener('click', () => {
+                const indexInFlagged = flaggedQuestions.indexOf(currentQuestionIndex);
+                if (indexInFlagged > -1) {
+                    flaggedQuestions.splice(indexInFlagged, 1);
+                } else {
+                    flaggedQuestions.push(currentQuestionIndex);
+                }
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                saveState();
+            });
+
+            proceedToSetupBtn.addEventListener('click', showSetupScreen);
+            reviewIncorrectBtn.addEventListener('click', () => startReview('incorrect'));
+            reviewFlaggedBtn.addEventListener('click', () => startReview('flagged'));
+            backToResultsBtn.addEventListener('click', () => {
+                reviewScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+            });
+            reviewPrevBtn.addEventListener('click', () => {
+                if (currentReviewIndex > 0) {
+                    currentReviewIndex--;
+                    displayReviewQuestion();
+                }
+            });
+            reviewNextBtn.addEventListener('click', () => {
+                if (currentReviewIndex < reviewList.length - 1) {
+                    currentReviewIndex++;
+                    displayReviewQuestion();
+                }
+            });
+
+            startQuizBtn.addEventListener('click', startQuiz);
+            restartQuizBtn.addEventListener('click', () => {
+                resultsScreen.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
+            });
+            nextQuestionBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                displayQuestion();
+            });
+        });
+    </script>
+</body>
+</html>

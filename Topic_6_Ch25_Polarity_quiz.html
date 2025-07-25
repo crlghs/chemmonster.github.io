@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz: Bond Polarity & Molecular Shape</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #89f7fe 0%, #66a6ff 100%);
+            color: #4a4a4a;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .btn {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+        #flag-question-btn {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        #flag-question-btn.flagged {
+            background-color: #fef9c3;
+            border-color: #facc15;
+            color: #713f12;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            transition: width 0.3s ease-in-out;
+        }
+        .option-btn {
+            border: 1px solid #d1d5db;
+            transition: all 0.2s ease-in-out;
+            height: 100%;
+            text-align: left;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .option-btn:hover {
+            border-color: #0072ff;
+            transform: translateY(-2px);
+        }
+        .option-btn.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen p-4">
+    <div class="quiz-container card w-full max-w-3xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">Bond Polarity & Molecular Shape Quiz</h1>
+            <p class="text-lg text-gray-600 mt-2">Explore the properties that determine molecular behavior!</p>
+        </header>
+
+        <div id="welcome-screen" class="text-center">
+            <i class="fas fa-magnet text-6xl text-cyan-500 mb-4"></i>
+            <h2 class="text-3xl font-bold mb-4">Welcome to the Polarity Challenge!</h2>
+            <p class="text-gray-600 mb-6">Let's investigate the invisible charges that determine how molecules behave.</p>
+            <div class="text-left mb-6 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-bullseye text-cyan-500 mr-3"></i>Quiz Objectives</h3>
+                <ul class="list-disc list-inside text-gray-700 space-y-2 pl-5">
+                    <li>Define electronegativity and understand bond polarity.</li>
+                    <li>Predict bond polarity using periodic trends.</li>
+                    <li>Determine a molecule's overall polarity from its shape.</li>
+                    <li>Understand the experimental test for polar liquids.</li>
+                </ul>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                     <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-info-circle text-cyan-500 mr-3"></i>Learning Tips</h3>
+                     <div class="pl-5 space-y-2 text-gray-700">
+                        <p>Use the <span class="font-bold">"🚩 Flag for Review"</span> button to mark tricky questions for later.</p>
+                        <p>Revisit this quiz to reinforce your learning through spaced repetition!</p>
+                     </div>
+                </div>
+            </div>
+            <p class="text-xl font-semibold mb-6">Are you ready to get started?</p>
+            <button id="proceed-to-setup-btn" class="w-full btn btn-primary">Let's Go!</button>
+        </div>
+
+        <div id="setup-screen" class="hidden text-center">
+            <h2 class="text-2xl font-bold mb-4">Quiz Setup</h2>
+            <div class="text-left mb-6">
+                <label for="num-questions" class="block mb-2 font-medium text-center">Number of Questions:</label>
+                <select id="num-questions" class="p-2 border rounded-lg w-full bg-white">
+                    <option value="5">5 Questions</option>
+                    <option value="10" selected>10 Questions</option>
+                    <option value="20">20 Questions</option>
+                    <option value="30">30 Questions</option>
+                </select>
+            </div>
+            <div id="start-buttons-container" class="space-y-2">
+               <button id="start-quiz-btn" class="w-full btn btn-primary">Start New Quiz</button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-bold">Question <span id="question-number"></span>/<span id="total-questions"></span></h2>
+                 <div class="flex items-center gap-4">
+                    <div class="text-lg font-bold bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full">Score: <span id="score">0</span></div>
+                    <button id="flag-question-btn" title="Flag this question for review"></button>
+                 </div>
+            </div>
+            <p id="question-text" class="text-xl mb-6 bg-gray-100 p-4 rounded-lg"></p>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="feedback-container" class="hidden mt-4"></div>
+            <button id="next-question-btn" class="hidden w-full mt-4 btn bg-gray-700 text-white hover:bg-gray-800">Next Question</button>
+        </div>
+        
+        <div id="results-screen" class="hidden text-center">
+            <canvas id="confetti-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
+            <h2 id="results-title" class="text-3xl font-bold mb-2">Quiz Complete!</h2>
+            <p id="results-message" class="text-lg text-gray-600 mb-4"></p>
+            <p class="text-xl mb-2">Your final score is:</p>
+            <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500 mb-6" id="final-score"></p>
+            <div id="review-buttons-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <button id="review-incorrect-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-times-circle mr-2"></i>Review Incorrect</button>
+                <button id="review-flagged-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-flag mr-2"></i>Review Flagged</button>
+            </div>
+            <button id="restart-quiz-btn" class="w-full btn btn-primary">Try Again</button>
+        </div>
+
+        <div id="review-screen" class="hidden">
+            <h2 id="review-title" class="text-2xl font-bold mb-4">Reviewing Questions</h2>
+            <div id="review-content" class="space-y-4"></div>
+            <div class="flex justify-between items-center mt-6">
+                <button id="review-prev-btn" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Prev</button>
+                <span id="review-counter" class="font-semibold"></span>
+                <button id="review-next-btn" class="btn btn-secondary">Next<i class="fas fa-arrow-right ml-2"></i></button>
+            </div>
+             <button id="back-to-results-btn" class="w-full btn btn-primary mt-4">Back to Results</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const questionBank = [
+                { question: "What is electronegativity?", options: ["The energy required to remove an electron", "The ability of an atom to attract bonding electrons in a covalent bond", "The size of an atom", "The charge of an atom's nucleus"], answer: "The ability of an atom to attract bonding electrons in a covalent bond", explanation: "Electronegativity is a measure of the tendency of an atom to attract a bonding pair of electrons." },
+                { question: "How does electronegativity generally change across a period from left to right?", options: ["It increases", "It decreases", "It stays the same", "It increases then decreases"], answer: "It increases", explanation: "Across a period, the nuclear charge increases while the shielding remains similar, pulling bonding electrons more strongly." },
+                { question: "How does electronegativity generally change down a group?", options: ["It increases", "It decreases", "It stays the same", "It decreases then increases"], answer: "It decreases", explanation: "Down a group, the bonding electrons are further from the nucleus and shielded by more electron shells, resulting in a weaker attraction." },
+                { question: "Which of the following is the most electronegative element?", options: ["Oxygen (O)", "Chlorine (Cl)", "Fluorine (F)", "Nitrogen (N)"], answer: "Fluorine (F)", explanation: "Fluorine is the most electronegative element on the periodic table." },
+                { question: "True or False: Noble gases are typically assigned the highest electronegativity values.", options: ["True", "False"], answer: "False", explanation: "Noble gases are often not assigned electronegativity values because they rarely form chemical bonds due to their stable electron configurations." },
+                { question: "A covalent bond formed between two identical atoms (e.g., in H₂) is always...", options: ["Polar", "Non-polar", "Ionic", "Metallic"], answer: "Non-polar", explanation: "When two identical atoms bond, they have the same electronegativity and share the bonding electrons equally, creating a non-polar bond." },
+                { question: "A P-H bond is considered non-polar. What does this imply about the electronegativity of Phosphorus and Hydrogen?", options: ["Phosphorus is much more electronegative", "Hydrogen is much more electronegative", "Their electronegativity values are very similar", "They cannot form a bond"], answer: "Their electronegativity values are very similar", explanation: "Bonds are non-polar when the difference in electronegativity between the two atoms is very small or zero." },
+                { question: "In a polar covalent bond, the more electronegative atom gains a...", options: ["Full positive charge", "Partial positive charge (δ+)", "Full negative charge", "Partial negative charge (δ-)"], answer: "Partial negative charge (δ-)", explanation: "The bonding electrons are pulled closer to the more electronegative atom, giving it a slight excess of negative charge (δ-)." },
+                { question: "Which of the following bonds is the most polar?", options: ["H-F", "H-Cl", "H-Br", "H-I"], answer: "H-F", explanation: "The polarity of a bond is determined by the difference in electronegativity. Fluorine has the highest electronegativity, so the H-F bond has the largest electronegativity difference and is the most polar." },
+                { question: "What is a dipole moment?", options: ["The moment an atom becomes an ion", "A measure of the overall charge of a molecule", "A measure of the polarity of a covalent bond", "The force between two molecules"], answer: "A measure of the polarity of a covalent bond", explanation: "A dipole moment is a vector quantity that measures the separation of positive and negative charges in a polar bond." },
+                { question: "True or False: A molecule that contains polar bonds must be a polar molecule.", options: ["True", "False"], answer: "False", explanation: "A molecule with polar bonds can be non-polar if its shape is symmetrical, causing the individual bond dipoles to cancel each other out (e.g., CCl₄)." },
+                { question: "The CO₂ molecule is linear and non-polar. Why?", options: ["The C=O bonds are non-polar.", "Oxygen is not very electronegative.", "The two polar C=O bonds are symmetrical and their bond polarities cancel out.", "The molecule is a gas."], answer: "The two polar C=O bonds are symmetrical and their bond polarities cancel out.", explanation: "Although each C=O bond is polar, the molecule's linear shape (O=C=O) means the two bond dipoles point in opposite directions and cancel each other completely." },
+                { question: "The water molecule (H₂O) is polar because...", options: ["The O-H bonds are non-polar.", "It has a linear shape.", "It has a V-shaped (bent) and the bond polarities of O-H bonds do not cancel out.", "Oxygen is only slightly more electronegative than hydrogen."], answer: "It has a V-shaped (bent) and the bond polarities of O-H bonds do not cancel out.", explanation: "The two O-H bonds are polar, and the bent shape of the molecule means the bond dipoles add together to create a net dipole moment." },
+                { question: "Which of these molecules is non-polar?", options: ["NH₃", "CHCl₃", "BF₃", "H₂O"], answer: "BF₃", explanation: "BF₃ has a symmetrical trigonal planar shape. The three polar B-F bonds are arranged at 120° angles, and their dipole moments cancel each other out." },
+                { question: "Why is an ammonia (NH₃) molecule polar?", options: ["It has a symmetrical trigonal planar shape.", "The N-H bonds are non-polar.", "It has a trigonal pyramidal shape, so the bond polarities of N-H bonds do not cancel out.", "Nitrogen is less electronegative than hydrogen."], answer: "It has a trigonal pyramidal shape, so the bond polarities of N-H bonds do not cancel out.", explanation: "The trigonal pyramidal shape is asymmetrical, meaning the individual N-H bond dipoles do not cancel, resulting in a net dipole moment for the molecule." },
+                { question: "Is the carbon tetrachloride (CCl₄) molecule polar or non-polar?", options: ["Polar", "Non-polar"], answer: "Non-polar", explanation: "Despite having four polar C-Cl bonds, the tetrahedral shape is perfectly symmetrical. The four bond dipoles point to the corners of the tetrahedron and cancel each other out." },
+                { question: "Which of the following molecules is polar?", options: ["CH₄", "SF₆", "PCl₃", "BeCl₂"], answer: "PCl₃", explanation: "PCl₃ has a trigonal pyramidal shape due to a lone pair on the phosphorus atom, making it asymmetrical and polar. The others (CH₄, SF₆, BeCl₂) are all symmetrical and non-polar." },
+                { question: "Is the CH₂Cl₂ molecule polar or non-polar?", options: ["Polar", "Non-polar"], answer: "Polar", explanation: "Although the shape is tetrahedral, the bonds are not identical (two C-H and two C-Cl). This leads to an unsymmetrical distribution of charge and a net dipole moment." },
+                { question: "True or False: All hydrocarbon molecules (like CH₄ and C₂H₆) are considered non-polar.", options: ["True", "False"], answer: "True", explanation: "The electronegativity difference between carbon and hydrogen is very small, making C-H bonds essentially non-polar. Combined with their symmetrical shapes, this makes hydrocarbons non-polar molecules." },
+                { question: "If a molecule has only one polar bond, the molecule is...", options: ["Always polar", "Always non-polar", "Sometimes polar", "Cannot be determined"], answer: "Always polar", explanation: "If there is only one polar bond, there are no other bond dipoles to cancel it out. Therefore, the molecule will always have a net dipole moment and be polar (e.g., HCl)." },
+                { question: "Is the SF₆ molecule polar or non-polar?", options: ["Polar", "Non-polar"], answer: "Non-polar", explanation: "The octahedral shape is perfectly symmetrical. The six polar S-F bonds point to the vertices of the octahedron, and their dipole moments cancel each other out completely." },
+                { question: "Which two factors determine the polarity of a molecule?", options: ["Atomic mass and bond length", "Number of neutrons and molecular shape", "Bond polarity and molecular shape", "Melting point and boiling point"], answer: "Bond polarity and molecular shape", explanation: "You must consider both whether the bonds are polar and how those polar bonds are arranged in 3D space (the molecule's geometry)." },
+                { question: "The molecule OCS is linear. Is it polar or non-polar?", options: ["Polar", "Non-polar"], answer: "Polar", explanation: "Even though it's linear, the C=O bond is more polar than the C=S bond. Since the dipole moments are unequal, they do not cancel out, and the molecule is polar." },
+                { question: "Which of these molecules has a net dipole moment of zero?", options: ["H₂S", "SO₂", "SiCl₄", "CH₃Cl"], answer: "SiCl₄", explanation: "SiCl₄ is the only symmetrical molecule in the list. The four polar Si-Cl bonds are arranged symmetrically in a tetrahedral shape, causing their dipoles to cancel." },
+                { question: "Why is methanol (CH₃OH) a polar molecule?", options: ["It contains carbon.", "The C-H bonds are strongly polar.", "The O-H bond is highly polar and the molecule is asymmetrical.", "It is a liquid at room temperature."], answer: "The O-H bond is highly polar and the molecule is asymmetrical.", explanation: "The highly polar C-O and O-H bonds, combined with the molecule's overall asymmetrical shape, result in a strong net dipole moment." },
+                { question: "When a positively charged rod is brought near a jet of a polar liquid like water, what happens?", options: ["The jet is repelled", "The jet is attracted", "Nothing happens", "The jet turns into steam"], answer: "The jet is attracted", explanation: "The partial negative ends (δ-) of the polar water molecules are attracted to the positive rod, causing the entire stream of liquid to bend towards it." },
+                { question: "What would happen if a charged rod were brought near a jet of non-polar tetrachloromethane (CCl₄)?", options: ["The jet would be strongly attracted", "The jet would be weakly attracted", "The jet would be repelled", "The jet would not be deflected"], answer: "The jet would not be deflected", explanation: "Since CCl₄ molecules are non-polar, they have no permanent dipole to be attracted to the charged rod, so the stream of liquid flows straight down." },
+                { question: "True or False: Both a positively charged rod and a negatively charged rod will attract a stream of a polar liquid.", options: ["True", "False"], answer: "True", explanation: "A positive rod attracts the negative ends of the molecules. A negative rod attracts the positive ends. In either case, the result is a net attraction that deflects the stream." },
+                { question: "The deflection of a liquid jet by a charged rod is a test for...", options: ["The liquid's density", "The liquid's boiling point", "The presence of ions in the liquid", "The polarity of the liquid's molecules"], answer: "The polarity of the liquid's molecules", explanation: "This classic experiment demonstrates the effect of an electrostatic field on molecular dipoles, providing a simple visual test for molecular polarity." },
+                { question: "Why is ethanol (CH₃CH₂OH) deflected by a charged rod?", options: ["Because it is flammable", "Because it is a non-polar molecule", "Because it is a polar molecule", "Because it contains carbon atoms"], answer: "Because it is a polar molecule", explanation: "Ethanol has a polar O-H group and an asymmetrical shape, making it a polar molecule. Its molecular dipoles will align with the electric field of the charged rod, causing attraction." }
+            ];
+            
+            const correctSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+            const incorrectSound = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.2 } }).toDestination();
+
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const setupScreen = document.getElementById('setup-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            const reviewScreen = document.getElementById('review-screen');
+            const proceedToSetupBtn = document.getElementById('proceed-to-setup-btn');
+            const startQuizBtn = document.getElementById('start-quiz-btn');
+            const restartQuizBtn = document.getElementById('restart-quiz-btn');
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+            const flagQuestionBtn = document.getElementById('flag-question-btn');
+            const reviewIncorrectBtn = document.getElementById('review-incorrect-btn');
+            const reviewFlaggedBtn = document.getElementById('review-flagged-btn');
+            const backToResultsBtn = document.getElementById('back-to-results-btn');
+            const reviewPrevBtn = document.getElementById('review-prev-btn');
+            const reviewNextBtn = document.getElementById('review-next-btn');
+
+            const questionNumberEl = document.getElementById('question-number');
+            const totalQuestionsEl = document.getElementById('total-questions');
+            const scoreEl = document.getElementById('score');
+            const questionTextEl = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const finalScoreEl = document.getElementById('final-score');
+            const resultsTitleEl = document.getElementById('results-title');
+            const resultsMessageEl = document.getElementById('results-message');
+            const numQuestionsSelect = document.getElementById('num-questions');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const progressBar = document.getElementById('progress-bar');
+            const reviewContent = document.getElementById('review-content');
+            const reviewCounter = document.getElementById('review-counter');
+            const reviewTitle = document.getElementById('review-title');
+            
+            let questions = [];
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let flaggedQuestions = [];
+            let incorrectlyAnswered = [];
+            let reviewList = [];
+            let currentReviewIndex = 0;
+            let quizInProgress = false;
+
+            const correctMessages = ["Great job! 👍", "Excellent! 🎉", "You've got it! ✨", "Correct! ✅", "Awesome! 🤩"];
+            const incorrectMessages = ["Not quite. 🤔", "Keep trying! 💪", "That's a common mistake.", "Almost there! 🧐"];
+
+            function saveState() {
+                if (!quizInProgress) return;
+                const state = { questions, currentQuestionIndex, score, flaggedQuestions, incorrectlyAnswered, quizInProgress };
+                localStorage.setItem('bondPolarityQuizState', JSON.stringify(state));
+            }
+
+            function loadState() {
+                const savedState = localStorage.getItem('bondPolarityQuizState');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    questions = state.questions;
+                    currentQuestionIndex = state.currentQuestionIndex;
+                    score = state.score;
+                    flaggedQuestions = state.flaggedQuestions;
+                    incorrectlyAnswered = state.incorrectlyAnswered;
+                    quizInProgress = state.quizInProgress;
+                    return true;
+                }
+                return false;
+            }
+
+            function clearState() {
+                localStorage.removeItem('bondPolarityQuizState');
+            }
+
+            function showSetupScreen() {
+                welcomeScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+                
+                const startButtonsContainer = document.getElementById('start-buttons-container');
+                const existingResumeBtn = document.getElementById('resume-quiz-btn');
+                if (existingResumeBtn) existingResumeBtn.remove();
+
+                if (loadState() && quizInProgress) {
+                    const resumeBtn = document.createElement('button');
+                    resumeBtn.id = 'resume-quiz-btn';
+                    resumeBtn.textContent = 'Resume Previous Quiz';
+                    resumeBtn.className = 'w-full btn btn-secondary';
+                    startButtonsContainer.appendChild(resumeBtn);
+                    resumeBtn.addEventListener('click', resumeQuiz);
+                }
+            }
+
+            function resumeQuiz() {
+                setupScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                totalQuestionsEl.textContent = questions.length;
+                scoreEl.textContent = score;
+                displayQuestion();
+            }
+            
+            function startQuiz() {
+                Tone.start();
+                clearState();
+                quizInProgress = true;
+                const numQuestions = parseInt(numQuestionsSelect.value);
+                score = 0;
+                currentQuestionIndex = 0;
+                flaggedQuestions = [];
+                incorrectlyAnswered = [];
+                
+                questions = questionBank.sort(() => 0.5 - Math.random()).slice(0, numQuestions);
+
+                setupScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                
+                totalQuestionsEl.textContent = questions.length;
+                scoreEl.textContent = score;
+                displayQuestion();
+                saveState();
+            }
+
+            function displayQuestion() {
+                if (currentQuestionIndex >= questions.length) {
+                    quizInProgress = false;
+                    showResults();
+                    saveState();
+                    clearState();
+                    return;
+                }
+                feedbackContainer.classList.add('hidden');
+                nextQuestionBtn.classList.add('hidden');
+                
+                const question = questions[currentQuestionIndex];
+                questionNumberEl.textContent = currentQuestionIndex + 1;
+                questionTextEl.innerHTML = question.question;
+                
+                optionsContainer.innerHTML = '';
+                
+                progressBar.style.width = `${((currentQuestionIndex) / questions.length) * 100}%`;
+                
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                
+                const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
+                shuffledOptions.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.innerHTML = optionText;
+                    button.className = 'option-btn btn w-full';
+                    button.onclick = () => checkAnswer(optionText, question.answer, button, question.explanation);
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            function checkAnswer(selectedAnswer, correctAnswer, button, explanation) {
+                optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+                
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                    scoreEl.textContent = score;
+                    button.classList.add('correct');
+                    correctSound.triggerAttackRelease('C5', '8n', Tone.now());
+                    feedbackContainer.className = 'p-4 rounded-lg mt-4 bg-green-100 border-l-4 border-green-500';
+                    feedbackContainer.innerHTML = `<p class="font-bold text-green-800 mb-2">${correctMessages[Math.floor(Math.random() * correctMessages.length)]}</p><p class="text-green-700">${explanation}</p>`;
+                } else {
+                    button.classList.add('incorrect');
+                    incorrectSound.triggerAttackRelease('A2', '8n', Tone.now());
+                    optionsContainer.querySelectorAll('.option-btn').forEach(btn => {
+                        if (btn.innerHTML === correctAnswer) btn.classList.add('correct');
+                    });
+                    incorrectlyAnswered.push({ ...questions[currentQuestionIndex], userAnswer: selectedAnswer });
+                    feedbackContainer.className = 'p-4 rounded-lg mt-4 bg-red-100 border-l-4 border-red-500';
+                    feedbackContainer.innerHTML = `<p class="font-bold text-red-800 mb-2">${incorrectMessages[Math.floor(Math.random() * incorrectMessages.length)]}</p><p class="text-red-700">${explanation}</p>`;
+                }
+                
+                feedbackContainer.classList.remove('hidden');
+                nextQuestionBtn.classList.remove('hidden');
+                progressBar.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+                saveState();
+            }
+
+            function showResults() {
+                quizInProgress = false;
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                const finalPercentage = questions.length > 0 ? score / questions.length : 0;
+                finalScoreEl.textContent = `${score} / ${questions.length}`;
+
+                if (finalPercentage >= 0.8) {
+                    resultsTitleEl.textContent = "Excellent Work! 🌟";
+                    resultsMessageEl.textContent = "You have a strong grasp of molecular polarity!";
+                    const confettiCanvas = document.getElementById('confetti-canvas');
+                    const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+                    myConfetti({ particleCount: 200, spread: 160, origin: { y: 0.6 } });
+                } else if (finalPercentage >= 0.5) {
+                    resultsTitleEl.textContent = "Good Job! 👍";
+                    resultsMessageEl.textContent = "You're well on your way to mastering these concepts.";
+                } else {
+                    resultsTitleEl.textContent = "Keep Going! 💪";
+                    resultsMessageEl.textContent = "Practice makes perfect. Give it another try!";
+                }
+
+                reviewIncorrectBtn.classList.toggle('hidden', incorrectlyAnswered.length === 0);
+                reviewFlaggedBtn.classList.toggle('hidden', flaggedQuestions.length === 0);
+                clearState();
+            }
+
+            function startReview(mode) {
+                currentReviewIndex = 0;
+                if (mode === 'incorrect') {
+                    reviewList = incorrectlyAnswered;
+                    reviewTitle.textContent = "Reviewing Incorrect Answers";
+                } else {
+                    reviewList = flaggedQuestions.map(index => {
+                        const question = questions[index];
+                        const incorrectAttempt = incorrectlyAnswered.find(item => item.question === question.question);
+                        return incorrectAttempt ? incorrectAttempt : question;
+                    });
+                    reviewTitle.textContent = "Reviewing Flagged Questions";
+                }
+                
+                if (reviewList.length > 0) {
+                    resultsScreen.classList.add('hidden');
+                    reviewScreen.classList.remove('hidden');
+                    displayReviewQuestion();
+                }
+            }
+
+            function displayReviewQuestion() {
+                const item = reviewList[currentReviewIndex];
+                reviewContent.innerHTML = `
+                    <div class="p-4 bg-gray-100 rounded-lg">
+                        <p class="font-bold text-lg">${item.question}</p>
+                    </div>
+                    ${item.userAnswer ? `<p class="text-red-600"><strong>Your Answer:</strong> ${item.userAnswer}</p>` : ''}
+                    <p class="text-green-600"><strong>Correct Answer:</strong> ${item.answer}</p>
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                        <p><strong>Explanation:</strong> ${item.explanation}</p>
+                    </div>
+                `;
+                reviewCounter.textContent = `${currentReviewIndex + 1} / ${reviewList.length}`;
+                reviewPrevBtn.disabled = currentReviewIndex === 0;
+                reviewNextBtn.disabled = currentReviewIndex === reviewList.length - 1;
+            }
+
+            flagQuestionBtn.addEventListener('click', () => {
+                const indexInFlagged = flaggedQuestions.indexOf(currentQuestionIndex);
+                if (indexInFlagged > -1) {
+                    flaggedQuestions.splice(indexInFlagged, 1);
+                } else {
+                    flaggedQuestions.push(currentQuestionIndex);
+                }
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                saveState();
+            });
+
+            proceedToSetupBtn.addEventListener('click', showSetupScreen);
+            reviewIncorrectBtn.addEventListener('click', () => startReview('incorrect'));
+            reviewFlaggedBtn.addEventListener('click', () => startReview('flagged'));
+            backToResultsBtn.addEventListener('click', () => {
+                reviewScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+            });
+            reviewPrevBtn.addEventListener('click', () => {
+                if (currentReviewIndex > 0) {
+                    currentReviewIndex--;
+                    displayReviewQuestion();
+                }
+            });
+            reviewNextBtn.addEventListener('click', () => {
+                if (currentReviewIndex < reviewList.length - 1) {
+                    currentReviewIndex++;
+                    displayReviewQuestion();
+                }
+            });
+
+            startQuizBtn.addEventListener('click', startQuiz);
+            restartQuizBtn.addEventListener('click', () => {
+                resultsScreen.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
+            });
+            nextQuestionBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                displayQuestion();
+            });
+        });
+    </script>
+</body>
+</html>
