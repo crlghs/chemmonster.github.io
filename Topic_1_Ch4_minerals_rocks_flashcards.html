@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chemistry Flashcards</title>
+    <title>Rocks & Minerals Flashcards</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -57,7 +57,6 @@
         }
         .card-front { background-color: #ffffff; }
         .card-back { background-color: #f0fdf4; transform: rotateY(180deg); }
-        .latex { font-family: "Times New Roman", serif; }
         .main-container {
             background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border-radius: 1.5rem;
             border: 1px solid rgba(255, 255, 255, 0.2); padding: 2rem;
@@ -72,8 +71,9 @@
 <body>
     <div id="introModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full transform transition-all scale-95 opacity-0 animate-fade-in-up">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800">Welcome to Your Flashcards!</h2>
-            <p class="mb-6 text-gray-600">Here’s a quick guide to the study tools:</p>
+            <h2 id="modal-title" class="text-2xl font-bold mb-2 text-gray-800 text-center"></h2>
+            <p id="modal-subtitle" class="text-center text-gray-600 mb-6"></p>
+            <p class="mb-6 text-gray-600 text-center">Here’s a quick guide to the study tools:</p>
             <ul class="text-left space-y-3 mb-8">
                 <li class="flex items-start">
                     <span class="text-yellow-500 mr-3 mt-1">&#9733;</span>
@@ -86,6 +86,10 @@
                  <li class="flex items-start">
                      <span class="text-yellow-500 mr-3 mt-1">&#128269;</span>
                     <div><b class="text-gray-700">Review Flagged:</b> Starts a new session with only the cards you've flagged.</div>
+                </li>
+                <li class="flex items-start">
+                     <span class="text-green-500 mr-3 mt-1">&#128190;</span>
+                    <div><b class="text-gray-700">Saved Progress:</b> Your flagged cards are automatically saved in your browser for your next visit.</div>
                 </li>
             </ul>
             <button id="closeModalBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">Let's Get Started!</button>
@@ -108,9 +112,6 @@
     </div>
     <div class="content-wrapper p-4">
         <div class="w-full max-w-2xl mx-auto main-container">
-            <h1 id="deck-title" class="text-3xl font-bold text-center text-gray-800 mb-2">Chemistry Flashcards</h1>
-            <p id="deck-subtitle" class="text-center text-gray-600 mb-4">Rocks, Minerals & Reactions</p>
-            
             <div id="flashcard-container" class="mb-4"></div>
             
             <div class="flex justify-between items-center mb-4">
@@ -119,16 +120,32 @@
                 <button id="nextBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Next</button>
             </div>
             
-            <div class="flex justify-center items-center space-x-2 md:space-x-4 border-t pt-4 mt-4">
-                <button id="shuffleBtn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Shuffle</button>
-                <button id="resetBtn" class="bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Reset / Exit</button>
-                <button id="reviewFlaggedBtn" class="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50" disabled>Review Flagged</button>
+            <div id="controls-container" class="border-t pt-4 mt-4">
+                <div id="revision-scheduler" class="hidden text-center">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Schedule Your Next Revision!</h3>
+                    <p class="text-gray-600 mb-4">Use spaced repetition to improve memory.</p>
+                    <div class="flex justify-center items-center space-x-2 md:space-x-4">
+                        <button onclick="generateCalendarLink(1)" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">In 1 Day</button>
+                        <button onclick="generateCalendarLink(3)" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">In 3 Days</button>
+                        <button onclick="generateCalendarLink(7)" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">In 1 Week</button>
+                    </div>
+                </div>
+
+                <div id="main-controls" class="flex justify-center items-center space-x-2 md:space-x-4">
+                    <button id="shuffleBtn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-blue-600">Shuffle</button>
+                    <button id="resetBtn" class="bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-600">Reset / Exit</button>
+                    <button id="reviewFlaggedBtn" class="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-yellow-600 disabled:opacity-50" disabled>Review Flagged</button>
+                    <button id="scheduleBtn" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">Schedule Revision</button>
+                </div>
             </div>
             <p class="text-center text-gray-500 text-sm mt-4">Click the card to flip it.</p>
         </div>
     </div>
 
     <script>
+        const DECK_TITLE = "Chemistry Flashcards";
+        const DECK_SUBTITLE = "Rocks, Minerals & Reactions";
+
         const initialDeck = [
             { id: 0, question: "Name three common rocks that contain the mineral calcite (calcium carbonate).", answer: "1. Limestone<br>2. Chalk<br>3. Marble" },
             { id: 1, question: "Compare the hardness of Limestone, Chalk, and Marble.", answer: "<b>Chalk:</b> Slightly softer<br><b>Limestone:</b> Hard, strong<br><b>Marble:</b> Very hard" },
@@ -150,13 +167,7 @@
             { id: 17, question: "How would you test for the presence of calcium ions in a sample of limestone?", answer: "Perform a flame test. Calcium ions will produce a brick-red (or orange-red) flame." }
         ];
 
-        let activeDeck = [...initialDeck];
-        let flaggedCardIds = new Set();
-        let currentCardIndex = 0;
-
         const flashcardContainer = document.getElementById('flashcard-container');
-        const deckTitle = document.getElementById('deck-title');
-        const deckSubtitle = document.getElementById('deck-subtitle');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const shuffleBtn = document.getElementById('shuffleBtn');
@@ -165,6 +176,18 @@
         const cardCounter = document.getElementById('card-counter');
         const introModal = document.getElementById('introModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
+        const revisionScheduler = document.getElementById('revision-scheduler');
+        const mainControls = document.getElementById('main-controls');
+        const scheduleBtn = document.getElementById('scheduleBtn');
+        const modalTitle = document.getElementById('modal-title');
+        const modalSubtitle = document.getElementById('modal-subtitle');
+
+        const flaggedCardsKey = `flashcardFlags-${DECK_TITLE.trim()}`;
+        const savedFlags = localStorage.getItem(flaggedCardsKey);
+        let flaggedCardIds = savedFlags ? new Set(JSON.parse(savedFlags)) : new Set();
+        
+        let activeDeck = [...initialDeck];
+        let currentCardIndex = 0;
 
         function createCardDOM(cardData) {
             const cardWrapper = document.createElement('div');
@@ -195,6 +218,7 @@
 
         function renderCard() {
             flashcardContainer.innerHTML = '';
+            
             if (currentCardIndex < activeDeck.length) {
                 const cardData = activeDeck[currentCardIndex];
                 flashcardContainer.appendChild(createCardDOM(cardData));
@@ -208,6 +232,7 @@
             cardCounter.textContent = `${Math.min(currentCardIndex + 1, activeDeck.length)} / ${activeDeck.length}`;
             prevBtn.disabled = currentCardIndex === 0;
             nextBtn.disabled = currentCardIndex >= activeDeck.length - 1;
+            reviewFlaggedBtn.disabled = flaggedCardIds.size === 0;
         }
 
         window.toggleFlag = (cardId, element) => {
@@ -219,6 +244,7 @@
                 flaggedCardIds.add(cardId);
                 svg.setAttribute('fill', '#facc15');
             }
+            localStorage.setItem(flaggedCardsKey, JSON.stringify([...flaggedCardIds]));
             reviewFlaggedBtn.disabled = flaggedCardIds.size === 0;
         };
         
@@ -251,8 +277,8 @@
 
         reviewFlaggedBtn.addEventListener('click', () => {
             if (flaggedCardIds.size > 0) {
-                deckTitle.textContent = "Reviewing Flagged Cards";
-                deckSubtitle.textContent = `You flagged ${flaggedCardIds.size} card(s) for review.`;
+                modalTitle.textContent = "Reviewing Flagged Cards";
+                modalSubtitle.textContent = `You flagged ${flaggedCardIds.size} card(s) for review.`;
                 activeDeck = initialDeck.filter(card => flaggedCardIds.has(card.id));
                 currentCardIndex = 0;
                 renderCard();
@@ -260,18 +286,49 @@
         });
 
         function resetToFullDeck() {
-            deckTitle.textContent = "Chemistry Flashcards";
-            deckSubtitle.textContent = "Rocks, Minerals & Reactions";
+            modalTitle.textContent = DECK_TITLE;
+            modalSubtitle.textContent = DECK_SUBTITLE;
             activeDeck = [...initialDeck];
             currentCardIndex = 0;
+            mainControls.classList.remove('hidden');
+            revisionScheduler.classList.add('hidden');
         }
 
         resetBtn.addEventListener('click', () => {
-            resetToFullDeck();
-            renderCard();
+            if (!revisionScheduler.classList.contains('hidden')) {
+                revisionScheduler.classList.add('hidden');
+                mainControls.classList.remove('hidden');
+            } else {
+                resetToFullDeck();
+                renderCard();
+            }
         });
         
-        // --- Modal Logic ---
+        scheduleBtn.addEventListener('click', () => {
+            mainControls.classList.add('hidden');
+            revisionScheduler.classList.remove('hidden');
+        });
+
+        window.generateCalendarLink = (days) => {
+            const today = new Date();
+            const futureDate = new Date();
+            futureDate.setDate(today.getDate() + days);
+            const year = futureDate.getFullYear();
+            const month = String(futureDate.getMonth() + 1).padStart(2, '0');
+            const day = String(futureDate.getDate()).padStart(2, '0');
+            
+            const dateString = `${year}${month}${day}`;
+            
+            const title = encodeURIComponent(`Revise: ${DECK_TITLE}`);
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateString}/${dateString}&allday=true`;
+            
+            window.open(url, '_blank');
+        };
+
+        // Initialize Modal Title and Subtitle
+        modalTitle.textContent = DECK_TITLE;
+        modalSubtitle.textContent = DECK_SUBTITLE;
+        
         if (sessionStorage.getItem('introModalSeen')) {
             introModal.style.display = 'none';
         }
