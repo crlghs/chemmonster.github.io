@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodic Table Flashcards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #f0f9ff;
+            margin: 0;
+            padding: 0;
+            /* * Changed 'overflow: hidden' to 'overflow: auto'.
+             * This allows the body to scroll if the content is taller than the viewport,
+             * which is essential for smaller screens or landscape view on mobile.
+             */
+            overflow: auto;
+        }
+
+        .bubbles-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden;
+        }
+        .bubbles {
+            position: absolute; width: 100%; height: 100%; padding: 0; margin: 0; top: 0; left: 0;
+        }
+        .bubbles li {
+            position: absolute; list-style: none; display: block; width: 20px; height: 20px;
+            background-color: rgba(219, 234, 254, 0.7);
+            bottom: -150px; animation: square 25s infinite; transition-timing-function: linear; border-radius: 50%;
+        }
+        .bubbles li:nth-child(1) { left: 10%; width: 80px; height: 80px; animation-delay: 0s; }
+        .bubbles li:nth-child(2) { left: 20%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+        .bubbles li:nth-child(3) { left: 25%; width: 20px; height: 20px; animation-delay: 4s; }
+        .bubbles li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
+        .bubbles li:nth-child(5) { left: 70%; width: 20px; height: 20px; animation-delay: 0s; }
+        .bubbles li:nth-child(6) { left: 80%; width: 110px; height: 110px; animation-delay: 1s; }
+        .bubbles li:nth-child(7) { left: 32%; width: 150px; height: 150px; animation-delay: 7s; }
+        .bubbles li:nth-child(8) { left: 55%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
+        .bubbles li:nth-child(9) { left: 25%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
+        .bubbles li:nth-child(10) { left: 90%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
+
+        @keyframes square {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(600deg); opacity: 0; }
+        }
+
+        .content-wrapper {
+            position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; min-height: 100vh; width: 100%;
+        }
+        .card-container { perspective: 1000px; cursor: pointer; }
+        .card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex;
+            flex-direction: column; justify-content: center; align-items: center; padding: 2rem; border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .card-front { background-color: #ffffff; }
+        .card-back { background-color: #f0fdf4; transform: rotateY(180deg); }
+        .main-container {
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border-radius: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2); padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        }
+        .flag-btn {
+            position: absolute; top: 1rem; right: 1rem; background: none; border: none; cursor: pointer; z-index: 10;
+        }
+        .flag-btn svg { width: 24px; height: 24px; }
+    </style>
+</head>
+<body>
+    <div id="introModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full transform transition-all scale-95 opacity-0 animate-fade-in-up">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Welcome to Your Flashcards!</h2>
+            <p class="mb-6 text-gray-600">Here’s a quick guide to the study tools:</p>
+            <ul class="text-left space-y-3 mb-8">
+                <li class="flex items-start">
+                    <span class="text-yellow-500 mr-3 mt-1">&#9733;</span>
+                    <div><b class="text-gray-700">Flag (Star Icon):</b> Click the star on any card to mark it for a custom review session.</div>
+                </li>
+                <li class="flex items-start">
+                     <span class="text-blue-500 mr-3 mt-1">&#128256;</span>
+                     <div><b class="text-gray-700">Shuffle:</b> Randomizes the order of the current deck to test your memory.</div>
+                </li>
+                 <li class="flex items-start">
+                     <span class="text-yellow-500 mr-3 mt-1">&#128269;</span>
+                    <div><b class="text-gray-700">Review Flagged:</b> Starts a new session with only the cards you've flagged.</div>
+                </li>
+                <li class="flex items-start">
+                     <span class="text-green-500 mr-3 mt-1">&#128190;</span>
+                    <div><b class="text-gray-700">Saved Progress:</b> Your flagged cards are automatically saved in your browser for your next visit.</div>
+                </li>
+            </ul>
+            <button id="closeModalBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">Let's Get Started!</button>
+        </div>
+    </div>
+    <style>
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.4s ease-out forwards;
+        }
+    </style>
+
+    <div class="bubbles-container">
+        <ul class="bubbles">
+            <li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li>
+        </ul>
+    </div>
+    <div class="content-wrapper p-4">
+        <div class="w-full max-w-2xl mx-auto main-container">
+            <h1 id="deck-title" class="text-3xl font-bold text-center text-gray-800 mb-2">The Periodic Table</h1>
+            <p id="deck-subtitle" class="text-center text-gray-600 mb-4">Groups, Periods, and Trends</p>
+            
+            <div id="flashcard-container" class="mb-4"></div>
+            
+            <div class="flex justify-between items-center mb-4">
+                <button id="prevBtn" class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                <div id="card-counter" class="text-gray-600 font-medium">1 / 22</div>
+                <button id="nextBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Next</button>
+            </div>
+            
+            <div id="revision-scheduler" class="hidden text-center border-t pt-4 mt-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Schedule Your Next Revision!</h3>
+                <p class="text-gray-600 mb-4">Use spaced repetition to improve memory.</p>
+                <div class="flex justify-center items-center space-x-2 md:space-x-4">
+                    <button onclick="generateCalendarLink(1)" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">In 1 Day</button>
+                    <button onclick="generateCalendarLink(3)" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">In 3 Days</button>
+                    <button onclick="generateCalendarLink(7)" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">In 1 Week</button>
+                </div>
+            </div>
+
+            <div id="main-controls" class="flex flex-wrap justify-center items-center gap-2 md:gap-4 border-t pt-4 mt-4">
+                <button id="shuffleBtn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-blue-600">Shuffle</button>
+                <button id="resetBtn" class="bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-600">Reset / Exit</button>
+                <button id="reviewFlaggedBtn" class="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-yellow-600 disabled:opacity-50" disabled>Review Flagged</button>
+                <button id="scheduleBtn" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">Schedule Revision</button>
+            </div>
+            <p class="text-center text-gray-500 text-sm mt-4">Click the card to flip it.</p>
+        </div>
+    </div>
+
+    <script>
+        const initialDeck = [
+            { id: 0, question: "How are elements arranged in the modern Periodic Table?", answer: "They are arranged in order of increasing atomic number." },
+            { id: 1, question: "What are the horizontal rows in the Periodic Table called, and what do they indicate about an element's atomic structure?", answer: "They are called <b>Periods</b>. The period number indicates the number of occupied electron shells in an atom of the element." },
+            { id: 2, question: "What are the vertical columns in the Periodic Table called, and what do they typically indicate about an element's atomic structure?", answer: "They are called <b>Groups</b>. The group number indicates the number of electrons in the outermost shell of an atom." },
+            { id: 3, question: "What is the special name given to Group I elements?", answer: "Alkali metals." },
+            { id: 4, question: "What is the special name given to Group II elements?", answer: "Alkaline earth metals." },
+            { id: 5, question: "What is the special name given to Group VII elements?", answer: "Halogens." },
+            { id: 6, question: "What is the special name given to Group 0 elements?", answer: "Noble gases." },
+            { id: 7, question: "An element has the electronic arrangement 2, 8, 6. To which period and group does it belong?", answer: "Period 3, Group VI." },
+            { id: 8, question: "What are the elements located between Group II and Group III called?", answer: "Transition elements." },
+            { id: 9, question: "Describe the general trend in metallic character as you move from left to right across Period 3 (Na to Ar).", answer: "The elements change from metals (Na, Mg, Al) to a metalloid (Si), and then to non-metals (P, S, Cl, Ar)." },
+            { id: 10, question: "How does the reactivity of metals change across Period 3 (from Na to Al)?", answer: "The reactivity of the metals decreases." },
+            { id: 11, question: "How does the reactivity of non-metals change across Period 3 (from P to Cl)?", answer: "The reactivity of the non-metals increases." },
+            { id: 12, question: "What are three common physical properties of Group I (alkali) metals?", answer: "They are soft, have low densities (some float on water), and are silvery solids when freshly cut." },
+            { id: 13, question: "What is the trend in reactivity for alkali metals as you go down Group I?", answer: "Reactivity increases down the group." },
+            { id: 14, question: "Why must alkali metals be stored in paraffin oil?", answer: "They are highly reactive and must be protected from reacting with oxygen and water vapour in the air." },
+            { id: 15, question: "How does the reactivity of Group II (alkaline earth) metals compare to Group I metals?", answer: "They are reactive, but generally less reactive than the alkali metals in the same period." },
+            { id: 16, question: "Describe the trend in the physical states of the halogens as you go down Group VII.", answer: "The elements go from gas (Fluorine, Chlorine), to liquid (Bromine), to solid (Iodine)." },
+            { id: 17, question: "What is the trend in reactivity for halogens as you go down Group VII?", answer: "Reactivity decreases down the group." },
+            { id: 18, question: "Why are Group 0 elements (noble gases) chemically very unreactive?", answer: "They have a stable electronic arrangement with a full outermost electron shell (an octet or duplet)." },
+            { id: 19, question: "What feature of an atom's electronic arrangement is the main factor that determines its chemical properties?", answer: "The number of electrons in its outermost shell." },
+            { id: 20, question: "Why do elements in the same group share similar chemical properties?", answer: "Because their atoms have the same number of outermost shell electrons." },
+            { id: 21, question: "Do isotopes of the same element have identical chemical properties? Explain why.", answer: "Yes, because they have the same number of protons and, therefore, the same number of electrons and the same electronic arrangement. Chemical properties are determined by number of electrons/ electronic arrangement." }
+        ];
+
+        const flashcardContainer = document.getElementById('flashcard-container');
+        const deckTitle = document.getElementById('deck-title');
+        const deckSubtitle = document.getElementById('deck-subtitle');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const reviewFlaggedBtn = document.getElementById('reviewFlaggedBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const cardCounter = document.getElementById('card-counter');
+        const introModal = document.getElementById('introModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const revisionScheduler = document.getElementById('revision-scheduler');
+        const mainControls = document.getElementById('main-controls');
+        const scheduleBtn = document.getElementById('scheduleBtn');
+
+        const flaggedCardsKey = `flashcardFlags-${deckTitle.textContent.trim()}`;
+        const savedFlags = localStorage.getItem(flaggedCardsKey);
+        let flaggedCardIds = savedFlags ? new Set(JSON.parse(savedFlags)) : new Set();
+        
+        let activeDeck = [...initialDeck];
+        let currentCardIndex = 0;
+
+        function createCardDOM(cardData) {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'card-container h-64';
+            const isFlagged = flaggedCardIds.has(cardData.id);
+            cardWrapper.innerHTML = `
+                <button class="flag-btn" onclick="toggleFlag(${cardData.id}, this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${isFlagged ? '#facc15' : 'gray'}" class="w-6 h-6">
+                        <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.007z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <div class="card">
+                    <div class="card-face card-front">
+                        <p class="text-xl text-center text-gray-800 px-8">${cardData.question}</p>
+                    </div>
+                    <div class="card-face card-back">
+                        <p class="text-lg text-center text-gray-700">${cardData.answer}</p>
+                    </div>
+                </div>
+            `;
+            cardWrapper.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    cardWrapper.querySelector('.card').classList.toggle('is-flipped');
+                }
+            });
+            return cardWrapper;
+        }
+
+        function renderCard() {
+            flashcardContainer.innerHTML = '';
+            
+            if (currentCardIndex < activeDeck.length) {
+                const cardData = activeDeck[currentCardIndex];
+                flashcardContainer.appendChild(createCardDOM(cardData));
+            } else {
+                 flashcardContainer.innerHTML = `<div class="h-64 flex items-center justify-center"><p class="text-xl font-semibold text-gray-700">End of deck!</p></div>`;
+            }
+            updateControls();
+        }
+        
+        function updateControls() {
+            cardCounter.textContent = `${Math.min(currentCardIndex + 1, activeDeck.length)} / ${activeDeck.length}`;
+            prevBtn.disabled = currentCardIndex === 0;
+            nextBtn.disabled = currentCardIndex >= activeDeck.length - 1;
+            reviewFlaggedBtn.disabled = flaggedCardIds.size === 0;
+        }
+
+        window.toggleFlag = (cardId, element) => {
+            const svg = element.querySelector('svg');
+            if (flaggedCardIds.has(cardId)) {
+                flaggedCardIds.delete(cardId);
+                svg.setAttribute('fill', 'gray');
+            } else {
+                flaggedCardIds.add(cardId);
+                svg.setAttribute('fill', '#facc15');
+            }
+            localStorage.setItem(flaggedCardsKey, JSON.stringify([...flaggedCardIds]));
+            reviewFlaggedBtn.disabled = flaggedCardIds.size === 0;
+        };
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if(currentCardIndex > 0) {
+                currentCardIndex--;
+                renderCard();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if(currentCardIndex < activeDeck.length - 1) {
+                currentCardIndex++;
+                renderCard();
+            }
+        });
+
+        shuffleBtn.addEventListener('click', () => {
+            resetToFullDeck();
+            shuffleArray(activeDeck);
+            renderCard();
+        });
+
+        reviewFlaggedBtn.addEventListener('click', () => {
+            if (flaggedCardIds.size > 0) {
+                deckTitle.textContent = "Reviewing Flagged Cards";
+                deckSubtitle.textContent = `You flagged ${flaggedCardIds.size} card(s) for review.`;
+                activeDeck = initialDeck.filter(card => flaggedCardIds.has(card.id));
+                currentCardIndex = 0;
+                renderCard();
+            }
+        });
+
+        function resetToFullDeck() {
+            deckTitle.textContent = "The Periodic Table";
+            deckSubtitle.textContent = "Groups, Periods, and Trends";
+            activeDeck = [...initialDeck];
+            currentCardIndex = 0;
+            shuffleBtn.style.display = '';
+            reviewFlaggedBtn.style.display = '';
+            scheduleBtn.style.display = '';
+            revisionScheduler.classList.add('hidden');
+        }
+
+        resetBtn.addEventListener('click', () => {
+            if (!revisionScheduler.classList.contains('hidden')) {
+                revisionScheduler.classList.add('hidden');
+                shuffleBtn.style.display = '';
+                reviewFlaggedBtn.style.display = '';
+                scheduleBtn.style.display = '';
+            } else {
+                resetToFullDeck();
+                renderCard();
+            }
+        });
+        
+        scheduleBtn.addEventListener('click', () => {
+            shuffleBtn.style.display = 'none';
+            reviewFlaggedBtn.style.display = 'none';
+            scheduleBtn.style.display = 'none';
+            revisionScheduler.classList.remove('hidden');
+        });
+
+        window.generateCalendarLink = (days) => {
+            const today = new Date();
+            const futureDate = new Date();
+            futureDate.setDate(today.getDate() + days);
+            const year = futureDate.getFullYear();
+            const month = String(futureDate.getMonth() + 1).padStart(2, '0');
+            const day = String(futureDate.getDate()).padStart(2, '0');
+            
+            const dateString = `${year}${month}${day}`;
+            
+            const title = encodeURIComponent(`Revise: ${deckTitle.textContent}`);
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateString}/${dateString}&allday=true`;
+            
+            window.open(url, '_blank');
+        };
+
+        if (sessionStorage.getItem('introModalSeen')) {
+            introModal.style.display = 'none';
+        }
+
+        closeModalBtn.addEventListener('click', () => {
+            introModal.style.display = 'none';
+            sessionStorage.setItem('introModalSeen', 'true');
+        });
+
+        renderCard();
+    </script>
+</body>
+</html>

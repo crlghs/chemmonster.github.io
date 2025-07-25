@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz: Rocks & Reactions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease;
+        }
+        .btn {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        @media (min-width: 640px) {
+            .options-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .option-btn {
+            border: 1px solid #d1d5db;
+            transition: all 0.2s ease-in-out;
+            height: 100%;
+            text-align: left;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .option-btn:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        .option-btn.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .hidden { display: none; }
+        .feedback {
+            border-left-width: 4px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .feedback-correct {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+        }
+        .feedback-incorrect {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        #flag-question-btn {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        #flag-question-btn.flagged {
+            background-color: #fef9c3; /* yellow-100 */
+            border-color: #facc15; /* yellow-400 */
+            color: #713f12; /* yellow-800 */
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            transition: width 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-5xl font-extrabold text-gray-800 tracking-tight">Rocks & Reactions Quiz</h1>
+            <p class="text-xl text-gray-600 mt-2">Test your knowledge of minerals and chemical changes!</p>
+        </header>
+
+        <div class="card relative">
+            <!-- Welcome Screen -->
+            <div id="welcome-screen" class="text-center">
+                <i class="fas fa-gem text-6xl text-blue-500 mb-4"></i>
+                <h2 class="text-3xl font-bold mb-4">Welcome to the Rocks & Reactions Challenge!</h2>
+                <p class="text-gray-600 mb-6">Explore the fascinating chemistry of the world beneath our feet.</p>
+                <div class="text-left mb-6 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-bullseye text-blue-500 mr-3"></i>Quiz Objectives</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-2 pl-5">
+                        <li>Identify common rocks, minerals, and their chemical properties.</li>
+                        <li>Understand key reactions like thermal decomposition and acid tests.</li>
+                        <li>Learn about the limestone cycle and its real-world applications.</li>
+                    </ul>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                         <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-info-circle text-blue-500 mr-3"></i>How to Play</h3>
+                         <p class="text-gray-700 pl-5">Use the <span class="font-bold">"🚩 Flag for Review"</span> button to mark tricky questions. You can review them all at the end!</p>
+                    </div>
+                </div>
+                <p class="text-xl font-semibold mb-6">Are you ready to dig in?</p>
+                <button id="proceed-to-setup-btn" class="w-full btn btn-primary">Let's Go!</button>
+            </div>
+            
+            <!-- Setup Screen -->
+            <div id="setup-screen" class="hidden text-center">
+                <h2 class="text-2xl font-bold mb-4">Quiz Setup</h2>
+                <div class="inline-block text-left">
+                    <label for="num-questions" class="block mb-2 font-medium">Number of Questions:</label>
+                    <select id="num-questions" class="p-2 border rounded-lg mb-6 w-full">
+                        <option value="5" selected>5 Questions</option>
+                        <option value="10">10 Questions</option>
+                    </select>
+                </div>
+                <div id="start-buttons-container" class="space-y-2">
+                   <button id="start-quiz-btn" class="w-full btn btn-primary">Start New Quiz</button>
+                </div>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-screen" class="hidden">
+                <div class="progress-bar-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                     <h2 class="text-2xl font-bold">Question <span id="question-number"></span>/<span id="total-questions"></span></h2>
+                     <div class="flex items-center gap-4">
+                        <div class="text-lg font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">Score: <span id="score">0</span></div>
+                        <button id="flag-question-btn" title="Flag this question for review"></button>
+                     </div>
+                </div>
+                <p id="question-text" class="text-xl mb-6 bg-gray-100 p-4 rounded-lg"></p>
+                <div id="options-container" class="options-grid"></div>
+                <div id="feedback-container" class="hidden"></div>
+                <button id="next-question-btn" class="hidden w-full mt-4 btn bg-gray-700 text-white hover:bg-gray-800">Next Question</button>
+            </div>
+
+            <!-- Results Screen -->
+            <div id="results-screen" class="hidden text-center">
+                <canvas id="confetti-canvas"></canvas>
+                <h2 id="results-title" class="text-3xl font-bold mb-2">Quiz Complete!</h2>
+                <p id="results-message" class="text-lg text-gray-600 mb-4"></p>
+                <p class="text-xl mb-2">Your final score is:</p>
+                <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500 mb-6" id="final-score"></p>
+                <div id="review-buttons-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <button id="review-incorrect-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-times-circle mr-2"></i>Review Incorrect</button>
+                    <button id="review-flagged-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-flag mr-2"></i>Review Flagged</button>
+                </div>
+                <button id="restart-quiz-btn" class="w-full btn btn-primary">Try Again</button>
+            </div>
+
+            <!-- Review Screen -->
+            <div id="review-screen" class="hidden">
+                <h2 id="review-title" class="text-2xl font-bold mb-4">Reviewing Questions</h2>
+                <div id="review-content" class="space-y-4"></div>
+                <div class="flex justify-between items-center mt-6">
+                    <button id="review-prev-btn" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Prev</button>
+                    <span id="review-counter" class="font-semibold"></span>
+                    <button id="review-next-btn" class="btn btn-secondary">Next<i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+                 <button id="back-to-results-btn" class="w-full btn btn-primary mt-4">Back to Results</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+             const questionBank = [
+                { question: "True or False: Weathering is the process of breaking down rocks, while erosion involves the movement of those broken pieces.", options: ["True", "False"], answer: "True", explanation: "That's correct! Weathering breaks the rocks down 'in place' with no movement, while erosion is the transportation of rock fragments by agents like water, wind, or ice." },
+                { question: "What is the chemical formula for calcium carbonate?", options: ["CaCO<sub>3</sub>", "Ca(OH)<sub>2</sub>", "CaO", "CaCl<sub>2</sub>"], answer: "CaCO<sub>3</sub>", explanation: "CaCO<sub>3</sub> is the chemical formula for calcium carbonate, the main component of limestone, chalk, and marble." },
+                { question: "The formation of limestone caves starts when rainwater reacts with which gas in the air to form carbonic acid?", options: ["Oxygen (O<sub>2</sub>)", "Nitrogen (N<sub>2</sub>)", "Carbon Dioxide (CO<sub>2</sub>)", "Methane (CH<sub>4</sub>)"], answer: "Carbon Dioxide (CO<sub>2</sub>)", explanation: "Rainwater (H<sub>2</sub>O) combines with atmospheric carbon dioxide (CO<sub>2</sub>) to form weak carbonic acid (H<sub>2</sub>CO<sub>3</sub>), which can dissolve limestone." },
+                { question: "When calcium carbonate is heated strongly, it undergoes thermal decomposition. What are the products?", options: ["Calcium hydroxide and water", "Calcium oxide and carbon dioxide", "Calcium and carbon", "Calcium chloride and water"], answer: "Calcium oxide and carbon dioxide", explanation: "The reaction is CaCO<sub>3</sub>(s) → CaO(s) + CO<sub>2</sub>(g). Calcium oxide is also known as quicklime." },
+                { question: "What is the common name for calcium oxide (CaO)?", options: ["Slaked lime", "Limewater", "Quicklime", "Plaster"], answer: "Quicklime", explanation: "CaO is called quicklime. When water is added, it becomes slaked lime (calcium hydroxide)." },
+                { question: "What is the positive test for carbon dioxide gas?", options: ["It relights a glowing splint.", "It turns limewater milky.", "It turns damp blue litmus paper red.", "It has a sharp smell."], answer: "It turns limewater milky.", explanation: "CO<sub>2</sub> reacts with limewater (calcium hydroxide solution) to form insoluble white calcium carbonate, making the solution appear milky." },
+                { question: "Which process describes rainwater freezing in the cracks of rocks and forcing them apart?", options: ["Chemical weathering", "Erosion", "Frost disintegration", "Acid rain"], answer: "Frost disintegration", explanation: "Frost disintegration is a type of physical weathering where the expansion of freezing water breaks rocks." },
+                { question: "What soluble substance is formed when carbonic acid reacts with calcium carbonate, leading to the formation of caves?", options: ["Calcium oxide", "Calcium hydroxide", "Calcium hydrogencarbonate", "Calcium chloride"], answer: "Calcium hydrogencarbonate", explanation: "The reaction is CaCO<sub>3</sub>(s) + H<sub>2</sub>CO<sub>3</sub>(aq) → Ca(HCO<sub>3</sub>)<sub>2</sub>(aq). Calcium hydrogencarbonate is soluble in water and is carried away, forming caves." },
+                { question: "What happens when excess carbon dioxide is bubbled through milky limewater?", options: ["The milkiness increases.", "The solution turns clear again.", "The solution turns blue.", "The solution gets hot."], answer: "The solution turns clear again.", explanation: "The insoluble calcium carbonate reacts with more CO<sub>2</sub> and water to form soluble calcium hydrogencarbonate, so the milkiness disappears." },
+                { question: "The reaction of calcium carbonate with a dilute acid (like HCl) produces which gas?", options: ["Hydrogen", "Oxygen", "Chlorine", "Carbon dioxide"], answer: "Carbon dioxide", explanation: "All metal carbonates react with acids to produce carbon dioxide gas, a salt, and water." },
+                { question: "What is the chemical name for slaked lime?", options: ["Calcium carbonate", "Calcium oxide", "Calcium hydroxide", "Calcium chloride"], answer: "Calcium hydroxide", explanation: "Slaked lime is calcium hydroxide, Ca(OH)<sub>2</sub>, formed by adding water to quicklime (CaO)." },
+                { question: "Which of these is an example of chemical weathering?", options: ["Rocks breaking due to temperature changes.", "Rocks being broken by freezing water.", "The action of acid rain on limestone.", "Rocks being worn down by wind."], answer: "The action of acid rain on limestone.", explanation: "Chemical weathering involves a chemical reaction that changes the composition of the rock, such as an acid dissolving limestone." },
+                { question: "True or False: The limestone cycle shows that calcium carbonate can be regenerated from quicklime through a series of reactions.", options: ["True", "False"], answer: "True", explanation: "The cycle shows CaO → Ca(OH)<sub>2</sub> → CaCO<sub>3</sub>, demonstrating how the original material can be reformed." },
+                { question: "What is the observation when a dilute acid is added to a piece of marble?", options: ["It turns black.", "It dissolves with bubbles of gas.", "It glows brightly.", "Nothing happens."], answer: "It dissolves with bubbles of gas.", explanation: "Marble is calcium carbonate. It reacts with acid to produce bubbles of carbon dioxide gas as it dissolves." },
+                { question: "Which equation correctly represents the thermal decomposition of calcium carbonate (limestone) when heated?", options: ["CaCO<sub>3</sub> → CaO + CO<sub>2</sub>", "CaCO<sub>3</sub> + H<sub>2</sub>O → Ca(OH)<sub>2</sub>", "CaO + CO<sub>2</sub> → CaCO<sub>3</sub>", "CaCO<sub>3</sub> → Ca + C + O<sub>3</sub>"], answer: "CaCO<sub>3</sub> → CaO + CO<sub>2</sub>", explanation: "Thermal decomposition of calcium carbonate yields calcium oxide (quicklime) and carbon dioxide gas." },
+                { question: "When water is added to quicklime, slaked lime is formed. Which equation shows this reaction?", options: ["CaO + H<sub>2</sub>O → Ca(OH)<sub>2</sub>", "Ca(OH)<sub>2</sub> → CaO + H<sub>2</sub>O", "CaCO<sub>3</sub> + H<sub>2</sub>O → Ca(OH)<sub>2</sub> + CO<sub>2</sub>", "Ca + H<sub>2</sub>O → CaO + H<sub>2</sub>"], answer: "CaO + H<sub>2</sub>O → Ca(OH)<sub>2</sub>", explanation: "Calcium oxide reacts with water to form calcium hydroxide, a process known as slaking." },
+                { question: "The test for carbon dioxide involves bubbling it through limewater, which turns milky. Which equation represents this observation?", options: ["Ca(OH)<sub>2</sub> + CO<sub>2</sub> → CaCO<sub>3</sub> + H<sub>2</sub>O", "CaCO<sub>3</sub> + CO<sub>2</sub> + H<sub>2</sub>O → Ca(HCO<sub>3</sub>)<sub>2</sub>", "CaO + CO<sub>2</sub> → CaCO<sub>3</sub>", "Ca(OH)<sub>2</sub> + 2CO<sub>2</sub> → Ca(HCO<sub>3</sub>)<sub>2</sub>"], answer: "Ca(OH)<sub>2</sub> + CO<sub>2</sub> → CaCO<sub>3</sub> + H<sub>2</sub>O", explanation: "The milky appearance is due to the formation of insoluble calcium carbonate precipitate." },
+                { question: "If you continue to bubble CO<sub>2</sub> through milky limewater, it turns clear again. Which equation explains this?", options: ["CaCO<sub>3</sub> + CO<sub>2</sub> + H<sub>2</sub>O → Ca(HCO<sub>3</sub>)<sub>2</sub>", "Ca(OH)<sub>2</sub> + CO<sub>2</sub> → CaCO<sub>3</sub> + H<sub>2</sub>O", "Ca(HCO<sub>3</sub>)<sub>2</sub> → CaCO<sub>3</sub> + CO<sub>2</sub> + H<sub>2</sub>O", "CaCO<sub>3</sub> → CaO + CO<sub>2</sub>"], answer: "CaCO<sub>3</sub> + CO<sub>2</sub> + H<sub>2</sub>O → Ca(HCO<sub>3</sub>)<sub>2</sub>", explanation: "The insoluble calcium carbonate reacts to form soluble calcium hydrogencarbonate, clearing the solution." },
+                { question: "Marble chips (CaCO<sub>3</sub>) react with dilute hydrochloric acid. What is the balanced chemical equation for this reaction?", options: ["CaCO<sub>3</sub> + 2HCl → CaCl<sub>2</sub> + CO<sub>2</sub> + H<sub>2</sub>O", "CaCO<sub>3</sub> + HCl → CaCl + HCO<sub>3</sub>", "CaCO<sub>3</sub> + H<sub>2</sub>SO<sub>4</sub> → CaSO<sub>4</sub> + CO<sub>2</sub> + H<sub>2</sub>O", "CaCO<sub>3</sub> + 2HCl → CaH<sub>2</sub> + Cl<sub>2</sub> + CO<sub>2</sub>"], answer: "CaCO<sub>3</sub> + 2HCl → CaCl<sub>2</sub> + CO<sub>2</sub> + H<sub>2</sub>O", explanation: "A carbonate reacts with an acid to produce a salt, carbon dioxide, and water." },
+                { question: "Rainwater becomes weakly acidic by dissolving carbon dioxide from the atmosphere. Which equation shows the formation of carbonic acid?", options: ["CO<sub>2</sub> + H<sub>2</sub>O → H<sub>2</sub>CO<sub>3</sub>", "SO<sub>2</sub> + H<sub>2</sub>O → H<sub>2</sub>SO<sub>3</sub>", "CO + H<sub>2</sub>O → H<sub>2</sub>CO<sub>2</sub>", "H<sub>2</sub> + CO<sub>2</sub> → H<sub>2</sub>CO<sub>2</sub>"], answer: "CO<sub>2</sub> + H<sub>2</sub>O → H<sub>2</sub>CO<sub>3</sub>", explanation: "This is the first step in the chemical weathering process that forms limestone caves." },
+                { question: "This newly formed carbonic acid in rainwater is responsible for dissolving limestone to form caves. Select the correct equation.", options: ["CaCO<sub>3</sub> + H<sub>2</sub>CO<sub>3</sub> → Ca(HCO<sub>3</sub>)<sub>2</sub>", "CaCO<sub>3</sub> + H<sub>2</sub>O → Ca(OH)<sub>2</sub> + CO<sub>2</sub>", "Ca(OH)<sub>2</sub> + H<sub>2</sub>CO<sub>3</sub> → CaCO<sub>3</sub> + 2H<sub>2</sub>O", "CaO + H<sub>2</sub>CO<sub>3</sub> → CaCO<sub>3</sub> + H<sub>2</sub>O"], answer: "CaCO<sub>3</sub> + H<sub>2</sub>CO<sub>3</sub> → Ca(HCO<sub>3</sub>)<sub>2</sub>", explanation: "The acid reacts with the insoluble carbonate to form a soluble hydrogencarbonate." },
+                { question: "You are testing an unknown white powder for the presence of a carbonate. You add dilute HCl. What observation confirms it is a carbonate?", options: ["Bubbles of a colourless gas are produced.", "The powder dissolves to form a blue solution.", "The test tube gets very hot.", "A white precipitate is formed."], answer: "Bubbles of a colourless gas are produced.", explanation: "The production of gas (effervescence) is the key observation. This gas is CO<sub>2</sub>, which can be confirmed by the limewater test." },
+                { question: "When performing a flame test on a sample of chalk, what is the expected observation that indicates the presence of calcium ions?", options: ["A brick-red flame", "A lilac (pale purple) flame", "A bright yellow flame", "A blue-green flame"], answer: "A brick-red flame", explanation: "Calcium compounds give a characteristic brick-red (or orange-red) color to a flame." },
+                { question: "What is the correct first step to prepare limewater starting from limestone (calcium carbonate)?", options: ["Heat the limestone strongly", "Filter the limestone", "Add water to the limestone", "Dissolve the limestone in acid"], answer: "Heat the limestone strongly", explanation: "The first step is thermal decomposition (heating) of limestone (CaCO<sub>3</sub>) to produce quicklime (CaO). Then water is added to make slaked lime, which is filtered to get limewater." },
+                { question: "What happens when solid calcium carbonate is added to pure water?", options: ["It dissolves completely", "It reacts to produce hydrogen gas", "It neither reacts nor dissolves significantly", "It turns the water milky immediately"], answer: "It neither reacts nor dissolves significantly", explanation: "Calcium carbonate is insoluble in pure water. It only dissolves in water that contains dissolved CO<sub>2</sub> (carbonic acid)." }
+            ];
+            
+            const correctSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+            const incorrectSound = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.2 } }).toDestination();
+
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const setupScreen = document.getElementById('setup-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            const reviewScreen = document.getElementById('review-screen');
+            const proceedToSetupBtn = document.getElementById('proceed-to-setup-btn');
+            const startQuizBtn = document.getElementById('start-quiz-btn');
+            const restartQuizBtn = document.getElementById('restart-quiz-btn');
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+            const flagQuestionBtn = document.getElementById('flag-question-btn');
+            const reviewIncorrectBtn = document.getElementById('review-incorrect-btn');
+            const reviewFlaggedBtn = document.getElementById('review-flagged-btn');
+            const backToResultsBtn = document.getElementById('back-to-results-btn');
+            const reviewPrevBtn = document.getElementById('review-prev-btn');
+            const reviewNextBtn = document.getElementById('review-next-btn');
+
+            const questionNumberEl = document.getElementById('question-number');
+            const totalQuestionsEl = document.getElementById('total-questions');
+            const scoreEl = document.getElementById('score');
+            const questionTextEl = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const finalScoreEl = document.getElementById('final-score');
+            const resultsTitleEl = document.getElementById('results-title');
+            const resultsMessageEl = document.getElementById('results-message');
+            const numQuestionsSelect = document.getElementById('num-questions');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const progressBar = document.getElementById('progress-bar');
+            const reviewContent = document.getElementById('review-content');
+            const reviewCounter = document.getElementById('review-counter');
+            const reviewTitle = document.getElementById('review-title');
+            
+            let questions = [];
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let flaggedQuestions = [];
+            let incorrectlyAnswered = [];
+            let reviewList = [];
+            let currentReviewIndex = 0;
+            let quizInProgress = false;
+
+            const correctMessages = ["Great job! 👍", "Excellent! 🎉", "You've got it! ✨", "Correct! ✅", "Awesome! 🤩"];
+            const incorrectMessages = ["Not quite. 🤔", "Keep trying! 💪", "That's a common mistake.", "Almost there! 🧐"];
+
+            function saveState() {
+                if (!quizInProgress) return;
+                const state = { questions, currentQuestionIndex, score, flaggedQuestions, incorrectlyAnswered, quizInProgress };
+                localStorage.setItem('rocksQuizState', JSON.stringify(state));
+            }
+
+            function loadState() {
+                const savedState = localStorage.getItem('rocksQuizState');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    questions = state.questions;
+                    currentQuestionIndex = state.currentQuestionIndex;
+                    score = state.score;
+                    flaggedQuestions = state.flaggedQuestions;
+                    incorrectlyAnswered = state.incorrectlyAnswered;
+                    quizInProgress = state.quizInProgress;
+                    return true;
+                }
+                return false;
+            }
+
+            function clearState() {
+                localStorage.removeItem('rocksQuizState');
+            }
+
+            function showSetupScreen() {
+                welcomeScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+                
+                const startButtonsContainer = document.getElementById('start-buttons-container');
+                const existingResumeBtn = document.getElementById('resume-quiz-btn');
+                if (existingResumeBtn) existingResumeBtn.remove();
+
+                if (loadState() && quizInProgress) {
+                    const resumeBtn = document.createElement('button');
+                    resumeBtn.id = 'resume-quiz-btn';
+                    resumeBtn.textContent = 'Resume Previous Quiz';
+                    resumeBtn.className = 'w-full btn btn-secondary';
+                    startButtonsContainer.appendChild(resumeBtn);
+                    resumeBtn.addEventListener('click', resumeQuiz);
+                }
+            }
+
+            function resumeQuiz() {
+                setupScreen.classList.add('hidden');
+                if (currentQuestionIndex >= questions.length) {
+                    showResults();
+                } else {
+                    quizScreen.classList.remove('hidden');
+                    totalQuestionsEl.textContent = questions.length;
+                    scoreEl.textContent = score;
+                    displayQuestion();
+                }
+            }
+            
+            function startQuiz() {
+                Tone.start();
+                clearState();
+                quizInProgress = true;
+                const numQuestions = parseInt(numQuestionsSelect.value);
+                score = 0;
+                currentQuestionIndex = 0;
+                flaggedQuestions = [];
+                incorrectlyAnswered = [];
+                
+                questions = questionBank.sort(() => 0.5 - Math.random()).slice(0, numQuestions);
+
+                setupScreen.classList.add('hidden');
+                resultsScreen.classList.add('hidden');
+                reviewScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                
+                totalQuestionsEl.textContent = numQuestions;
+                scoreEl.textContent = score;
+                displayQuestion();
+                saveState();
+            }
+
+            function displayQuestion() {
+                if (currentQuestionIndex >= questions.length) {
+                    quizInProgress = false;
+                    showResults();
+                    saveState();
+                    clearState();
+                    return;
+                }
+                feedbackContainer.classList.add('hidden');
+                nextQuestionBtn.classList.add('hidden');
+                
+                const question = questions[currentQuestionIndex];
+                questionNumberEl.textContent = currentQuestionIndex + 1;
+                questionTextEl.innerHTML = question.question;
+                
+                optionsContainer.innerHTML = '';
+                
+                progressBar.style.width = `${((currentQuestionIndex) / questions.length) * 100}%`;
+                
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                
+                const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
+                shuffledOptions.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.innerHTML = optionText;
+                    button.className = 'option-btn btn';
+                    button.onclick = () => checkAnswer(optionText, question.answer, button, question.explanation);
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            function checkAnswer(selectedAnswer, correctAnswer, button, explanation) {
+                optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+                
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                    scoreEl.textContent = score;
+                    button.classList.add('correct');
+                    correctSound.triggerAttackRelease('C5', '8n', Tone.now());
+                    feedbackContainer.className = 'feedback feedback-correct';
+                    feedbackContainer.innerHTML = `<p class="font-bold mb-2">${correctMessages[Math.floor(Math.random() * correctMessages.length)]}</p><p>${explanation}</p>`;
+                } else {
+                    button.classList.add('incorrect');
+                    incorrectSound.triggerAttackRelease('A2', '8n', Tone.now());
+                    optionsContainer.querySelectorAll('.option-btn').forEach(btn => {
+                        if (btn.innerHTML === correctAnswer) btn.classList.add('correct');
+                    });
+                    incorrectlyAnswered.push({ ...questions[currentQuestionIndex], userAnswer: selectedAnswer });
+                    feedbackContainer.className = 'feedback feedback-incorrect';
+                    feedbackContainer.innerHTML = `<p class="font-bold mb-2">${incorrectMessages[Math.floor(Math.random() * incorrectMessages.length)]}</p><p>${explanation}</p>`;
+                }
+                
+                feedbackContainer.classList.remove('hidden');
+                nextQuestionBtn.classList.remove('hidden');
+                progressBar.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+                saveState();
+            }
+
+            function showResults() {
+                quizInProgress = false;
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                const finalPercentage = questions.length > 0 ? score / questions.length : 0;
+                finalScoreEl.textContent = `${score} / ${questions.length}`;
+
+                if (finalPercentage >= 0.8) {
+                    resultsTitleEl.textContent = "Excellent Work! 🌟";
+                    resultsMessageEl.textContent = "You're a true geology whiz!";
+                    const confettiCanvas = document.getElementById('confetti-canvas');
+                    const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+                    myConfetti({ particleCount: 200, spread: 160, origin: { y: 0.6 } });
+                } else if (finalPercentage >= 0.5) {
+                    resultsTitleEl.textContent = "Good Job! 👍";
+                    resultsMessageEl.textContent = "You have a solid understanding of these topics.";
+                } else {
+                    resultsTitleEl.textContent = "Keep Going! 💪";
+                    resultsMessageEl.textContent = "Every attempt is a step forward. Don't give up, try the quiz again!";
+                }
+
+                reviewIncorrectBtn.classList.toggle('hidden', incorrectlyAnswered.length === 0);
+                reviewFlaggedBtn.classList.toggle('hidden', flaggedQuestions.length === 0);
+                clearState();
+            }
+
+            function startReview(mode) {
+                currentReviewIndex = 0;
+                if (mode === 'incorrect') {
+                    reviewList = incorrectlyAnswered;
+                    reviewTitle.textContent = "Reviewing Incorrect Answers";
+                } else {
+                    reviewList = flaggedQuestions.map(index => questions[index]);
+                    reviewTitle.textContent = "Reviewing Flagged Questions";
+                }
+                
+                if (reviewList.length > 0) {
+                    resultsScreen.classList.add('hidden');
+                    reviewScreen.classList.remove('hidden');
+                    displayReviewQuestion();
+                }
+            }
+
+            function displayReviewQuestion() {
+                const item = reviewList[currentReviewIndex];
+                reviewContent.innerHTML = `
+                    <div class="p-4 bg-gray-100 rounded-lg">
+                        <p class="font-bold text-lg">${item.question}</p>
+                    </div>
+                    ${item.userAnswer ? `<p class="text-red-600"><strong>Your Answer:</strong> ${item.userAnswer}</p>` : ''}
+                    <p class="text-green-600"><strong>Correct Answer:</strong> ${item.answer}</p>
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                        <p><strong>Explanation:</strong> ${item.explanation}</p>
+                    </div>
+                `;
+                reviewCounter.textContent = `${currentReviewIndex + 1} / ${reviewList.length}`;
+                reviewPrevBtn.disabled = currentReviewIndex === 0;
+                reviewNextBtn.disabled = currentReviewIndex === reviewList.length - 1;
+            }
+
+            flagQuestionBtn.addEventListener('click', () => {
+                const indexInFlagged = flaggedQuestions.indexOf(currentQuestionIndex);
+                if (indexInFlagged > -1) {
+                    flaggedQuestions.splice(indexInFlagged, 1);
+                } else {
+                    flaggedQuestions.push(currentQuestionIndex);
+                }
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                saveState();
+            });
+
+            proceedToSetupBtn.addEventListener('click', showSetupScreen);
+            reviewIncorrectBtn.addEventListener('click', () => startReview('incorrect'));
+            reviewFlaggedBtn.addEventListener('click', () => startReview('flagged'));
+            backToResultsBtn.addEventListener('click', () => {
+                reviewScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+            });
+            reviewPrevBtn.addEventListener('click', () => {
+                if (currentReviewIndex > 0) {
+                    currentReviewIndex--;
+                    displayReviewQuestion();
+                }
+            });
+            reviewNextBtn.addEventListener('click', () => {
+                if (currentReviewIndex < reviewList.length - 1) {
+                    currentReviewIndex++;
+                    displayReviewQuestion();
+                }
+            });
+
+            startQuizBtn.addEventListener('click', startQuiz);
+            restartQuizBtn.addEventListener('click', () => {
+                resultsScreen.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
+            });
+            nextQuestionBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                displayQuestion();
+            });
+        });
+    </script>
+</body>
+</html>

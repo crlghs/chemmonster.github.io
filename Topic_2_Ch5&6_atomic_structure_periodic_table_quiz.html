@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structure of the Atom & Periodic Table Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease;
+        }
+        .btn {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        @media (min-width: 640px) {
+            .options-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .option-btn {
+            border: 1px solid #d1d5db;
+            transition: all 0.2s ease-in-out;
+            height: 100%;
+            text-align: left;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .option-btn:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        .option-btn.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .hidden { display: none; }
+        .feedback {
+            border-left-width: 4px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .feedback-correct {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+        }
+        .feedback-incorrect {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        #flag-question-btn {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        #flag-question-btn.flagged {
+            background-color: #fef9c3; /* yellow-100 */
+            border-color: #facc15; /* yellow-400 */
+            color: #713f12; /* yellow-800 */
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            transition: width 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-5xl font-extrabold text-gray-800 tracking-tight">Atomic Structure & Periodic Table Quiz</h1>
+            <p class="text-xl text-gray-600 mt-2">Test your knowledge of the building blocks of matter!</p>
+        </header>
+
+        <div class="card relative">
+            <!-- Welcome Screen -->
+            <div id="welcome-screen" class="text-center">
+                <i class="fas fa-atom text-6xl text-blue-500 mb-4"></i>
+                <h2 class="text-3xl font-bold mb-4">Welcome to the Atomic Challenge!</h2>
+                <p class="text-gray-600 mb-6">Let's explore the fundamental concepts of chemistry together.</p>
+                <div class="text-left mb-6 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-bullseye text-blue-500 mr-3"></i>Quiz Objectives</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-2 pl-5">
+                        <li>Learn about sub-atomic particles.</li>
+                        <li>Understand atomic number, mass number, and isotopes.</li>
+                        <li>Connect electron arrangement to the Periodic Table.</li>
+                        <li>Recognize patterns in elemental properties.</li>
+                    </ul>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                         <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-info-circle text-blue-500 mr-3"></i>Learning Tips</h3>
+                         <div class="pl-5 space-y-2 text-gray-700">
+                            <p>Use the <span class="font-bold">"🚩 Flag for Review"</span> button to mark tricky questions so you can look at them again at the end.</p>
+                            <p>For better memory retention, try revisiting this quiz later. Spaced repetition is a great way to learn!</p>
+                         </div>
+                    </div>
+                </div>
+                <p class="text-xl font-semibold mb-6">Are you ready to begin?</p>
+                <button id="proceed-to-setup-btn" class="w-full btn btn-primary">Let's Go!</button>
+            </div>
+
+            <!-- Setup Screen -->
+            <div id="setup-screen" class="hidden text-center">
+                <h2 class="text-2xl font-bold mb-4">Quiz Setup</h2>
+                <div class="mb-6 text-left">
+                    <label class="block mb-3 font-medium text-center">1. Select Topic(s):</label>
+                    <div class="flex justify-center gap-x-6 gap-y-2 flex-wrap">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="topic-atom" name="topic" value="atom" checked class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            <label for="topic-atom" class="ml-2 block text-sm text-gray-900">Structure of Atom</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="topic-pt" name="topic" value="pt" checked class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            <label for="topic-pt" class="ml-2 block text-sm text-gray-900">Periodic Table</label>
+                        </div>
+                    </div>
+                    <p id="topic-error" class="text-red-500 text-sm mt-2 text-center hidden">Please select at least one topic.</p>
+                </div>
+                <div class="text-left mb-6">
+                    <label for="num-questions" class="block mb-2 font-medium text-center">2. Number of Questions:</label>
+                    <select id="num-questions" class="p-2 border rounded-lg w-full bg-white">
+                        <option value="5">5 Questions</option>
+                        <option value="10" selected>10 Questions</option>
+                        <option value="20">20 Questions</option>
+                    </select>
+                </div>
+                <div id="start-buttons-container" class="space-y-2">
+                   <button id="start-quiz-btn" class="w-full btn btn-primary">Start New Quiz</button>
+                </div>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-screen" class="hidden">
+                <div class="progress-bar-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                     <h2 class="text-2xl font-bold">Question <span id="question-number"></span>/<span id="total-questions"></span></h2>
+                     <div class="flex items-center gap-4">
+                        <div class="text-lg font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">Score: <span id="score">0</span></div>
+                        <button id="flag-question-btn" title="Flag this question for review"></button>
+                     </div>
+                </div>
+                <p id="question-text" class="text-xl mb-6 bg-gray-100 p-4 rounded-lg"></p>
+                <div id="options-container" class="options-grid"></div>
+                <div id="feedback-container" class="hidden"></div>
+                <button id="next-question-btn" class="hidden w-full mt-4 btn bg-gray-700 text-white hover:bg-gray-800">Next Question</button>
+            </div>
+
+            <!-- Results Screen -->
+            <div id="results-screen" class="hidden text-center">
+                <canvas id="confetti-canvas"></canvas>
+                <h2 id="results-title" class="text-3xl font-bold mb-2">Quiz Complete!</h2>
+                <p id="results-message" class="text-lg text-gray-600 mb-4"></p>
+                <p class="text-xl mb-2">Your final score is:</p>
+                <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500 mb-6" id="final-score"></p>
+                <div id="review-buttons-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <button id="review-incorrect-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-times-circle mr-2"></i>Review Incorrect</button>
+                    <button id="review-flagged-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-flag mr-2"></i>Review Flagged</button>
+                </div>
+                <button id="restart-quiz-btn" class="w-full btn btn-primary">Try Again</button>
+            </div>
+
+            <!-- Review Screen -->
+            <div id="review-screen" class="hidden">
+                <h2 id="review-title" class="text-2xl font-bold mb-4">Reviewing Questions</h2>
+                <div id="review-content" class="space-y-4"></div>
+                <div class="flex justify-between items-center mt-6">
+                    <button id="review-prev-btn" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Prev</button>
+                    <span id="review-counter" class="font-semibold"></span>
+                    <button id="review-next-btn" class="btn btn-secondary">Next<i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+                 <button id="back-to-results-btn" class="w-full btn btn-primary mt-4">Back to Results</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const questionBank = [
+                // Section 1: Structure of Atom (Q1-18)
+                { "question": "Which two particles are found inside the nucleus of an atom?", "options": ["Protons and Electrons", "Neutrons and Electrons", "Protons and Neutrons", "Only Protons"], "answer": "Protons and Neutrons", "explanation": "The nucleus is the dense, central part of the atom containing the protons and neutrons. Electrons orbit the nucleus." },
+                { "question": "Where are electrons found in an atom?", "options": ["Inside the nucleus", "Bonded to protons", "In shells orbiting the nucleus", "Mixed with neutrons"], "answer": "In shells orbiting the nucleus", "explanation": "Electrons occupy specific energy levels or shells that surround the central nucleus." },
+                { "question": "Which sub-atomic particle has a relative mass of 1 and a charge of +1?", "options": ["Proton", "Neutron", "Electron", "Nucleus"], "answer": "Proton", "explanation": "A proton, found in the nucleus, has a relative mass of approximately 1 and a positive charge of +1." },
+                { "question": "What is the electrical charge of a neutron?", "options": ["+1", "0", "-1", "+2"], "answer": "0", "explanation": "A neutron is electrically neutral, meaning it has no charge." },
+                { "question": "Which sub-atomic particle has a mass that is considered negligible compared to the others?", "options": ["Proton", "Neutron", "Electron", "Nucleon"], "answer": "Electron", "explanation": "An electron's mass is approximately 1/1837th of a proton's mass, so it is often considered negligible when calculating the mass number." },
+                { "question": "Where is a proton located in an atom?", "options": ["In the outermost shell", "In the nucleus", "Orbiting the nucleus", "Outside the atom"], "answer": "In the nucleus", "explanation": "Protons are located in the dense, positively charged nucleus at the center of the atom." },
+                { "question": "The atomic number of an element is equal to the number of ______ in an atom's nucleus.", "options": ["Neutrons", "Electrons", "Protons", "Protons and Neutrons"], "answer": "Protons", "explanation": "The atomic number (Z) uniquely identifies an element and is defined by the number of protons in its nucleus." },
+                { "question": "An atom has 20 protons and 20 neutrons. What is its mass number?", "options": ["20", "40", "60", "0"], "answer": "40", "explanation": "Mass number is the sum of protons and neutrons (20 + 20 = 40)." },
+                { "question": "What is the mass number of an atom with 11 protons, 12 neutrons, and 11 electrons?", "options": ["11", "22", "23", "12"], "answer": "23", "explanation": "The mass number is the total number of protons and neutrons in the nucleus. (11 protons + 12 neutrons = 23)." },
+                { "question": "An atom has a mass number of 27 and an atomic number of 13. How many neutrons does it have?", "options": ["13", "14", "27", "40"], "answer": "14", "explanation": "Number of neutrons = Mass Number - Atomic Number (27 - 13 = 14)." },
+                { "question": "An atom of Potassium (K) has an atomic number of 19 and a mass number of 39. How many neutrons does it have?", "options": ["19", "20", "39", "58"], "answer": "20", "explanation": "Number of neutrons = Mass Number - Atomic Number (39 - 19 = 20)." },
+                { "question": "An atom has 16 neutrons and 15 protons. What is its mass number?", "options": ["15", "16", "1", "31"], "answer": "31", "explanation": "Mass number is the sum of protons and neutrons (15 + 16 = 31)." },
+                { "question": "True or False: In a neutral atom, the number of electrons is equal to the number of neutrons.", "options": ["True", "False"], "answer": "False", "explanation": "In a neutral atom, the number of electrons is equal to the number of protons to balance the charge. The number of neutrons can vary." },
+                { "question": "An atom of Beryllium (Be) has 4 protons and 5 neutrons. How many electrons does a neutral Be atom have?", "options": ["4", "5", "9", "1"], "answer": "4", "explanation": "A neutral atom must have an equal number of protons (+1 charge) and electrons (-1 charge) to have an overall charge of zero." },
+                { "question": "What is the full atomic symbol for an atom with 17 protons and 20 neutrons?", "options": ["<sup>37</sup><sub>17</sub>Cl", "<sup>20</sup><sub>17</sub>Cl", "<sup>17</sup><sub>37</sub>Cl", "<sup>37</sup><sub>20</sub>Cl"], "answer": "<sup>37</sup><sub>17</sub>Cl", "explanation": "The mass number (protons + neutrons = 37) is the superscript, and the atomic number (protons = 17) is the subscript." },
+                { "question": "Isotopes of an element have the same number of protons but a different number of ______.", "options": ["Electrons", "Neutrons", "Charges", "Shells"], "answer": "Neutrons", "explanation": "Isotopes are atoms of the same element with different mass numbers, which is due to a varying number of neutrons." },
+                { "question": "Why do isotopes of the same element have identical chemical properties?", "options": ["They have the same number of neutrons.", "They have the same mass number.", "They have the same number of electrons.", "They are all radioactive."], "answer": "They have the same number of electrons.", "explanation": "Chemical properties are determined by the electronic structure, specifically the outermost electrons. Since isotopes have the same number of protons, they also have the same number of electrons." },
+                { "question": "The relative atomic mass of an element is the weighted average mass of its isotopes compared to which standard?", "options": ["Hydrogen-1", "Oxygen-16", "Helium-4", "Carbon-12"], "answer": "Carbon-12", "explanation": "The modern scale for atomic masses is based on the Carbon-12 isotope, which is assigned a mass of exactly 12." },
+                // Section 2: Periodic Table (Q19-40)
+                { "question": "True or False: An atom is the smallest particle of an element that can take part in a chemical reaction.", "options": ["True", "False"], "answer": "True", "explanation": "This is the fundamental definition of an atom in chemistry. Chemical reactions involve the rearrangement of atoms." },
+                { "question": "An element is a solid at room temperature, shiny, and a good conductor of electricity. It is most likely a...", "options": ["Metal", "Non-metal", "Metalloid", "Noble Gas"], "answer": "Metal", "explanation": "Shininess (lustre), high conductivity, and being solid at room temperature are all characteristic physical properties of metals." },
+                { "question": "What is the electronic arrangement of a Sodium (Na) atom, which has an atomic number of 11?", "options": ["2,9", "2,8,1", "8,2,1", "2,1,8"], "answer": "2,8,1", "explanation": "The electrons fill the shells in order: 2 in the first shell, 8 in the second, and the remaining 1 in the third shell." },
+                { "question": "Which element has the electronic arrangement 2,8,8?", "options": ["Potassium (K)", "Chlorine (Cl)", "Argon (Ar)", "Calcium (Ca)"], "answer": "Argon (Ar)", "explanation": "Argon has an atomic number of 18 (2+8+8=18). It is a stable noble gas in Period 3." },
+                { "question": "An atom has 3 occupied electron shells. In which Period of the Periodic Table is it located?", "options": ["Period 1", "Period 2", "Period 3", "Period 4"], "answer": "Period 3", "explanation": "The period number corresponds to the number of occupied electron shells. An arrangement like 2,8,x would be in Period 3." },
+                { "question": "The horizontal rows in the Periodic Table are called...", "options": ["Groups", "Periods", "Families", "Blocks"], "answer": "Periods", "explanation": "Horizontal rows are called periods, while vertical columns are called groups." },
+                { "question": "An atom has an electronic arrangement of 2,8,7. In which Group of the Periodic Table is it located?", "options": ["Group 1", "Group 2", "Group 7", "Group 0 (or 8)"], "answer": "Group 7", "explanation": "The group number for main group elements corresponds to the number of electrons in the outermost shell, which is 7 in this case." },
+                { "question": "True or False: Elements in the same Period have similar chemical properties.", "options": ["True", "False"], "answer": "False", "explanation": "Elements in the same Group have similar chemical properties because they have the same number of outermost electrons. Elements in the same period have the same number of electron shells." },
+                { "question": "The elements in Group 0 are called Noble Gases. What makes them so stable and unreactive?", "options": ["They are all gases.", "They have a full outermost electron shell.", "They have an equal number of protons and neutrons.", "They have high melting points."], "answer": "They have a full outermost electron shell.", "explanation": "Noble gases have a stable octet (8 electrons) or duplet (2 for Helium) structure in their outermost shell, which makes them chemically inert." },
+                { "question": "Which of the following is a property of alkali metals (Group 1)?", "options": ["Hard and dense", "React slowly with water", "Soft and less dense than water", "Form acidic solutions in water"], "answer": "Soft and less dense than water", "explanation": "Alkali metals like sodium and potassium are soft enough to be cut with a knife and can float on water." },
+                { "question": "Which statement best describes a physical property of Group 1 metals?", "options": ["They are brittle solids", "They have low melting points for metals", "They are poor conductors of electricity", "They are dull in appearance"], "answer": "They have low melting points for metals", "explanation": "Compared to other metals, alkali metals have unusually low melting and boiling points." },
+                { "question": "True or False: The reactivity of Group 1 alkali metals increases as you go down the group.", "options": ["True", "False"], "answer": "True", "explanation": "As you go down Group 1, the outermost electron is further from the nucleus and more easily lost, making the element more reactive." },
+                { "question": "True or False: Lithium is more reactive than Potassium.", "options": ["True", "False"], "answer": "False", "explanation": "Potassium is below Lithium in Group 1, so it is more reactive." },
+                { "question": "Arrange the following alkali metals in order of **increasing** reactivity (least reactive to most reactive): Sodium, Potassium, Lithium.", "options": ["Potassium, Sodium, Lithium", "Sodium, Lithium, Potassium", "Lithium, Sodium, Potassium", "Lithium, Potassium, Sodium"], "answer": "Lithium, Sodium, Potassium", "explanation": "Reactivity increases down Group 1, so the order from least to most reactive is Li, Na, K." },
+                { "question": "What is a key observation when a piece of sodium is placed in water?", "options": ["It sinks to the bottom", "It melts into a silvery ball and fizzes", "It burns with a green flame", "It does nothing"], "answer": "It melts into a silvery ball and fizzes", "explanation": "Sodium melts from the heat of the reaction and moves across the water surface while producing hydrogen gas (fizzing)." },
+                { "question": "What is the observation when potassium is added to water?", "options": ["It sinks and gives off bubbles slowly", "It melts into a ball and burns with a lilac flame", "It does not react", "It turns the water green"], "answer": "It melts into a ball and burns with a lilac flame", "explanation": "Potassium's reaction with water is very vigorous, producing enough heat to ignite the hydrogen gas produced, which burns with a characteristic lilac flame." },
+                { "question": "How does the reaction of calcium in water differ from that of sodium?", "options": ["Calcium reacts more violently", "Calcium sinks while sodium floats", "Calcium produces oxygen gas", "Calcium does not react"], "answer": "Calcium sinks while sodium floats", "explanation": "Calcium is denser than water and sinks, reacting steadily. Sodium is less dense and floats, reacting vigorously on the surface." },
+                { "question": "Which of these elements is a halogen?", "options": ["Neon (Ne)", "Sodium (Na)", "Chlorine (Cl)", "Calcium (Ca)"], "answer": "Chlorine (Cl)", "explanation": "The halogens are the elements in Group 7 of the Periodic Table. Chlorine has an electronic arrangement of 2,8,7." },
+                { "question": "True or False: The reactivity of Group 7 halogens increases as you go down the group.", "options": ["True", "False"], "answer": "False", "explanation": "As you go down Group 7, it becomes harder to attract an electron to complete the outer shell, so reactivity decreases." },
+                { "question": "Arrange the following halogens in order of **decreasing** reactivity (most reactive to least reactive): Bromine, Chlorine, Fluorine.", "options": ["Fluorine, Chlorine, Bromine", "Bromine, Chlorine, Fluorine", "Chlorine, Fluorine, Bromine", "Fluorine, Bromine, Chlorine"], "answer": "Fluorine, Chlorine, Bromine", "explanation": "Reactivity decreases down Group 7, so the order from most to least reactive is F, Cl, Br." },
+                { "question": "What is the trend in the physical state of halogens at room temperature as you go down the group?", "options": ["Solid -> Liquid -> Gas", "Gas -> Liquid -> Solid", "Liquid -> Gas -> Solid", "Gas -> Solid -> Liquid"], "answer": "Gas -> Liquid -> Solid", "explanation": "Fluorine and Chlorine are gases, Bromine is a liquid, and Iodine is a solid at room temperature." },
+                { "question": "Which halogen is a reddish-brown liquid at room temperature?", "options": ["Fluorine", "Chlorine", "Bromine", "Iodine"], "answer": "Bromine", "explanation": "Bromine is one of only two elements (the other being mercury) that is a liquid at standard room temperature." }
+            ];
+            
+            const correctSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+            const incorrectSound = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.2 } }).toDestination();
+
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const setupScreen = document.getElementById('setup-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            const reviewScreen = document.getElementById('review-screen');
+            const proceedToSetupBtn = document.getElementById('proceed-to-setup-btn');
+            const startQuizBtn = document.getElementById('start-quiz-btn');
+            const restartQuizBtn = document.getElementById('restart-quiz-btn');
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+            const flagQuestionBtn = document.getElementById('flag-question-btn');
+            const reviewIncorrectBtn = document.getElementById('review-incorrect-btn');
+            const reviewFlaggedBtn = document.getElementById('review-flagged-btn');
+            const backToResultsBtn = document.getElementById('back-to-results-btn');
+            const reviewPrevBtn = document.getElementById('review-prev-btn');
+            const reviewNextBtn = document.getElementById('review-next-btn');
+
+            const questionNumberEl = document.getElementById('question-number');
+            const totalQuestionsEl = document.getElementById('total-questions');
+            const scoreEl = document.getElementById('score');
+            const questionTextEl = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const finalScoreEl = document.getElementById('final-score');
+            const resultsTitleEl = document.getElementById('results-title');
+            const resultsMessageEl = document.getElementById('results-message');
+            const numQuestionsSelect = document.getElementById('num-questions');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const progressBar = document.getElementById('progress-bar');
+            const reviewContent = document.getElementById('review-content');
+            const reviewCounter = document.getElementById('review-counter');
+            const reviewTitle = document.getElementById('review-title');
+            const topicAtomCheckbox = document.getElementById('topic-atom');
+            const topicPtCheckbox = document.getElementById('topic-pt');
+            const topicError = document.getElementById('topic-error');
+            
+            let questions = [];
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let flaggedQuestions = [];
+            let incorrectlyAnswered = [];
+            let reviewList = [];
+            let currentReviewIndex = 0;
+            let quizInProgress = false;
+
+            const correctMessages = ["Great job! 👍", "Excellent! 🎉", "You've got it! ✨", "Correct! ✅", "Awesome! 🤩"];
+            const incorrectMessages = ["Not quite. 🤔", "Keep trying! 💪", "That's a common mistake.", "Almost there! 🧐"];
+
+            function saveState() {
+                if (!quizInProgress) return;
+                const state = { questions, currentQuestionIndex, score, flaggedQuestions, incorrectlyAnswered, quizInProgress };
+                localStorage.setItem('atomQuizState', JSON.stringify(state));
+            }
+
+            function loadState() {
+                const savedState = localStorage.getItem('atomQuizState');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    questions = state.questions;
+                    currentQuestionIndex = state.currentQuestionIndex;
+                    score = state.score;
+                    flaggedQuestions = state.flaggedQuestions;
+                    incorrectlyAnswered = state.incorrectlyAnswered;
+                    quizInProgress = state.quizInProgress;
+                    return true;
+                }
+                return false;
+            }
+
+            function clearState() {
+                localStorage.removeItem('atomQuizState');
+            }
+
+            function showSetupScreen() {
+                welcomeScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+                
+                const startButtonsContainer = document.getElementById('start-buttons-container');
+                const existingResumeBtn = document.getElementById('resume-quiz-btn');
+                if (existingResumeBtn) existingResumeBtn.remove();
+
+                if (loadState() && quizInProgress) {
+                    const resumeBtn = document.createElement('button');
+                    resumeBtn.id = 'resume-quiz-btn';
+                    resumeBtn.textContent = 'Resume Previous Quiz';
+                    resumeBtn.className = 'w-full btn btn-secondary';
+                    startButtonsContainer.appendChild(resumeBtn);
+                    resumeBtn.addEventListener('click', resumeQuiz);
+                }
+            }
+
+            function resumeQuiz() {
+                setupScreen.classList.add('hidden');
+                if (currentQuestionIndex >= questions.length) {
+                    showResults();
+                } else {
+                    quizScreen.classList.remove('hidden');
+                    totalQuestionsEl.textContent = questions.length;
+                    scoreEl.textContent = score;
+                    displayQuestion();
+                }
+            }
+            
+            function startQuiz() {
+                Tone.start();
+                
+                let selectedQuestionsPool = [];
+                if (topicAtomCheckbox.checked) {
+                    selectedQuestionsPool.push(...questionBank.slice(0, 18));
+                }
+                if (topicPtCheckbox.checked) {
+                    selectedQuestionsPool.push(...questionBank.slice(18, 40));
+                }
+
+                if (selectedQuestionsPool.length === 0) {
+                    topicError.classList.remove('hidden');
+                    return;
+                }
+                topicError.classList.add('hidden');
+
+                clearState();
+                quizInProgress = true;
+                const numQuestions = parseInt(numQuestionsSelect.value);
+                score = 0;
+                currentQuestionIndex = 0;
+                flaggedQuestions = [];
+                incorrectlyAnswered = [];
+                
+                questions = selectedQuestionsPool.sort(() => 0.5 - Math.random()).slice(0, numQuestions);
+
+                setupScreen.classList.add('hidden');
+                resultsScreen.classList.add('hidden');
+                reviewScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                
+                totalQuestionsEl.textContent = questions.length;
+                scoreEl.textContent = score;
+                displayQuestion();
+                saveState();
+            }
+
+            function displayQuestion() {
+                if (currentQuestionIndex >= questions.length) {
+                    quizInProgress = false;
+                    showResults();
+                    saveState();
+                    clearState();
+                    return;
+                }
+                feedbackContainer.classList.add('hidden');
+                nextQuestionBtn.classList.add('hidden');
+                
+                const question = questions[currentQuestionIndex];
+                questionNumberEl.textContent = currentQuestionIndex + 1;
+                questionTextEl.innerHTML = question.question;
+                
+                optionsContainer.innerHTML = '';
+                
+                progressBar.style.width = `${((currentQuestionIndex) / questions.length) * 100}%`;
+                
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                
+                const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
+                shuffledOptions.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.innerHTML = optionText;
+                    button.className = 'option-btn btn';
+                    button.onclick = () => checkAnswer(optionText, question.answer, button, question.explanation);
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            function checkAnswer(selectedAnswer, correctAnswer, button, explanation) {
+                optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+                
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                    scoreEl.textContent = score;
+                    button.classList.add('correct');
+                    correctSound.triggerAttackRelease('C5', '8n', Tone.now());
+                    feedbackContainer.className = 'feedback feedback-correct';
+                    feedbackContainer.innerHTML = `<p class="font-bold mb-2">${correctMessages[Math.floor(Math.random() * correctMessages.length)]}</p><p>${explanation}</p>`;
+                } else {
+                    button.classList.add('incorrect');
+                    incorrectSound.triggerAttackRelease('A2', '8n', Tone.now());
+                    optionsContainer.querySelectorAll('.option-btn').forEach(btn => {
+                        if (btn.innerHTML === correctAnswer) btn.classList.add('correct');
+                    });
+                    incorrectlyAnswered.push({ ...questions[currentQuestionIndex], userAnswer: selectedAnswer });
+                    feedbackContainer.className = 'feedback feedback-incorrect';
+                    feedbackContainer.innerHTML = `<p class="font-bold mb-2">${incorrectMessages[Math.floor(Math.random() * incorrectMessages.length)]}</p><p>${explanation}</p>`;
+                }
+                
+                feedbackContainer.classList.remove('hidden');
+                nextQuestionBtn.classList.remove('hidden');
+                progressBar.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+                saveState();
+            }
+
+            function showResults() {
+                quizInProgress = false;
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                const finalPercentage = questions.length > 0 ? score / questions.length : 0;
+                finalScoreEl.textContent = `${score} / ${questions.length}`;
+
+                if (finalPercentage >= 0.8) {
+                    resultsTitleEl.textContent = "Excellent Work! 🌟";
+                    resultsMessageEl.textContent = "You're a true chemistry whiz!";
+                    const confettiCanvas = document.getElementById('confetti-canvas');
+                    const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+                    myConfetti({ particleCount: 200, spread: 160, origin: { y: 0.6 } });
+                } else if (finalPercentage >= 0.5) {
+                    resultsTitleEl.textContent = "Good Job! 👍";
+                    resultsMessageEl.textContent = "You have a solid understanding of these topics.";
+                } else {
+                    resultsTitleEl.textContent = "Keep Going! 💪";
+                    resultsMessageEl.textContent = "Every attempt is a step forward. Don't give up, try the quiz again!";
+                }
+
+                reviewIncorrectBtn.classList.toggle('hidden', incorrectlyAnswered.length === 0);
+                reviewFlaggedBtn.classList.toggle('hidden', flaggedQuestions.length === 0);
+                clearState();
+            }
+
+            function startReview(mode) {
+                currentReviewIndex = 0;
+                if (mode === 'incorrect') {
+                    reviewList = incorrectlyAnswered;
+                    reviewTitle.textContent = "Reviewing Incorrect Answers";
+                } else {
+                    reviewList = flaggedQuestions.map(index => {
+                        const question = questions[index];
+                        const incorrectAttempt = incorrectlyAnswered.find(item => item.question === question.question);
+                        return incorrectAttempt ? incorrectAttempt : question;
+                    });
+                    reviewTitle.textContent = "Reviewing Flagged Questions";
+                }
+                
+                if (reviewList.length > 0) {
+                    resultsScreen.classList.add('hidden');
+                    reviewScreen.classList.remove('hidden');
+                    displayReviewQuestion();
+                }
+            }
+
+            function displayReviewQuestion() {
+                const item = reviewList[currentReviewIndex];
+                reviewContent.innerHTML = `
+                    <div class="p-4 bg-gray-100 rounded-lg">
+                        <p class="font-bold text-lg">${item.question}</p>
+                    </div>
+                    ${item.userAnswer ? `<p class="text-red-600"><strong>Your Answer:</strong> ${item.userAnswer}</p>` : ''}
+                    <p class="text-green-600"><strong>Correct Answer:</strong> ${item.answer}</p>
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                        <p><strong>Explanation:</strong> ${item.explanation}</p>
+                    </div>
+                `;
+                reviewCounter.textContent = `${currentReviewIndex + 1} / ${reviewList.length}`;
+                reviewPrevBtn.disabled = currentReviewIndex === 0;
+                reviewNextBtn.disabled = currentReviewIndex === reviewList.length - 1;
+            }
+
+            flagQuestionBtn.addEventListener('click', () => {
+                const indexInFlagged = flaggedQuestions.indexOf(currentQuestionIndex);
+                if (indexInFlagged > -1) {
+                    flaggedQuestions.splice(indexInFlagged, 1);
+                } else {
+                    flaggedQuestions.push(currentQuestionIndex);
+                }
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                saveState();
+            });
+
+            proceedToSetupBtn.addEventListener('click', showSetupScreen);
+            reviewIncorrectBtn.addEventListener('click', () => startReview('incorrect'));
+            reviewFlaggedBtn.addEventListener('click', () => startReview('flagged'));
+            backToResultsBtn.addEventListener('click', () => {
+                reviewScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+            });
+            reviewPrevBtn.addEventListener('click', () => {
+                if (currentReviewIndex > 0) {
+                    currentReviewIndex--;
+                    displayReviewQuestion();
+                }
+            });
+            reviewNextBtn.addEventListener('click', () => {
+                if (currentReviewIndex < reviewList.length - 1) {
+                    currentReviewIndex++;
+                    displayReviewQuestion();
+                }
+            });
+
+            startQuizBtn.addEventListener('click', startQuiz);
+            restartQuizBtn.addEventListener('click', () => {
+                resultsScreen.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
+            });
+            nextQuestionBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                displayQuestion();
+            });
+        });
+    </script>
+</body>
+</html>

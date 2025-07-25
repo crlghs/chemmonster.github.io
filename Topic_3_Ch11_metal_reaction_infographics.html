@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metal Reactions Interactive Infographic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+        
+        .subtitle {
+            font-size: 1.4rem;
+            max-width: 800px;
+            margin: 0 auto 20px;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .panel {
+            background: rgba(30, 30, 50, 0.85);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .canvas-container {
+            width: 400px;
+            height: 600px;
+        }
+        
+        canvas {
+            background: #0d1425;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 100%;
+        }
+        
+        .info-panel {
+            width: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ffcc00;
+        }
+        
+        .metal-symbol {
+            font-size: 2.5rem;
+            font-weight: bold;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 20px;
+            background: #1a2a6c;
+            color: #ffcc00;
+            border: 3px solid #ffcc00;
+        }
+        
+        .metal-name {
+            font-size: 2rem;
+            color: #ffcc00;
+        }
+
+        .reaction-selector {
+            display: flex;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .selector-btn {
+            flex: 1;
+            padding: 12px 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #a0b0c0;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .selector-btn i {
+            margin-right: 8px;
+            font-style: normal; /* Emojis don't need italics */
+        }
+
+        .selector-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .selector-btn.active {
+            background: #ffcc00;
+            color: #1a2a6c;
+        }
+        
+        .reactions-container {
+            background: rgba(10, 15, 30, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            flex-grow: 1;
+            min-height: 250px; /* Ensure a consistent height */
+        }
+        
+        .reaction {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #ffcc00;
+        }
+        
+        .reaction-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #4dabf7;
+            display: flex;
+            align-items: center;
+        }
+        
+        .reaction-title i {
+            margin-right: 10px;
+            font-size: 1.8rem;
+        }
+        
+        .reaction-equation {
+            font-size: 1.6rem;
+            font-family: 'Cambria', serif;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            color: #ffcc00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .reaction-desc {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .reactivity-key {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .reactivity-high { color: #ff6b6b; }
+        .reactivity-moderate { color: #4dabf7; }
+        .reactivity-low { color: #51cf66; }
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #a0a0c0;
+            font-size: 1rem;
+            padding: 20px;
+        }
+        
+        @media (max-width: 1000px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .canvas-container, .info-panel {
+                width: 95%;
+                max-width: 500px;
+            }
+            .canvas-container {
+                height: auto;
+                aspect-ratio: 2/3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Metal Reactions Interactive Infographic</h1>
+        <p class="subtitle">Explore the reactivity series and chemical reactions of metals with air, water, and acids</p>
+        <div class="reactivity-key">
+            <div><span class="reactivity-high">Highly Reactive</span> (K, Na, Ca)</div>
+            <div><span class="reactivity-moderate">Moderately Reactive</span> (Mg, Al, Zn, Fe)</div>
+            <div><span class="reactivity-low">Less Reactive</span> (Pb, Cu, Hg, Ag, Au)</div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="panel canvas-container">
+            <canvas id="reactionsCanvas" width="400" height="600"></canvas>
+        </div>
+        
+        <div class="panel info-panel">
+            <div class="info-header">
+                <div class="metal-symbol">K</div>
+                <div class="metal-name">Potassium</div>
+            </div>
+            
+            <div class="reaction-selector">
+                <button class="selector-btn" data-reaction="air"><i>☁️</i> Air</button>
+                <button class="selector-btn" data-reaction="water"><i>💧</i> Water</button>
+                <button class="selector-btn" data-reaction="hydrochloricAcid"><i>🧪</i> Dilute HCl</button>
+                <button class="selector-btn" data-reaction="sulphuricAcid"><i>🧪</i> Dilute H₂SO₄</button>
+            </div>
+
+            <div class="reactions-container">
+                <!-- Reaction details will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Based on Chapter 6: Reactions of Metals | Microscopic World I & Metals</p>
+        <p>Reactivity Series: K > Na > Ca > Mg > Al > Zn > Fe > Pb > Cu > Hg > Ag > Au</p>
+    </footer>
+
+    <script>
+        // Metal data with reactions
+        const metals = [
+            {
+                symbol: "K", 
+                name: "Potassium",
+                reactivity: "high",
+                reactions: {
+                    air: { equation: "4K + O₂ → 2K₂O", description: "Reacts vigorously with oxygen to form potassium oxide. The reaction is highly exothermic and produces a bright flame." },
+                    water: { equation: "2K + 2H₂O → 2KOH + H₂", description: "Reacts explosively with cold water, producing hydrogen gas and potassium hydroxide solution. The reaction releases so much heat that the hydrogen gas often ignites." },
+                    hydrochloricAcid: { equation: "2K + 2HCl → 2KCl + H₂", description: "Reacts violently with dilute hydrochloric acid to produce salt and hydrogen gas. The reaction is extremely exothermic and potentially explosive." },
+                    sulphuricAcid: { equation: "2K + H₂SO₄ → K₂SO₄ + H₂", description: "Reacts violently with dilute sulphuric acid, producing potassium sulfate and hydrogen gas."}
+                }
+            },
+            {
+                symbol: "Na", 
+                name: "Sodium",
+                reactivity: "high",
+                reactions: {
+                    air: { equation: "4Na + O₂ → 2Na₂O", description: "Reacts rapidly with oxygen to form sodium oxide. The reaction produces a bright yellow flame." },
+                    water: { equation: "2Na + 2H₂O → 2NaOH + H₂", description: "Reacts vigorously with cold water, producing hydrogen gas and sodium hydroxide solution. The metal melts and darts around on the water surface." },
+                    hydrochloricAcid: { equation: "2Na + 2HCl → 2NaCl + H₂", description: "Reacts violently with dilute acids to produce salt and hydrogen gas. The reaction is highly exothermic." },
+                    sulphuricAcid: { equation: "2Na + H₂SO₄ → Na₂SO₄ + H₂", description: "Reacts violently with dilute sulphuric acid, producing sodium sulfate and hydrogen gas."}
+                }
+            },
+            {
+                symbol: "Ca", 
+                name: "Calcium",
+                reactivity: "high",
+                reactions: {
+                    air: { equation: "2Ca + O₂ → 2CaO", description: "Reacts with oxygen to form calcium oxide. The reaction is less vigorous than with potassium or sodium." },
+                    water: { equation: "Ca + 2H₂O → Ca(OH)₂ + H₂", description: "Reacts steadily with cold water, producing hydrogen gas and slightly soluble calcium hydroxide. The reaction is less vigorous than with sodium." },
+                    hydrochloricAcid: { equation: "Ca + 2HCl → CaCl₂ + H₂", description: "Reacts vigorously with dilute acids to produce salt and hydrogen gas. The reaction rate is moderate compared to more reactive metals." },
+                    sulphuricAcid: { equation: "Ca + H₂SO₄ → CaSO₄ + H₂", description: "Reacts with dilute sulphuric acid, but the reaction slows down due to the formation of insoluble calcium sulfate."}
+                }
+            },
+            {
+                symbol: "Mg", 
+                name: "Magnesium",
+                reactivity: "moderate",
+                reactions: {
+                    air: { equation: "2Mg + O₂ → 2MgO", description: "Burns with a bright white flame in air to form magnesium oxide. The reaction is highly exothermic and produces intense light." },
+                    water: { equation: "Mg + H₂O (steam) → MgO + H₂", description: "Reacts slowly with cold water but vigorously with steam to form magnesium oxide and hydrogen gas. The reaction with steam produces a bright white light." },
+                    hydrochloricAcid: { equation: "Mg + 2HCl → MgCl₂ + H₂", description: "Reacts vigorously with dilute acids to produce salt and hydrogen gas. The reaction is faster than with less reactive metals." },
+                    sulphuricAcid: { equation: "Mg + H₂SO₄ → MgSO₄ + H₂", description: "Reacts very vigorously with dilute sulphuric acid to produce magnesium sulfate and hydrogen gas."}
+                }
+            },
+            {
+                symbol: "Al", 
+                name: "Aluminium",
+                reactivity: "moderate",
+                reactions: {
+                    air: { equation: "4Al + 3O₂ → 2Al₂O₃", description: "Forms a protective oxide layer when exposed to air, preventing further reaction. When powdered, it burns brightly." },
+                    water: { equation: "2Al + 3H₂O (steam) → Al₂O₃ + 3H₂", description: "Reacts slowly with steam due to its protective oxide layer. When the oxide layer is removed, it reacts vigorously." },
+                    hydrochloricAcid: { equation: "2Al + 6HCl → 2AlCl₃ + 3H₂", description: "Reacts with dilute acids to produce salt and hydrogen gas, but the protective oxide layer initially slows the reaction." },
+                    sulphuricAcid: { equation: "2Al + 3H₂SO₄ → Al₂(SO₄)₃ + 3H₂", description: "Reacts readily with dilute sulphuric acid once the initial protective oxide layer is breached."}
+                }
+            },
+            {
+                symbol: "Zn", 
+                name: "Zinc",
+                reactivity: "moderate",
+                reactions: {
+                    air: { equation: "2Zn + O₂ → 2ZnO", description: "Burns in air with a bluish-green flame to form zinc oxide. The reaction is less vigorous than with magnesium." },
+                    water: { equation: "Zn + H₂O (steam) → ZnO + H₂", description: "Reacts with steam to form zinc oxide and hydrogen gas. The reaction requires continuous heating to sustain." },
+                    hydrochloricAcid: { equation: "Zn + 2HCl → ZnCl₂ + H₂", description: "Reacts steadily with dilute acids to produce salt and hydrogen gas. The reaction rate is moderate." },
+                    sulphuricAcid: { equation: "Zn + H₂SO₄ → ZnSO₄ + H₂", description: "Reacts steadily with dilute sulphuric acid to produce zinc sulfate and hydrogen gas."}
+                }
+            },
+            {
+                symbol: "Fe", 
+                name: "Iron",
+                reactivity: "moderate",
+                reactions: {
+                    air: { equation: "3Fe + 2O₂ → Fe₃O₄", description: "Reacts slowly with oxygen in moist air to form hydrated iron(III) oxide (rust). The reaction requires water." },
+                    water: { equation: "3Fe + 4H₂O (steam) → Fe₃O₄ + 4H₂", description: "Reacts with steam to form triiron tetroxide and hydrogen gas. The reaction is relatively slow." },
+                    hydrochloricAcid: { equation: "Fe + 2HCl → FeCl₂ + H₂", description: "Reacts slowly with dilute acids to produce iron(II) chloride and hydrogen gas. The reaction rate increases with acid concentration." },
+                    sulphuricAcid: { equation: "Fe + H₂SO₄ → FeSO₄ + H₂", description: "Reacts slowly with dilute sulphuric acid to produce iron(II) sulfate and hydrogen gas."}
+                }
+            },
+            {
+                symbol: "Pb", 
+                name: "Lead",
+                reactivity: "low",
+                reactions: {
+                    air: { equation: "2Pb + O₂ → 2PbO", description: "Reacts slowly with oxygen to form lead(II) oxide. A protective layer forms that prevents further reaction." },
+                    water: { equation: "No reaction", description: "Does not react with water or steam due to its low reactivity and protective oxide layer." },
+                    hydrochloricAcid: { equation: "Pb + 2HCl → PbCl₂ + H₂ (slow)", description: "Reacts very slowly with dilute acids due to the formation of insoluble lead chloride that coats the metal surface." },
+                    sulphuricAcid: { equation: "Pb + H₂SO₄ → PbSO₄ + H₂", description: "Reaction is extremely slow as it is stopped by a layer of insoluble lead(II) sulfate."}
+                }
+            },
+            {
+                symbol: "Cu", 
+                name: "Copper",
+                reactivity: "low",
+                reactions: {
+                    air: { equation: "2Cu + O₂ → 2CuO (heated)", description: "Reacts slowly with oxygen when heated to form copper(II) oxide. The metal develops a black coating." },
+                    water: { equation: "No reaction", description: "Does not react with water or steam due to its low position in the reactivity series." },
+                    hydrochloricAcid: { equation: "No reaction with dilute HCl", description: "Does not react with dilute hydrochloric acid. It requires oxidizing acids like nitric acid." },
+                    sulphuricAcid: { equation: "No reaction with dilute H₂SO₄", description: "Does not react with dilute sulphuric acid. It requires hot, concentrated sulphuric acid for a reaction."}
+                }
+            },
+            {
+                symbol: "Hg", 
+                name: "Mercury",
+                reactivity: "low",
+                reactions: {
+                    air: { equation: "2Hg + O₂ → 2HgO (heated)", description: "Reacts slowly with oxygen when heated to form mercury(II) oxide. The oxide decomposes easily on stronger heating." },
+                    water: { equation: "No reaction", description: "Does not react with water or steam due to its low reactivity." },
+                    hydrochloricAcid: { equation: "No reaction with dilute HCl", description: "Does not react with dilute acids. It requires oxidizing acids for reaction." },
+                    sulphuricAcid: { equation: "No reaction with dilute H₂SO₄", description: "Does not react with dilute sulphuric acid."}
+                }
+            },
+            {
+                symbol: "Ag", 
+                name: "Silver",
+                reactivity: "low",
+                reactions: {
+                    air: { equation: "No reaction", description: "Does not react with oxygen under normal conditions. It tarnishes due to reaction with sulfur compounds." },
+                    water: { equation: "No reaction", description: "Does not react with water or steam due to its very low reactivity." },
+                    hydrochloricAcid: { equation: "No reaction with dilute HCl", description: "Does not react with dilute hydrochloric or sulfuric acid. It dissolves in nitric acid." },
+                    sulphuricAcid: { equation: "No reaction with dilute H₂SO₄", description: "Does not react with dilute sulphuric acid."}
+                }
+            },
+            {
+                symbol: "Au", 
+                name: "Gold",
+                reactivity: "low",
+                reactions: {
+                    air: { equation: "No reaction", description: "Is unreactive and does not tarnish in air. It remains shiny indefinitely." },
+                    water: { equation: "No reaction", description: "Does not react with water or steam due to its extremely low reactivity." },
+                    hydrochloricAcid: { equation: "No reaction with acids", description: "Does not react with any single acid. It requires aqua regia (a mixture of nitric and hydrochloric acids) to dissolve." },
+                    sulphuricAcid: { equation: "No reaction", description: "Does not react with dilute sulphuric acid."}
+                }
+            }
+        ];
+
+        // Canvas setup
+        const canvas = document.getElementById('reactionsCanvas');
+        const ctx = canvas.getContext('2d');
+        const infoPanel = document.querySelector('.info-panel');
+        const metalSymbolEl = document.querySelector('.metal-symbol');
+        const metalNameEl = document.querySelector('.metal-name');
+        const reactionsContainer = document.querySelector('.reactions-container');
+        let selectedMetalIndex = 0;
+        let selectedReactionType = 'air'; // Default reaction type
+
+        // Colors
+        const colors = {
+            background: "#0d1425",
+            reactivityHigh: "#ff6b6b",
+            reactivityModerate: "#4dabf7",
+            reactivityLow: "#51cf66",
+            text: "#ffffff",
+            textSecondary: "#a0b0c0",
+            highlight: "#ffcc00",
+        };
+
+        // Draw the reactivity series
+        function drawReactivitySeries() {
+            // Clear canvas
+            ctx.fillStyle = colors.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw title
+            ctx.font = "bold 24px 'Segoe UI', sans-serif";
+            ctx.fillStyle = colors.highlight;
+            ctx.textAlign = "center";
+            ctx.fillText("Metal Reactivity Series", canvas.width/2, 30);
+            
+            // Draw reactivity labels
+            ctx.font = "bold 16px 'Segoe UI', sans-serif";
+            ctx.fillStyle = colors.reactivityHigh;
+            ctx.textAlign = "center";
+            ctx.fillText("Most Reactive", canvas.width/2, 60);
+            
+            ctx.fillStyle = colors.reactivityLow;
+            ctx.fillText("Least Reactive", canvas.width/2, 580);
+            
+            // Draw the series line
+            const xPos = canvas.width / 2;
+            ctx.beginPath();
+            ctx.moveTo(xPos, 85);
+            ctx.lineTo(xPos, 555);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw the metals
+            const metalSpacing = 40;
+            const startY = 90;
+            
+            for (let i = 0; i < metals.length; i++) {
+                const metal = metals[i];
+                const y = startY + i * metalSpacing;
+                
+                // Draw metal circle
+                ctx.beginPath();
+                ctx.arc(xPos, y, 18, 0, Math.PI * 2);
+                
+                if (metal.reactivity === "high") ctx.fillStyle = colors.reactivityHigh;
+                else if (metal.reactivity === "moderate") ctx.fillStyle = colors.reactivityModerate;
+                else ctx.fillStyle = colors.reactivityLow;
+                
+                ctx.fill();
+                
+                // Highlight selected metal
+                if (i === selectedMetalIndex) {
+                    ctx.strokeStyle = colors.highlight;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+                
+                // Draw metal symbol
+                ctx.font = "bold 16px 'Segoe UI', sans-serif";
+                ctx.fillStyle = "#ffffff";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(metal.symbol, xPos, y);
+            }
+        }
+
+        // Update info panel with selected metal data
+        function updateInfoPanel(metal, reactionType) {
+            metalSymbolEl.textContent = metal.symbol;
+            metalNameEl.textContent = metal.name;
+            
+            const reactionData = metal.reactions[reactionType];
+            let reactionHtml = '';
+            
+            if (reactionData) {
+                let icon = '';
+                let title = '';
+                switch(reactionType) {
+                    case 'air': 
+                        icon = '☁️';
+                        title = 'Reaction with Air';
+                        break;
+                    case 'water':
+                        icon = '💧';
+                        title = 'Reaction with Water';
+                        break;
+                    case 'hydrochloricAcid':
+                        icon = '🧪';
+                        title = 'Reaction with Dilute HCl';
+                        break;
+                    case 'sulphuricAcid':
+                        icon = '🧪';
+                        title = 'Reaction with Dilute H₂SO₄';
+                        break;
+                }
+
+                // Handle special display for H2O (steam)
+                let displayEquation = reactionData.equation.replace(
+                    /H₂O \(steam\)/g, 
+                    `<div style="display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle; line-height: 1.1;">
+                        <span>H₂O</span>
+                        <span style="font-size: 0.7em; color: #a0b0c0;">(steam)</span>
+                    </div>`
+                );
+
+                reactionHtml = `
+                    <div class="reaction">
+                        <div class="reaction-title"><i>${icon}</i> ${title}</div>
+                        <div class="reaction-equation">${displayEquation}</div>
+                        <div class="reaction-desc">${reactionData.description}</div>
+                    </div>
+                `;
+            }
+
+            reactionsContainer.innerHTML = reactionHtml;
+
+            // Update active state on selector buttons
+            document.querySelectorAll('.selector-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.reaction === reactionType);
+            });
+        }
+
+        // Initial setup
+        function init() {
+            updateInfoPanel(metals[selectedMetalIndex], selectedReactionType);
+            drawReactivitySeries();
+        }
+        
+        // Add click event to canvas
+        canvas.addEventListener('click', function(event) {
+            const rect = canvas.getBoundingClientRect();
+            // Adjust for canvas scaling if its display size is different from its resolution
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (event.clientX - rect.left) * scaleX;
+            const y = (event.clientY - rect.top) * scaleY;
+            
+            const startY = 90;
+            const xPos = canvas.width / 2;
+            const metalSpacing = 40;
+            
+            for (let i = 0; i < metals.length; i++) {
+                const metalY = startY + i * metalSpacing;
+                const distance = Math.sqrt(Math.pow(x - xPos, 2) + Math.pow(y - metalY, 2));
+                
+                if (distance <= 18) { // 18 is the radius of the circle
+                    selectedMetalIndex = i;
+                    updateInfoPanel(metals[i], selectedReactionType);
+                    drawReactivitySeries();
+                    break;
+                }
+            }
+        });
+
+        // Add event listeners for reaction type selector buttons
+        document.querySelectorAll('.selector-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedReactionType = btn.dataset.reaction;
+                updateInfoPanel(metals[selectedMetalIndex], selectedReactionType);
+            });
+        });
+
+        // Redraw on resize to handle responsive canvas size
+        window.addEventListener('resize', init);
+        
+        // Initial call
+        init();
+    </script>
+</body>
+</html>
