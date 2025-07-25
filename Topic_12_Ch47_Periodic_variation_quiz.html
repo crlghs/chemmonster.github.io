@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz: Periodic Properties</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Sound and Confetti Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #6dd5ed, #2193b0);
+            color: #4a4a4a;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .btn {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+        #flag-question-btn {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        #flag-question-btn.flagged {
+            background-color: #fef9c3;
+            border-color: #facc15;
+            color: #713f12;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            transition: width 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen p-4">
+    <div class="quiz-container card w-full max-w-3xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">Periodic Properties Quiz</h1>
+            <p class="text-lg text-gray-600 mt-2">Discover the patterns of the elements!</p>
+        </header>
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="text-center">
+            <i class="fas fa-table-cells-large text-6xl text-blue-500 mb-4"></i>
+            <h2 class="text-3xl font-bold mb-4">Welcome to the Periodic Properties Challenge!</h2>
+            <p class="text-gray-600 mb-6">Let's explore the trends that make the periodic table so powerful.</p>
+            <div class="text-left mb-6 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-bullseye text-blue-500 mr-3"></i>Quiz Objectives</h3>
+                <ul class="list-disc list-inside text-gray-700 space-y-2 pl-5">
+                    <li>Understand trends in melting points across periods.</li>
+                    <li>Explain variations in electrical conductivity.</li>
+                    <li>Relate element properties to their structure and bonding.</li>
+                </ul>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                     <h3 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-info-circle text-blue-500 mr-3"></i>Learning Tips</h3>
+                     <div class="pl-5 space-y-2 text-gray-700">
+                        <p>Use the <span class="font-bold">"🚩 Flag for Review"</span> button to mark tricky questions for later.</p>
+                        <p>Revisit this quiz to reinforce your learning through spaced repetition!</p>
+                     </div>
+                </div>
+            </div>
+            <p class="text-xl font-semibold mb-6">Are you ready to test your knowledge?</p>
+            <button id="proceed-to-setup-btn" class="w-full btn btn-primary">Let's Go!</button>
+        </div>
+
+        <!-- Setup Screen -->
+        <div id="setup-screen" class="hidden text-center">
+            <h2 class="text-2xl font-bold mb-4">Quiz Setup</h2>
+            <div class="text-left mb-6">
+                <label for="num-questions" class="block mb-2 font-medium text-center">Number of Questions:</label>
+                <select id="num-questions" class="p-2 border rounded-lg w-full bg-white">
+                    <option value="5">5 Questions</option>
+                    <option value="10" selected>10 Questions</option>
+                </select>
+            </div>
+            <div id="start-buttons-container" class="space-y-2">
+               <button id="start-quiz-btn" class="w-full btn btn-primary">Start New Quiz</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-bold">Question <span id="question-number"></span>/<span id="total-questions"></span></h2>
+                 <div class="flex items-center gap-4">
+                    <div class="text-lg font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">Score: <span id="score">0</span></div>
+                    <button id="flag-question-btn" title="Flag this question for review"></button>
+                 </div>
+            </div>
+            <p id="question-text" class="text-xl mb-6 bg-gray-100 p-4 rounded-lg"></p>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="feedback-container" class="hidden mt-4"></div>
+            <button id="next-question-btn" class="hidden w-full mt-4 btn bg-gray-700 text-white hover:bg-gray-800">Next Question</button>
+        </div>
+        
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden text-center">
+            <canvas id="confetti-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
+            <h2 id="results-title" class="text-3xl font-bold mb-2">Quiz Complete!</h2>
+            <p id="results-message" class="text-lg text-gray-600 mb-4"></p>
+            <p class="text-xl mb-2">Your final score is:</p>
+            <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500 mb-6" id="final-score"></p>
+            <div id="review-buttons-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <button id="review-incorrect-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-times-circle mr-2"></i>Review Incorrect</button>
+                <button id="review-flagged-btn" class="hidden w-full btn btn-secondary"><i class="fas fa-flag mr-2"></i>Review Flagged</button>
+            </div>
+            <button id="restart-quiz-btn" class="w-full btn btn-primary">Try Again</button>
+        </div>
+
+        <!-- Review Screen -->
+        <div id="review-screen" class="hidden">
+            <h2 id="review-title" class="text-2xl font-bold mb-4">Reviewing Questions</h2>
+            <div id="review-content" class="space-y-4"></div>
+            <div class="flex justify-between items-center mt-6">
+                <button id="review-prev-btn" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Prev</button>
+                <span id="review-counter" class="font-semibold"></span>
+                <button id="review-next-btn" class="btn btn-secondary">Next<i class="fas fa-arrow-right ml-2"></i></button>
+            </div>
+             <button id="back-to-results-btn" class="w-full btn btn-primary mt-4">Back to Results</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const questionBank = [
+                { question: "Which element has the highest melting point in Period 3?", options: ["Sodium (Na)", "Silicon (Si)", "Sulphur (S)", "Argon (Ar)"], answer: "Silicon (Si)", explanation: "Silicon has the highest melting point because it has a giant covalent structure. A large amount of energy is needed to break the strong covalent bonds between its atoms." },
+                { question: "Why does the melting point increase from Sodium (Na) to Aluminium (Al)?", options: ["The atoms get smaller.", "The number of delocalized electrons increases.", "The bonding changes from metallic to covalent.", "The nuclear charge decreases."], answer: "The number of delocalized electrons increases.", explanation: "Na, Mg, and Al all have giant metallic structures. As you move from Na to Al, the number of delocalized electrons contributed by each atom increases (from 1 to 3), resulting in a stronger metallic bond." },
+                { question: "Why is the melting point of Carbon (diamond) extremely high, while Neon's is extremely low?", options: ["Carbon is a solid and Neon is a gas.", "Carbon has stronger van der Waals forces.", "Carbon has a giant covalent structure while Neon has a simple molecular structure.", "Carbon has more electrons than Neon."], answer: "Carbon has a giant covalent structure while Neon has a simple molecular structure.", explanation: "Carbon (diamond) has a giant covalent structure requiring immense energy to break strong covalent bonds. Neon exists as individual atoms held by very weak van der Waals forces." },
+                { question: "Why does Sulphur have a higher melting point than Phosphorus?", options: ["Sulphur has stronger covalent bonds.", "Sulphur is a metal.", "S₈ molecules are larger than P₄ molecules.", "Phosphorus is more reactive."], answer: "S₈ molecules are larger than P₄ molecules.", explanation: "Both are simple molecular substances. S₈ molecules are larger and have more electrons than P₄ molecules, leading to stronger van der Waals forces between them." },
+                { question: "Arrange the following Period 2 elements in order of INCREASING melting point:", options: ["Nitrogen < Lithium < Beryllium < Carbon", "Lithium < Beryllium < Nitrogen < Carbon", "Carbon < Beryllium < Lithium < Nitrogen", "Nitrogen < Carbon < Lithium < Beryllium"], answer: "Nitrogen < Lithium < Beryllium < Carbon", explanation: "Nitrogen (simple molecular) has the lowest m.p. Li and Be (metallic) are next, with Be's bond being stronger. Carbon (giant covalent) has the highest m.p." },
+                { question: "Arrange these Period 3 elements in order of DECREASING electrical conductivity:", options: ["Al > Na > Si > S", "Si > Al > Na > S", "S > Si > Na > Al", "Al > Si > Na > S"], answer: "Al > Na > Si > S", explanation: "Conductivity depends on delocalized electrons. Al (3) > Na (1). Si is a semiconductor. S is a molecular insulator." },
+                { question: "An element 'X' is in Period 3, Group V. How would you expect its melting point to compare to its neighbors, Silicon and Sulphur?", options: ["Higher than both Si and S", "Lower than Si, but higher than S", "Much lower than Si, and comparable to S", "About halfway between Si and S"], answer: "Much lower than Si, and comparable to S", explanation: "Element 'X' is Phosphorus (P). Moving from Si (giant covalent) to P (simple molecular, P₄) causes a massive drop in melting point. P and S both have simple molecular structures." },
+                { question: "Magnesium (Period 3) is a solid with a high melting point, while Chlorine (Period 3) is a gas at room temp. What is the most fundamental reason for this difference?", options: ["The difference in atomic mass.", "Magnesium has fewer valence electrons.", "The difference in their bonding and structure.", "Chlorine is more electronegative."], answer: "The difference in their bonding and structure.", explanation: "Mg has a giant metallic structure with strong bonds. Cl exists as discrete Cl₂ molecules with weak forces between them." },
+                { question: "Arrange the following noble gases in order of INCREASING boiling point:", options: ["Argon < Neon < Helium", "Helium < Argon < Neon", "Neon < Helium < Argon", "Helium < Neon < Argon"], answer: "Helium < Neon < Argon", explanation: "Boiling point in noble gases depends on van der Waals forces. As you go down the group, atoms get larger with more electrons, leading to stronger forces and a higher boiling point." },
+                { question: "Arrange these elements from Period 2 and 3 in order of DECREASING melting point:", options: ["C > Si > Al > Mg", "Si > C > Al > Mg", "C > Al > Mg > Si", "Al > Mg > C > Si"], answer: "C > Si > Al > Mg", explanation: "C (diamond) has the highest m.p. (strongest giant covalent). Si (giant covalent) is next but has weaker bonds. Al and Mg are metallic, with Al having stronger bonds than Mg." },
+                { question: "Arrange the following Period 3 elements in order of INCREASING boiling point:", options: ["Ar < Cl < P < S", "Ar < P < Cl < S", "P < S < Cl < Ar", "Cl < Ar < P < S"], answer: "Ar < Cl < P < S", explanation: "All have simple molecular structures. Boiling point depends on the strength of van der Waals forces, which increase with molecular size/number of electrons. The order is Ar < Cl₂ < P₄ < S₈." }
+            ];
+            
+            const correctSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+            const incorrectSound = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.2 } }).toDestination();
+
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const setupScreen = document.getElementById('setup-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            const reviewScreen = document.getElementById('review-screen');
+            const proceedToSetupBtn = document.getElementById('proceed-to-setup-btn');
+            const startQuizBtn = document.getElementById('start-quiz-btn');
+            const restartQuizBtn = document.getElementById('restart-quiz-btn');
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+            const flagQuestionBtn = document.getElementById('flag-question-btn');
+            const reviewIncorrectBtn = document.getElementById('review-incorrect-btn');
+            const reviewFlaggedBtn = document.getElementById('review-flagged-btn');
+            const backToResultsBtn = document.getElementById('back-to-results-btn');
+            const reviewPrevBtn = document.getElementById('review-prev-btn');
+            const reviewNextBtn = document.getElementById('review-next-btn');
+
+            const questionNumberEl = document.getElementById('question-number');
+            const totalQuestionsEl = document.getElementById('total-questions');
+            const scoreEl = document.getElementById('score');
+            const questionTextEl = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const finalScoreEl = document.getElementById('final-score');
+            const resultsTitleEl = document.getElementById('results-title');
+            const resultsMessageEl = document.getElementById('results-message');
+            const numQuestionsSelect = document.getElementById('num-questions');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const progressBar = document.getElementById('progress-bar');
+            const reviewContent = document.getElementById('review-content');
+            const reviewCounter = document.getElementById('review-counter');
+            const reviewTitle = document.getElementById('review-title');
+            
+            let questions = [];
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let flaggedQuestions = [];
+            let incorrectlyAnswered = [];
+            let reviewList = [];
+            let currentReviewIndex = 0;
+            let quizInProgress = false;
+
+            const correctMessages = ["Great job! 👍", "Excellent! 🎉", "You've got it! ✨", "Correct! ✅", "Awesome! 🤩"];
+            const incorrectMessages = ["Not quite. 🤔", "Keep trying! 💪", "That's a common mistake.", "Almost there! 🧐"];
+
+            function saveState() {
+                if (!quizInProgress) return;
+                const state = { questions, currentQuestionIndex, score, flaggedQuestions, incorrectlyAnswered, quizInProgress };
+                localStorage.setItem('periodicQuizState', JSON.stringify(state));
+            }
+
+            function loadState() {
+                const savedState = localStorage.getItem('periodicQuizState');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    questions = state.questions;
+                    currentQuestionIndex = state.currentQuestionIndex;
+                    score = state.score;
+                    flaggedQuestions = state.flaggedQuestions;
+                    incorrectlyAnswered = state.incorrectlyAnswered;
+                    quizInProgress = state.quizInProgress;
+                    return true;
+                }
+                return false;
+            }
+
+            function clearState() {
+                localStorage.removeItem('periodicQuizState');
+            }
+
+            function showSetupScreen() {
+                welcomeScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+                
+                const startButtonsContainer = document.getElementById('start-buttons-container');
+                const existingResumeBtn = document.getElementById('resume-quiz-btn');
+                if (existingResumeBtn) existingResumeBtn.remove();
+
+                if (loadState() && quizInProgress) {
+                    const resumeBtn = document.createElement('button');
+                    resumeBtn.id = 'resume-quiz-btn';
+                    resumeBtn.textContent = 'Resume Previous Quiz';
+                    resumeBtn.className = 'w-full btn btn-secondary';
+                    startButtonsContainer.appendChild(resumeBtn);
+                    resumeBtn.addEventListener('click', resumeQuiz);
+                }
+            }
+
+            function resumeQuiz() {
+                setupScreen.classList.add('hidden');
+                if (currentQuestionIndex >= questions.length) {
+                    showResults();
+                } else {
+                    quizScreen.classList.remove('hidden');
+                    totalQuestionsEl.textContent = questions.length;
+                    scoreEl.textContent = score;
+                    displayQuestion();
+                }
+            }
+            
+            function startQuiz() {
+                Tone.start();
+                clearState();
+                quizInProgress = true;
+                const numQuestions = parseInt(numQuestionsSelect.value);
+                score = 0;
+                currentQuestionIndex = 0;
+                flaggedQuestions = [];
+                incorrectlyAnswered = [];
+                
+                questions = questionBank.sort(() => 0.5 - Math.random()).slice(0, numQuestions);
+
+                setupScreen.classList.add('hidden');
+                resultsScreen.classList.add('hidden');
+                reviewScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                
+                totalQuestionsEl.textContent = questions.length;
+                scoreEl.textContent = score;
+                displayQuestion();
+                saveState();
+            }
+
+            function displayQuestion() {
+                if (currentQuestionIndex >= questions.length) {
+                    quizInProgress = false;
+                    showResults();
+                    saveState();
+                    clearState();
+                    return;
+                }
+                feedbackContainer.classList.add('hidden');
+                nextQuestionBtn.classList.add('hidden');
+                
+                const question = questions[currentQuestionIndex];
+                questionNumberEl.textContent = currentQuestionIndex + 1;
+                questionTextEl.innerHTML = question.question;
+                
+                optionsContainer.innerHTML = '';
+                
+                progressBar.style.width = `${((currentQuestionIndex) / questions.length) * 100}%`;
+                
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                
+                const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
+                shuffledOptions.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.innerHTML = optionText;
+                    button.className = 'option-btn btn';
+                    button.onclick = () => checkAnswer(optionText, question.answer, button, question.explanation);
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            function checkAnswer(selectedAnswer, correctAnswer, button, explanation) {
+                optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+                
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                    scoreEl.textContent = score;
+                    button.classList.add('correct');
+                    correctSound.triggerAttackRelease('C5', '8n', Tone.now());
+                    feedbackContainer.className = 'feedback feedback-correct';
+                    feedbackContainer.innerHTML = `<p class="font-bold mb-2">${correctMessages[Math.floor(Math.random() * correctMessages.length)]}</p><p>${explanation}</p>`;
+                } else {
+                    button.classList.add('incorrect');
+                    incorrectSound.triggerAttackRelease('A2', '8n', Tone.now());
+                    optionsContainer.querySelectorAll('.option-btn').forEach(btn => {
+                        if (btn.innerHTML === correctAnswer) btn.classList.add('correct');
+                    });
+                    incorrectlyAnswered.push({ ...questions[currentQuestionIndex], userAnswer: selectedAnswer });
+                    feedbackContainer.className = 'feedback feedback-incorrect';
+                    feedbackContainer.innerHTML = `<p class="font-bold mb-2">${incorrectMessages[Math.floor(Math.random() * incorrectMessages.length)]}</p><p>${explanation}</p>`;
+                }
+                
+                feedbackContainer.classList.remove('hidden');
+                nextQuestionBtn.classList.remove('hidden');
+                progressBar.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+                saveState();
+            }
+
+            function showResults() {
+                quizInProgress = false;
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                const finalPercentage = questions.length > 0 ? score / questions.length : 0;
+                finalScoreEl.textContent = `${score} / ${questions.length}`;
+
+                if (finalPercentage >= 0.8) {
+                    resultsTitleEl.textContent = "Excellent Work! 🌟";
+                    resultsMessageEl.textContent = "You have a strong grasp of periodic trends!";
+                    const confettiCanvas = document.getElementById('confetti-canvas');
+                    const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+                    myConfetti({ particleCount: 200, spread: 160, origin: { y: 0.6 } });
+                } else if (finalPercentage >= 0.5) {
+                    resultsTitleEl.textContent = "Good Job! 👍";
+                    resultsMessageEl.textContent = "You're well on your way to mastering these concepts.";
+                } else {
+                    resultsTitleEl.textContent = "Keep Going! 💪";
+                    resultsMessageEl.textContent = "Practice makes perfect. Give it another try!";
+                }
+
+                reviewIncorrectBtn.classList.toggle('hidden', incorrectlyAnswered.length === 0);
+                reviewFlaggedBtn.classList.toggle('hidden', flaggedQuestions.length === 0);
+                clearState();
+            }
+
+            function startReview(mode) {
+                currentReviewIndex = 0;
+                if (mode === 'incorrect') {
+                    reviewList = incorrectlyAnswered;
+                    reviewTitle.textContent = "Reviewing Incorrect Answers";
+                } else {
+                    reviewList = flaggedQuestions.map(index => {
+                        const question = questions[index];
+                        const incorrectAttempt = incorrectlyAnswered.find(item => item.question === question.question);
+                        return incorrectAttempt ? incorrectAttempt : question;
+                    });
+                    reviewTitle.textContent = "Reviewing Flagged Questions";
+                }
+                
+                if (reviewList.length > 0) {
+                    resultsScreen.classList.add('hidden');
+                    reviewScreen.classList.remove('hidden');
+                    displayReviewQuestion();
+                }
+            }
+
+            function displayReviewQuestion() {
+                const item = reviewList[currentReviewIndex];
+                reviewContent.innerHTML = `
+                    <div class="p-4 bg-gray-100 rounded-lg">
+                        <p class="font-bold text-lg">${item.question}</p>
+                    </div>
+                    ${item.userAnswer ? `<p class="text-red-600"><strong>Your Answer:</strong> ${item.userAnswer}</p>` : ''}
+                    <p class="text-green-600"><strong>Correct Answer:</strong> ${item.answer}</p>
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                        <p><strong>Explanation:</strong> ${item.explanation}</p>
+                    </div>
+                `;
+                reviewCounter.textContent = `${currentReviewIndex + 1} / ${reviewList.length}`;
+                reviewPrevBtn.disabled = currentReviewIndex === 0;
+                reviewNextBtn.disabled = currentReviewIndex === reviewList.length - 1;
+            }
+
+            flagQuestionBtn.addEventListener('click', () => {
+                const indexInFlagged = flaggedQuestions.indexOf(currentQuestionIndex);
+                if (indexInFlagged > -1) {
+                    flaggedQuestions.splice(indexInFlagged, 1);
+                } else {
+                    flaggedQuestions.push(currentQuestionIndex);
+                }
+                const isFlagged = flaggedQuestions.includes(currentQuestionIndex);
+                flagQuestionBtn.classList.toggle('flagged', isFlagged);
+                flagQuestionBtn.innerHTML = isFlagged ? '🏁 Flagged' : '🚩 Flag for Review';
+                saveState();
+            });
+
+            proceedToSetupBtn.addEventListener('click', showSetupScreen);
+            reviewIncorrectBtn.addEventListener('click', () => startReview('incorrect'));
+            reviewFlaggedBtn.addEventListener('click', () => startReview('flagged'));
+            backToResultsBtn.addEventListener('click', () => {
+                reviewScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+            });
+            reviewPrevBtn.addEventListener('click', () => {
+                if (currentReviewIndex > 0) {
+                    currentReviewIndex--;
+                    displayReviewQuestion();
+                }
+            });
+            reviewNextBtn.addEventListener('click', () => {
+                if (currentReviewIndex < reviewList.length - 1) {
+                    currentReviewIndex++;
+                    displayReviewQuestion();
+                }
+            });
+
+            startQuizBtn.addEventListener('click', startQuiz);
+            restartQuizBtn.addEventListener('click', () => {
+                resultsScreen.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
+            });
+            nextQuestionBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                displayQuestion();
+            });
+        });
+    </script>
+</body>
+</html>

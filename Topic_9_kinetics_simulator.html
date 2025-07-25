@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Reaction Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #e0f2fe; 
+        }
+        /* MODIFICATION: Removed 'height: 100%' and 'overflow: hidden' to enable natural page scrolling. */
+        html, body { 
+            margin: 0; 
+        }
+        /* MODIFICATION: Changed 'height' to 'min-height' to allow the container to grow if content is too tall for the screen. */
+        #main-container { 
+            min-height: calc(100vh - 5rem); 
+        }
+        .panel { 
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn { 
+            transition: all 0.2s ease-in-out; 
+        }
+        .btn:active { 
+            transform: scale(0.96); 
+        }
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right .7em top 50%;
+            background-size: .65em auto;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+        }
+        @keyframes blink {
+            50% {
+                opacity: 0.6;
+            }
+        }
+        .blinking {
+            animation: blink 1.2s linear infinite;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col items-center p-4">
+
+    <div class="text-center w-full max-w-7xl flex-shrink-0">
+        <h1 id="equationTitle" class="text-2xl md:text-3xl font-bold text-slate-900">Ideal Reaction Kinetics Simulator</h1>
+    </div>
+
+    <div id="main-container" class="w-full max-w-7xl bg-transparent rounded-2xl p-4 mt-4">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+
+            <!-- Left Column: Controls & Microscopic View -->
+            <div class="flex flex-col gap-4 h-full">
+                <div class="panel flex flex-col p-4 rounded-xl flex-grow h-1/2">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-md font-semibold text-center flex-grow text-slate-700">Microscopic View</h2>
+                        <div class="flex space-x-3 text-xs font-medium">
+                            <span class="flex items-center text-blue-600"><span class="w-3 h-3 rounded-full bg-blue-500 mr-1.5"></span>A</span>
+                            <span class="flex items-center text-red-600"><span class="w-3 h-3 rounded-full bg-red-500 mr-1.5"></span>B</span>
+                            <span class="flex items-center text-green-600"><span class="w-3 h-3 rounded-full bg-green-500 mr-1.5"></span>C</span>
+                        </div>
+                    </div>
+                    <div class="flex-grow relative w-full h-full flex items-center justify-center">
+                        <canvas id="simulationCanvas" class="bg-slate-100 border-2 border-slate-200 rounded-lg w-full h-full"></canvas>
+                    </div>
+                </div>
+                <div class="panel p-4 rounded-xl flex flex-col justify-between flex-shrink-0">
+                    <div class="space-y-3">
+                        <h2 class="text-xl font-semibold text-center mb-2 text-slate-700">Controls</h2>
+                        <div id="completionMessage" class="hidden text-center font-semibold text-emerald-600 bg-emerald-100 p-2 rounded-md"></div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label for="coeffA" class="font-medium text-blue-600 text-sm">coefficient of A</label>
+                                <select id="coeffA" class="w-full p-2 border border-slate-300 rounded-md mt-1 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="coeffB" class="font-medium text-red-600 text-sm">coefficient of B</label>
+                                <select id="coeffB" class="w-full p-2 border border-slate-300 rounded-md mt-1 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="coeffC" class="font-medium text-green-600 text-sm">coefficient of C</label>
+                                <select id="coeffC" class="w-full p-2 border border-slate-300 rounded-md mt-1 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <hr class="border-slate-200"/>
+                        <div>
+                            <div class="flex justify-between items-center"><label class="font-medium text-slate-600 text-sm">initial concentration of A</label><span id="concAValue" class="font-mono text-slate-500 text-sm">0.05 M</span></div>
+                            <input type="range" id="concA" value="0.05" min="0.01" max="0.2" step="0.01" class="w-full">
+                        </div>
+                         <div>
+                            <div class="flex justify-between items-center"><label class="font-medium text-slate-600 text-sm">initial concentration of B</label><span id="concBValue" class="font-mono text-slate-500 text-sm">0.10 M</span></div>
+                            <input type="range" id="concB" value="0.10" min="0.01" max="0.2" step="0.01" class="w-full">
+                        </div>
+                        <hr class="border-slate-200"/>
+                        <div>
+                            <div class="flex justify-between items-center"><label class="font-medium text-slate-600 text-sm">Rate Constant (k)</label><span id="rateConstantValue" class="font-mono text-slate-500 text-sm">1.50</span></div>
+                            <input type="range" id="rateConstantSlider" min="0.1" max="10" value="1.5" step="0.1" class="w-full">
+                        </div>
+                         <div>
+                            <div class="flex justify-between items-center"><label class="font-medium text-slate-600 text-sm">Temperature</label><span id="tempValue" class="font-mono text-slate-500 text-sm">298 K</span></div>
+                            <input type="range" id="tempSlider" min="273" max="400" value="298" step="1" class="w-full">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="grid grid-cols-3 gap-3">
+                            <button id="startButton" class="btn bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-3 rounded-lg text-sm shadow-sm">Start</button>
+                            <button id="stopButton" class="btn bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-3 rounded-lg text-sm shadow-sm">Stop</button>
+                            <button id="resetButton" class="btn bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-3 rounded-lg text-sm shadow-sm">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Graphs -->
+            <div class="lg:col-span-2 flex flex-col gap-4 h-full">
+                <div class="panel p-3 rounded-xl flex flex-col flex-grow min-h-0">
+                    <h3 class="text-lg font-semibold text-center mb-1 text-slate-700">Concentration vs. Time</h3>
+                    <div class="relative flex-grow min-h-0"><canvas id="concentrationChart"></canvas></div>
+                </div>
+                <div class="panel p-3 rounded-xl flex flex-col flex-grow min-h-0">
+                    <h3 class="text-lg font-semibold text-center mb-1 text-slate-700">Rate vs. Time</h3>
+                     <div class="relative flex-grow min-h-0"><canvas id="rateChart"></canvas></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const concASlider = document.getElementById('concA');
+        const concBSlider = document.getElementById('concB');
+        const coeffASelect = document.getElementById('coeffA');
+        const coeffBSelect = document.getElementById('coeffB');
+        const coeffCSelect = document.getElementById('coeffC');
+        const rateConstantSlider = document.getElementById('rateConstantSlider');
+        const tempSlider = document.getElementById('tempSlider');
+        
+        const concAValue = document.getElementById('concAValue');
+        const concBValue = document.getElementById('concBValue');
+        const rateConstantValue = document.getElementById('rateConstantValue');
+        const tempValue = document.getElementById('tempValue');
+        
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const resetButton = document.getElementById('resetButton');
+        const equationTitle = document.getElementById('equationTitle');
+        const completionMessageEl = document.getElementById('completionMessage');
+
+        // --- State Variables ---
+        let simulationState = 'stopped';
+        let simulationInterval, animationFrameId;
+        let concentrations = { a: 0, b: 0, c: 0 };
+        let coefficients = { a: 1, b: 1, c: 1 };
+        let initialConcentrations = { a: 0, b: 0 };
+        let k_base = 1.5;
+        let k_effective = 1.5;
+        let temperature = 298;
+        let time = 0;
+        const dt = 0.05;
+        let currentXMax = 60;
+        let particles = [];
+        
+        const PARTICLE_SCALING_FACTOR = 1000;
+        const T_REF = 298; // Reference temperature in Kelvin for base k
+        const EA_OVER_R = 5000; // Effective (Ea / R) value for Arrhenius equation
+        const COMPLETION_THRESHOLD = 0.001; // 0.1% of initial concentration
+
+        // --- Chart Instances ---
+        let concentrationChart, rateChart;
+        
+        // --- Particle Class ---
+        class Particle {
+            constructor(x, y, type, radius = 2.5) {
+                this.x = x; this.y = y; this.type = type; this.radius = radius;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.color = type === 'A' ? '#3b82f6' : type === 'B' ? '#ef4444' : '#22c55e'; // C is now green
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update(width, height) {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x + this.radius > width || this.x - this.radius < 0) this.vx *= -1;
+                if (this.y + this.radius > height || this.y - this.radius < 0) this.vy *= -1;
+            }
+        }
+
+        // --- Simulation Core ---
+        function init() {
+            simulationState = 'stopped';
+            clearInterval(simulationInterval);
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+            
+            completionMessageEl.classList.add('hidden');
+            completionMessageEl.classList.remove('blinking');
+            
+            initialConcentrations.a = parseFloat(concASlider.value);
+            initialConcentrations.b = parseFloat(concBSlider.value);
+            coefficients.a = parseInt(coeffASelect.value);
+            coefficients.b = parseInt(coeffBSelect.value);
+            coefficients.c = parseInt(coeffCSelect.value);
+            concentrations.a = initialConcentrations.a;
+            concentrations.b = initialConcentrations.b;
+            concentrations.c = 0;
+            k_base = parseFloat(rateConstantSlider.value);
+            temperature = parseFloat(tempSlider.value);
+            time = 0;
+            currentXMax = 60;
+            
+            calculateEffectiveK();
+            updateAllValueDisplays();
+            updateEquationTitle();
+            setupCharts();
+            updateParticleView();
+            animateParticles();
+            updateUI();
+        }
+
+        function runSimulationStep() {
+            if (simulationState !== 'running') return;
+
+            const rate = k_effective * Math.pow(concentrations.a, coefficients.a) * Math.pow(concentrations.b, coefficients.b);
+            const change = rate * dt;
+            
+            concentrations.a = Math.max(0, concentrations.a - (coefficients.a * change));
+            concentrations.b = Math.max(0, concentrations.b - (coefficients.b * change));
+            concentrations.c += (coefficients.c * change);
+            
+            time += dt;
+
+            updateCharts();
+            updateParticleView();
+            checkCompletion();
+        }
+        
+        function checkCompletion() {
+            const limitingReactant = (initialConcentrations.a / coefficients.a) < (initialConcentrations.b / coefficients.b) ? 'a' : 'b';
+            const threshold = initialConcentrations[limitingReactant] * COMPLETION_THRESHOLD;
+
+            if (concentrations[limitingReactant] <= threshold) {
+                simulationState = 'stopped';
+                clearInterval(simulationInterval);
+                updateUI();
+                completionMessageEl.textContent = `Reaction complete in ${time.toFixed(1)}s`;
+                completionMessageEl.classList.remove('hidden');
+                completionMessageEl.classList.add('blinking');
+            }
+        }
+        
+        function calculateEffectiveK() {
+            k_effective = k_base * Math.exp(-EA_OVER_R * (1/temperature - 1/T_REF));
+        }
+        
+        function updateEquationTitle() {
+            equationTitle.textContent = `Ideal Kinetics: ${coefficients.a}A + ${coefficients.b}B → ${coefficients.c}C`;
+        }
+        
+        function updateParticleView() {
+            const targetA = Math.round(concentrations.a * PARTICLE_SCALING_FACTOR);
+            const targetB = Math.round(concentrations.b * PARTICLE_SCALING_FACTOR);
+            const targetC = Math.round(concentrations.c * PARTICLE_SCALING_FACTOR);
+            
+            syncParticles('A', targetA);
+            syncParticles('B', targetB);
+            syncParticles('C', targetC);
+        }
+        
+        function syncParticles(type, targetCount) {
+            let currentParticles = particles.filter(p => p.type === type);
+            let diff = targetCount - currentParticles.length;
+
+            if (diff > 0) { // Add particles
+                for (let i = 0; i < diff; i++) {
+                    particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, type));
+                }
+            } else if (diff < 0) { // Remove particles
+                for (let i = 0; i > diff; i--) {
+                    const indexToRemove = particles.findIndex(p => p.type === type);
+                    if (indexToRemove > -1) {
+                        particles.splice(indexToRemove, 1);
+                    }
+                }
+            }
+        }
+        
+        function animateParticles() {
+            if(!canvas) return;
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update(rect.width, rect.height);
+                p.draw();
+            });
+            animationFrameId = requestAnimationFrame(animateParticles);
+        }
+
+        // --- UI & Controls ---
+        function updateAllValueDisplays() {
+            concAValue.textContent = `${parseFloat(concASlider.value).toFixed(2)} M`;
+            concBValue.textContent = `${parseFloat(concBSlider.value).toFixed(2)} M`;
+            rateConstantValue.textContent = parseFloat(rateConstantSlider.value).toFixed(2);
+            tempValue.textContent = `${tempSlider.value} K`;
+        }
+        
+        function updateUI() {
+            const isStopped = simulationState === 'stopped';
+            [concASlider, concBSlider, coeffASelect, coeffBSelect, coeffCSelect, rateConstantSlider, tempSlider].forEach(el => el.disabled = !isStopped);
+            startButton.disabled = simulationState === 'running';
+            stopButton.textContent = simulationState === 'paused' ? 'Resume' : 'Stop';
+            stopButton.disabled = isStopped;
+        }
+
+        startButton.addEventListener('click', () => {
+            if (simulationState === 'stopped') init();
+            simulationState = 'running';
+            simulationInterval = setInterval(runSimulationStep, 20);
+            if(!animationFrameId) animateParticles();
+            updateUI();
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (simulationState === 'running') {
+                simulationState = 'paused';
+                clearInterval(simulationInterval);
+            } else if (simulationState === 'paused') {
+                simulationState = 'running';
+                simulationInterval = setInterval(runSimulationStep, 20);
+            }
+            updateUI();
+        });
+        
+        resetButton.addEventListener('click', () => {
+            simulationState = 'stopped';
+            concASlider.value = "0.05";
+            concBSlider.value = "0.10";
+            coeffASelect.value = "1";
+            coeffBSelect.value = "1";
+            coeffCSelect.value = "1";
+            rateConstantSlider.value = 1.5;
+            tempSlider.value = 298;
+            init();
+        });
+        
+        [concASlider, concBSlider, coeffASelect, coeffBSelect, coeffCSelect, rateConstantSlider, tempSlider].forEach(input => {
+            input.addEventListener('input', () => { 
+                updateAllValueDisplays();
+                if (simulationState === 'stopped') init(); 
+                else if (input.id === 'tempSlider' || input.id === 'rateConstantSlider') {
+                    temperature = parseFloat(tempSlider.value);
+                    k_base = parseFloat(rateConstantSlider.value);
+                    calculateEffectiveK();
+                }
+            });
+        });
+
+
+        // --- Charting & State Readouts ---
+        function setupCharts() {
+            if (concentrationChart) concentrationChart.destroy();
+            if (rateChart) rateChart.destroy();
+            
+            const commonXAxisOptions = { type: 'linear', title: { display: true, text: 'Time (s)' }, min: 0, max: currentXMax };
+            const commonOptions = { responsive: true, maintainAspectRatio: false, animation: false, parsing: false, elements: { point: { radius: 0 } } };
+
+            concentrationChart = new Chart('concentrationChart', {
+                type: 'line',
+                data: { datasets: [
+                    { label: '[A]', data: [{x: 0, y: concentrations.a}], borderColor: '#3b82f6', tension: 0.1 },
+                    { label: '[B]', data: [{x: 0, y: concentrations.b}], borderColor: '#ef4444', tension: 0.1 },
+                    { label: '[C]', data: [{x: 0, y: concentrations.c}], borderColor: '#22c55e', tension: 0.1 }
+                ]},
+                options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { x: commonXAxisOptions, y: { beginAtZero: true, title: { display: true, text: 'Concentration (mol/dm³)' } } } }
+            });
+            
+            const initialRate = k_effective * Math.pow(concentrations.a, coefficients.a) * Math.pow(concentrations.b, coefficients.b);
+            rateChart = new Chart('rateChart', {
+                type: 'line',
+                data: { datasets: [{ label: 'Rate', data: [{x: 0, y: initialRate}], borderColor: '#f59e0b', tension: 0.1 }] },
+                options: { ...commonOptions, plugins: { legend: { display: false } }, scales: { x: commonXAxisOptions, y: { beginAtZero: true, title: { display: true, text: 'Rate (M/s)' } } } }
+            });
+        }
+        
+        function updateCharts() {
+            concentrationChart.data.datasets[0].data.push({ x: time, y: concentrations.a });
+            concentrationChart.data.datasets[1].data.push({ x: time, y: concentrations.b });
+            concentrationChart.data.datasets[2].data.push({ x: time, y: concentrations.c });
+            
+            const rate = k_effective * Math.pow(concentrations.a, coefficients.a) * Math.pow(concentrations.b, coefficients.b);
+            rateChart.data.datasets[0].data.push({ x: time, y: rate });
+
+            if (time >= currentXMax) {
+                currentXMax += 60;
+                concentrationChart.options.scales.x.max = currentXMax;
+                rateChart.options.scales.x.max = currentXMax;
+            }
+
+            concentrationChart.update('none');
+            rateChart.update('none');
+        }
+
+        // --- Initial Load ---
+        init();
+    });
+    </script>
+</body>
+</html>

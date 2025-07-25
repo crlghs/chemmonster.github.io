@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Tangent Line Visualizer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        canvas {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8 lg:p-10 flex items-center justify-center min-h-screen">
+    <div class="container mx-auto max-w-4xl bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">Dynamic Tangent Line Visualizer</h1>
+
+        <p class="text-gray-600 text-center mb-6 max-w-2xl mx-auto">
+            Explore how the instantaneous rate of reaction is represented by the slope of the tangent line on a concentration-time graph.
+            Click and drag anywhere on the graph to observe the changing slopes for all visible species.
+        </p>
+
+        <div class="flex flex-col gap-6">
+            <!-- Controls Area - Top horizontal section -->
+            <div class="w-full p-4 bg-gray-50 rounded-lg shadow-inner flex flex-col md:flex-row md:flex-wrap justify-between items-start gap-4">
+
+                <!-- Reaction Type & Active Species Selects -->
+                <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto md:flex-grow">
+                    <div class="flex-1 min-w-[150px]">
+                        <label for="reactionSelect" class="block text-sm font-medium text-gray-700 mb-1">Reaction Type:</label>
+                        <select id="reactionSelect" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
+                            <option value="0">Reaction 1 (Fast Decay)</option>
+                            <option value="1">Reaction 2 (Slower Decay)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Display Curves Checkboxes -->
+                <div class="w-full md:w-auto md:flex-grow">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Display Curves:</label>
+                    <div class="flex flex-wrap gap-x-4 gap-y-2">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showA" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="showA" class="ml-2 block text-sm text-gray-900">Reactant A</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showB" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                            <label for="showB" class="ml-2 block text-sm text-gray-900">Reactant B</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showC" class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                            <label for="showC" class="ml-2 block text-sm text-gray-900">Product C</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stoichiometric Coefficients -->
+                <div class="w-full md:w-auto md:flex-grow">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Stoichiometric Coefficients (a<span class="text-indigo-600">A</span> + b<span class="text-green-600">B</span> &rarr; c<span class="text-orange-600">C</span>):
+                    </label>
+                    <div class="flex justify-between items-center space-x-2">
+                        <div class="flex-1">
+                            <label for="coeffA" class="block text-xs text-indigo-600">a (for A)</label>
+                            <input type="number" id="coeffA" value="1" min="1" class="mt-1 block w-full pl-2 pr-2 py-1 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm text-center">
+                        </div>
+                        <div class="flex-1">
+                            <label for="coeffB" class="block text-xs text-green-600">b (for B)</label>
+                            <input type="number" id="coeffB" value="1" min="1" class="mt-1 block w-full pl-2 pr-2 py-1 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm text-center">
+                        </div>
+                        <div class="flex-1">
+                            <label for="coeffC" class="block text-xs text-orange-600">c (for C)</label>
+                            <input type="number" id="coeffC" value="1" min="1" class="mt-1 block w-full pl-2 pr-2 py-1 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm text-center">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full text-center mt-4">
+                    <button id="resetButton" class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                        Reset View
+                    </button>
+                </div>
+            </div>
+
+            <!-- Graph Area -->
+            <div class="w-full flex flex-col items-center">
+                <canvas id="reactionGraph" class="w-full h-96"></canvas>
+                <!-- Legend -->
+                <div class="flex flex-wrap justify-center gap-4 mt-4 text-sm">
+                    <div class="flex items-center">
+                        <span class="inline-block w-4 h-4 rounded-full bg-indigo-600 mr-2"></span>
+                        <span>Reactant A</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="inline-block w-4 h-4 rounded-full bg-green-600 mr-2"></span>
+                        <span>Reactant B</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="inline-block w-4 h-4 rounded-full bg-orange-600 mr-2"></span>
+                        <span>Product C</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Parameters - Below the graph -->
+            <div class="w-full mt-4 p-4 bg-white rounded-lg shadow-md border border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Current Parameters (at <span id="currentTime" class="font-bold text-indigo-600">0.00</span> s):</h3>
+                <div class="space-y-1">
+                    <p class="text-gray-700">Reactant A: Conc: <span id="concA" class="font-bold text-indigo-600">0.00</span> M, Rate: <span id="rateA" class="font-bold text-green-600">0.00</span> M/s</p>
+                    <p class="text-gray-700">Reactant B: Conc: <span id="concB" class="font-bold text-indigo-600">0.00</span> M, Rate: <span id="rateB" class="font-bold text-green-600">0.00</span> M/s</p>
+                    <p class="text-gray-700">Product C: Conc: <span id="concC" class="font-bold text-indigo-600">0.00</span> M, Rate: <span id="rateC" class="font-bold text-green-600">0.00</span> M/s</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('reactionGraph');
+        const ctx = canvas.getContext('2d');
+        const reactionSelect = document.getElementById('reactionSelect');
+        const coeffAInput = document.getElementById('coeffA');
+        const coeffBInput = document.getElementById('coeffB');
+        const coeffCInput = document.getElementById('coeffC');
+        const showACheckbox = document.getElementById('showA');
+        const showBCheckbox = document.getElementById('showB');
+        const showCCheckbox = document.getElementById('showC');
+        const currentTimeSpan = document.getElementById('currentTime');
+        const concASpan = document.getElementById('concA');
+        const rateASpan = document.getElementById('rateA');
+        const concBSpan = document.getElementById('concB');
+        const rateBSpan = document.getElementById('rateB');
+        const concCSpan = document.getElementById('concC');
+        const rateCSpan = document.getElementById('rateC');
+        const resetButton = document.getElementById('resetButton');
+
+        // Define initial concentrations
+        const initialA_base = 1.0;
+        const initialB_base = 1.0;
+        const initialC_base = 0;
+
+        // Colors for each species
+        const speciesColors = {
+            A: '#4f46e5',
+            B: '#16a34a',
+            C: '#ea580c'
+        };
+
+        let dataSets = [
+            {
+                name: "Reaction 1 (Fast Decay)",
+                baseA: [],
+                speciesData: { A: [], B: [], C: [] }
+            },
+            {
+                name: "Reaction 2 (Slower Decay)",
+                baseA: [],
+                speciesData: { A: [], B: [], C: [] }
+            }
+        ];
+
+        // Populate base A data
+        dataSets[0].baseA = Array.from({ length: 101 }, (_, i) => ({ time: i * 0.5, concentration: initialA_base * Math.exp(-0.05 * i * 0.5) }));
+        dataSets[1].baseA = Array.from({ length: 101 }, (_, i) => ({ time: i * 0.5, concentration: initialA_base * Math.exp(-0.02 * i * 0.5) }));
+
+        let currentReactionIndex = 0;
+        let displaySpecies = ['A'];
+        let currentTime = 0;
+        let isDragging = false;
+
+        // Graph dimensions
+        const padding = 50;
+        let graphWidth, graphHeight;
+        let maxTime, maxConcentration;
+        let xScale, yScale;
+
+        function generateSpeciesData() {
+            const coeffA = parseInt(coeffAInput.value);
+            const coeffB = parseInt(coeffBInput.value);
+            const coeffC = parseInt(coeffCInput.value);
+
+            dataSets.forEach(reactionSet => {
+                reactionSet.speciesData.A = [];
+                reactionSet.speciesData.B = [];
+                reactionSet.speciesData.C = [];
+
+                reactionSet.baseA.forEach(pointA => {
+                    const time = pointA.time;
+                    const concentrationA = pointA.concentration;
+                    const A_consumed = initialA_base - concentrationA;
+
+                    const B_consumed = A_consumed * (coeffB / coeffA);
+                    const C_produced = A_consumed * (coeffC / coeffA);
+
+                    const concentrationB = Math.max(0, initialB_base - B_consumed);
+                    const concentrationC = initialC_base + C_produced;
+
+                    reactionSet.speciesData.A.push({ time, concentration: concentrationA });
+                    reactionSet.speciesData.B.push({ time, concentration: concentrationB });
+                    reactionSet.speciesData.C.push({ time, concentration: concentrationC });
+                });
+            });
+        }
+
+        function setCanvasDimensions() {
+            generateSpeciesData();
+            const containerWidth = canvas.parentElement.clientWidth;
+            canvas.width = containerWidth;
+            canvas.height = containerWidth * (2 / 3);
+
+            graphWidth = canvas.width - 2 * padding;
+            graphHeight = canvas.height - 2 * padding;
+
+            let allConcentrationsAcrossAllSpecies = [];
+            dataSets.forEach(ds => {
+                Object.values(ds.speciesData).forEach(speciesArr => {
+                    speciesArr.forEach(point => allConcentrationsAcrossAllSpecies.push(point.concentration));
+                });
+            });
+            maxTime = Math.max(...dataSets[currentReactionIndex].baseA.map(d => d.time));
+            maxConcentration = Math.max(...allConcentrationsAcrossAllSpecies);
+
+            xScale = (time) => padding + (time / maxTime) * graphWidth;
+            yScale = (concentration) => canvas.height - padding - (concentration / maxConcentration) * graphHeight;
+
+            drawGraph();
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Axes
+            ctx.beginPath();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.moveTo(padding, canvas.height - padding);
+            ctx.lineTo(canvas.width - padding, canvas.height - padding);
+            ctx.moveTo(padding, canvas.height - padding);
+            ctx.lineTo(padding, padding);
+            ctx.stroke();
+
+            // Draw Axis Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText('Time (s)', canvas.width / 2, canvas.height - padding / 2 + 10);
+            ctx.save();
+            ctx.translate(padding / 2 - 10, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Concentration (M)', 0, 0);
+            ctx.restore();
+
+            // Draw Ticks and Values
+            for (let i = 0; i <= 5; i++) {
+                const timeValue = (i / 5) * maxTime;
+                const x = xScale(timeValue);
+                ctx.beginPath();
+                ctx.moveTo(x, canvas.height - padding);
+                ctx.lineTo(x, canvas.height - padding + 5);
+                ctx.stroke();
+                ctx.fillText(timeValue.toFixed(0), x, canvas.height - padding + 20);
+            }
+
+            for (let i = 0; i <= 5; i++) {
+                const concValue = (i / 5) * maxConcentration;
+                const y = yScale(concValue);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(padding - 5, y);
+                ctx.stroke();
+                ctx.textAlign = 'right';
+                ctx.fillText(concValue.toFixed(1), padding - 10, y + 5);
+            }
+            ctx.textAlign = 'center';
+
+            // Draw all selected Reaction Curves
+            displaySpecies.forEach(speciesKey => {
+                const data = dataSets[currentReactionIndex].speciesData[speciesKey];
+                if (!data || data.length === 0) return;
+
+                ctx.beginPath();
+                ctx.strokeStyle = speciesColors[speciesKey];
+                ctx.lineWidth = 3;
+                data.forEach((point, index) => {
+                    const x = xScale(point.time);
+                    const y = yScale(point.concentration);
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+            });
+
+            // Draw tangent lines and points for all visible species at current time
+            displaySpecies.forEach(speciesKey => {
+                const data = dataSets[currentReactionIndex].speciesData[speciesKey];
+                if (!data || data.length === 0) return;
+
+                const index = findNearestPointIndexInArray(data, currentTime);
+                const point = data[index];
+                const x = xScale(point.time);
+                const y = yScale(point.concentration);
+
+                // Draw point on curve
+                ctx.beginPath();
+                ctx.arc(x, y, 7, 0, Math.PI * 2);
+                ctx.fillStyle = speciesColors[speciesKey];
+                ctx.fill();
+                ctx.strokeStyle = '#1e3a8a';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Calculate and draw tangent line
+                const slope = calculateSlopeGeneric(data, index);
+                const pixelSlope = -slope * (graphHeight / maxConcentration) / (graphWidth / maxTime);
+                const tangentLineLength = Math.min(graphWidth, graphHeight) / 2;
+                const dxForLine = tangentLineLength / Math.sqrt(1 + pixelSlope * pixelSlope);
+                const dyForLine = pixelSlope * dxForLine;
+
+                ctx.beginPath();
+                ctx.strokeStyle = speciesColors[speciesKey];
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.moveTo(x - dxForLine, y - dyForLine);
+                ctx.lineTo(x + dxForLine, y + dyForLine);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            });
+
+            // Update info display
+            currentTimeSpan.textContent = currentTime.toFixed(2);
+
+            ['A', 'B', 'C'].forEach(speciesKey => {
+                const data = dataSets[currentReactionIndex].speciesData[speciesKey];
+                if (data && data.length > 0) {
+                    const index = findNearestPointIndexInArray(data, currentTime);
+                    const point = data[index];
+                    const slope = calculateSlopeGeneric(data, index);
+
+                    document.getElementById(`conc${speciesKey}`).textContent = point.concentration.toFixed(2);
+                    document.getElementById(`rate${speciesKey}`).textContent = Math.abs(slope).toFixed(4);
+                } else {
+                    document.getElementById(`conc${speciesKey}`).textContent = 'N/A';
+                    document.getElementById(`rate${speciesKey}`).textContent = 'N/A';
+                }
+            });
+        }
+
+        function calculateSlopeGeneric(dataArray, index) {
+            if (!dataArray || dataArray.length < 2) return 0;
+
+            let p1, p2;
+
+            if (index === 0) {
+                p1 = dataArray[index];
+                p2 = dataArray[index + 1];
+            } else if (index === dataArray.length - 1) {
+                p1 = dataArray[index - 1];
+                p2 = dataArray[index];
+            } else {
+                p1 = dataArray[index - 1];
+                p2 = dataArray[index + 1];
+            }
+
+            const deltaY = p2.concentration - p1.concentration;
+            const deltaX = p2.time - p1.time;
+
+            if (deltaX === 0) return 0;
+            return deltaY / deltaX;
+        }
+
+        function findNearestPointIndexInArray(dataArray, targetTime) {
+            let closestIndex = 0;
+            let minDiff = Infinity;
+            dataArray.forEach((point, index) => {
+                const diff = Math.abs(point.time - targetTime);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIndex = index;
+                }
+            });
+            return closestIndex;
+        }
+
+        function getMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+
+        function handleWindowMouseMove(e) {
+            if (isDragging) {
+                const mousePos = getMousePos(canvas, e);
+                const constrainedX = Math.max(padding, Math.min(canvas.width - padding, mousePos.x));
+                currentTime = ((constrainedX - padding) / graphWidth) * maxTime;
+                drawGraph();
+            }
+        }
+
+        function handleWindowMouseUp() {
+            isDragging = false;
+            window.removeEventListener('mousemove', handleWindowMouseMove);
+            window.removeEventListener('mouseup', handleWindowMouseUp);
+        }
+
+        // Event Listeners
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            const mousePos = getMousePos(canvas, e);
+            currentTime = ((mousePos.x - padding) / graphWidth) * maxTime;
+            drawGraph();
+            window.addEventListener('mousemove', handleWindowMouseMove);
+            window.addEventListener('mouseup', handleWindowMouseUp);
+        });
+
+        reactionSelect.addEventListener('change', (e) => {
+            currentReactionIndex = parseInt(e.target.value);
+            currentTime = 0;
+            setCanvasDimensions();
+        });
+
+        coeffAInput.addEventListener('change', () => {
+            if (parseInt(coeffAInput.value) < 1) coeffAInput.value = 1;
+            setCanvasDimensions();
+        });
+
+        coeffBInput.addEventListener('change', () => {
+            if (parseInt(coeffBInput.value) < 1) coeffBInput.value = 1;
+            setCanvasDimensions();
+        });
+
+        coeffCInput.addEventListener('change', () => {
+            if (parseInt(coeffCInput.value) < 1) coeffCInput.value = 1;
+            setCanvasDimensions();
+        });
+
+        showACheckbox.addEventListener('change', () => { toggleDisplaySpecies('A', showACheckbox.checked); });
+        showBCheckbox.addEventListener('change', () => { toggleDisplaySpecies('B', showBCheckbox.checked); });
+        showCCheckbox.addEventListener('change', () => { toggleDisplaySpecies('C', showCCheckbox.checked); });
+
+        function toggleDisplaySpecies(species, isChecked) {
+            if (isChecked) {
+                if (!displaySpecies.includes(species)) {
+                    displaySpecies.push(species);
+                }
+            } else {
+                displaySpecies = displaySpecies.filter(s => s !== species);
+            }
+            drawGraph();
+        }
+
+        resetButton.addEventListener('click', () => {
+            currentTime = 0;
+            drawGraph();
+        });
+
+        // Initial setup
+        window.addEventListener('resize', setCanvasDimensions);
+        window.onload = () => {
+            showACheckbox.checked = true;
+            showBCheckbox.checked = false;
+            showCCheckbox.checked = false;
+            displaySpecies = ['A'];
+            setCanvasDimensions();
+        };
+    </script>
+</body>
+</html>

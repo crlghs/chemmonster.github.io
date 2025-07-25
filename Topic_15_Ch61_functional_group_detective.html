@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Functional Group Detective</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tone.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        /* Custom styles to enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            overflow-x: hidden; /* Prevent horizontal scroll from confetti */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top to prevent jumping on content change */
+            min-height: 100vh;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column; /* Always stack vertically */
+            gap: 1.5rem;
+            padding: 1.5rem;
+            max-width: 600px; /* Adjusted max-width for single column layout */
+            width: 100%;
+            margin: auto;
+            position: relative;
+            z-index: 1;
+        }
+        .panel {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .toolkit-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem; /* Space between each test row */
+        }
+        .toolkit button {
+            transition: all 0.2s ease;
+            flex-shrink: 0; /* Prevent button from shrinking */
+            width: 180px; /* Fixed width for consistent alignment */
+            text-align: left;
+            justify-content: flex-start;
+            font-weight: bold;
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+        }
+        .toolkit button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        #lab-flask {
+            transition: transform 0.5s ease-in-out;
+        }
+        .shake-animation {
+            animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        /* Confetti styles */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0.7;
+            border-radius: 50%;
+            animation: fall 3s linear forwards;
+            z-index: 100;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        .observation-inline {
+            flex-grow: 1; /* Allow observation box to take remaining space */
+            padding: 0.6rem 1rem;
+            border-radius: 0.5rem;
+            background-color: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            min-height: 45px; /* Ensure consistent height */
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #475569; /* Default text color */
+            font-family: 'Roboto Mono', monospace;
+        }
+        /* Specific colors for observations */
+        .observation-positive {
+            color: #dc2626; /* Red-700 */
+        }
+        .observation-negative {
+            color: #16a34a; /* Green-700 */
+        }
+        /* Hidden deduction area */
+        #deduction-area.hidden {
+            display: none;
+        }
+        #deduce-feedback-message {
+            min-height: 40px; /* Ensure space for message */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive adjustments - simplified for single panel */
+        @media (min-width: 768px) {
+            .game-container {
+                max-width: 700px; /* Slightly wider for better desktop view */
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="game-container">
+
+        <!-- Main Panel (formerly Introduction Panel, now combined) -->
+        <div class="main-panel panel">
+            <h1 class="text-3xl font-bold text-blue-700 mb-2">Functional Group Detective</h1>
+            <p class="text-gray-600 mb-4">
+                A mystery compound has been delivered to your lab! As the lead detective, your mission is to perform chemical tests to identify its functional group. The unknown sample is in the flask below. Select a test from your toolkit to begin the investigation.
+            </p>
+
+            <!-- Interactive Workspace Content (moved here) -->
+            <div class="text-center mb-6">
+                <img id="lab-flask" src="https://placehold.co/150x150/e0f2fe/0c4a6e?text=Unknown" alt="Laboratory flask with unknown compound" class="mx-auto rounded-full border-4 border-gray-200">
+                <h3 id="compound-label" class="mt-4 text-xl font-bold">Mystery Compound</h3>
+            </div>
+
+            <div id="toolkit" class="grid grid-cols-1 gap-3">
+                <!-- Test buttons and observation areas will be dynamically added here -->
+            </div>
+
+            <!-- Functional Group Deduce Buttons (always visible) -->
+            <div id="deduce-buttons-area" class="mt-6 text-center">
+                <h4 class="font-bold text-blue-700 mb-2">Deduce the Functional Group:</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <!-- Deduce buttons will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Feedback message for deductions -->
+            <div id="deduce-feedback-message" class="text-center"></div>
+
+            <div id="deduction-area" class="mt-6 text-center hidden">
+                <!-- Deduction elements will be injected here -->
+            </div>
+
+            <div class="mt-6 text-center flex flex-col items-center">
+                <div class="flex items-center mb-3">
+                    <input type="checkbox" id="hints-checkbox" class="form-checkbox h-5 w-5 text-yellow-600 rounded">
+                    <label for="hints-checkbox" class="ml-2 text-gray-700 font-bold cursor-pointer">Show Deductions / Hints</label>
+                </div>
+                <button id="new-game-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg">Start New Case</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- SOUND SETUP (Tone.js) ---
+        let soundsReady = false;
+        const clickSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } }).toDestination();
+        const correctSound = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+        const incorrectSound = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.3 } }).toDestination();
+
+        function playClick() {
+            if (soundsReady) clickSound.triggerAttackRelease('C5', '8n');
+        }
+
+        function playCorrect() {
+            if (soundsReady) {
+                correctSound.triggerAttackRelease('G5', '8n', Tone.now());
+                correctSound.triggerAttackRelease('E6', '8n', Tone.now() + 0.1);
+            }
+        }
+
+        function playIncorrect() {
+            if (soundsReady) incorrectSound.triggerAttackRelease('A3', '4n');
+        }
+
+        // --- DATA ---
+        const compounds = [
+            {
+                name: "Propan-1-ol",
+                group: "Primary/Secondary Alcohol",
+                tests: {
+                    alkene: { text: "The orange solution remains unchanged.", positive: false },
+                    oxidation: { text: "The solution turns from orange to green upon warming.", positive: true },
+                    carbonyl: { text: "No precipitate forms.", positive: false },
+                    aldehyde: { text: "No silver mirror forms.", positive: false },
+                    acid: { text: "No effervescence observed.", positive: false },
+                    esterification: { text: "A pleasant, fruity smell is detected upon warming.", positive: true }
+                },
+                explanation: "This compound can be oxidized by acidified K₂Cr₂O₇ (orange to green) and undergoes esterification (fruity smell). This confirms it's an alcohol that can be oxidized, so it must be a Primary or Secondary Alcohol."
+            },
+            {
+                name: "2-Methylpropan-2-ol",
+                group: "Tertiary Alcohol",
+                tests: {
+                    alkene: { text: "The orange solution remains unchanged.", positive: false },
+                    oxidation: { text: "The orange solution remains unchanged even upon warming.", positive: false },
+                    carbonyl: { text: "No precipitate forms.", positive: false },
+                    aldehyde: { text: "No silver mirror forms.", positive: false },
+                    acid: { text: "No effervescence observed.", positive: false },
+                    esterification: { text: "A pleasant, fruity smell is detected upon warming.", positive: true }
+                },
+                explanation: "This compound undergoes esterification (fruity smell) but is NOT oxidized by acidified K₂Cr₂O₇. This confirms it's a Tertiary Alcohol."
+            },
+            {
+                name: "Hex-1-ene",
+                group: "Alkene",
+                tests: {
+                    alkene: { text: "The orange solution rapidly decolourizes.", positive: true },
+                    oxidation: { text: "The orange solution remains unchanged.", positive: false },
+                    carbonyl: { text: "No precipitate forms.", positive: false },
+                    aldehyde: { text: "No silver mirror forms.", positive: false },
+                    acid: { text: "No effervescence observed.", positive: false },
+                    esterification: { text: "No change observed.", positive: false }
+                },
+                explanation: "This compound rapidly decolourizes bromine water, which is characteristic of an Alkene."
+            },
+            {
+                name: "Propanal",
+                group: "Aldehyde",
+                tests: {
+                    alkene: { text: "The orange solution remains unchanged.", positive: false },
+                    oxidation: { text: "The solution turns from orange to green upon warming.", positive: true },
+                    carbonyl: { text: "An orange precipitate forms.", positive: true },
+                    aldehyde: { text: "A silver mirror forms on the test tube wall.", positive: true },
+                    acid: { text: "No effervescence observed.", positive: false },
+                    esterification: { text: "No change observed.", positive: false }
+                },
+                explanation: "This compound gives a positive test with 2,4-dinitrophenylhydrazine (orange precipitate) and Tollen's Reagent (silver mirror), and can be oxidized by acidified K₂Cr₂O₇. This confirms it's an Aldehyde."
+            },
+            {
+                name: "Propanone",
+                group: "Ketone",
+                tests: {
+                    alkene: { text: "The orange solution remains unchanged.", positive: false },
+                    oxidation: { text: "The orange solution remains unchanged.", positive: false },
+                    carbonyl: { text: "An orange precipitate forms.", positive: true },
+                    aldehyde: { text: "No silver mirror forms.", positive: false },
+                    acid: { text: "No effervescence observed.", positive: false },
+                    esterification: { text: "No change observed.", positive: false }
+                },
+                explanation: "This compound gives a positive test with 2,4-dinitrophenylhydrazine (orange precipitate) but does NOT react with Tollen's Reagent or acidified K₂Cr₂O₇. This confirms it's a Ketone."
+            },
+            {
+                name: "Ethanoic Acid",
+                group: "Carboxylic Acid",
+                tests: {
+                    alkene: { text: "The orange solution remains unchanged.", positive: false },
+                    oxidation: { text: "The orange solution remains unchanged.", positive: false },
+                    carbonyl: { text: "No precipitate forms.", positive: false },
+                    aldehyde: { text: "No silver mirror forms.", positive: false },
+                    acid: { text: "Effervescence is observed as CO₂ gas is produced.", positive: true },
+                    esterification: { text: "A pleasant, fruity smell is detected upon warming.", positive: true }
+                },
+                explanation: "This compound reacts with sodium bicarbonate to produce effervescence (CO₂ gas) and undergoes esterification (fruity smell). This confirms it's a Carboxylic Acid."
+            },
+            {
+                name: "Ethyl Ethanoate",
+                group: "Ester",
+                tests: {
+                    alkene: { text: "The orange solution remains unchanged.", positive: false },
+                    oxidation: { text: "The orange solution remains unchanged.", positive: false },
+                    carbonyl: { text: "No precipitate forms.", positive: false },
+                    aldehyde: { text: "No silver mirror forms.", positive: false },
+                    acid: { text: "No effervescence observed.", positive: false },
+                    esterification: { text: "No change observed.", positive: false }
+                },
+                explanation: "This compound does not react with any of the reagents, which is characteristic of an Ester (already formed)."
+            }
+        ];
+
+        const functionalGroups = [
+            "Alkene", "Primary/Secondary Alcohol", "Tertiary Alcohol",
+            "Aldehyde", "Ketone", "Carboxylic Acid", "Ester"
+        ];
+
+        // General implications for tests
+        const testImplications = {
+            alkene: {
+                positive: "The compound decolourized bromine water, indicating the presence of an Alkene.",
+                negative: "The compound did NOT decolourize bromine water, ruling out an Alkene."
+            },
+            oxidation: {
+                positive: "The acidified K₂Cr₂O₇ turned green, indicating the presence of an oxidizable group like a Primary/Secondary Alcohol or an Aldehyde.",
+                negative: "The acidified K₂Cr₂O₇ remained orange, ruling out easily oxidizable groups such as Primary/Secondary Alcohols and Aldehydes."
+            },
+            carbonyl: {
+                positive: "A precipitate formed with 2,4-dinitrophenylhydrazine, indicating the presence of a Carbonyl group (Aldehyde or Ketone).",
+                negative: "No precipitate formed with 2,4-dinitrophenylhydrazine, ruling out Carbonyl groups (Aldehydes and Ketones)."
+            },
+            aldehyde: {
+                positive: "A silver mirror formed with Tollen's Reagent, indicating the presence of an Aldehyde.",
+                negative: "No silver mirror formed with Tollen's Reagent, ruling out an Aldehyde."
+            },
+            acid: {
+                positive: "Effervescence was observed with sodium bicarbonate, indicating the presence of a Carboxylic Acid.",
+                negative: "No effervescence was observed with sodium bicarbonate, ruling out a Carboxylic Acid."
+            },
+            esterification: {
+                positive: "A fruity smell was detected after esterification, suggesting the presence of an Alcohol or Carboxylic Acid (that can react with the added acid/alcohol).",
+                negative: "No characteristic fruity smell was detected after esterification, making an Alcohol or Carboxylic Acid less likely."
+            }
+        };
+
+
+        let currentCompound = null;
+        let performedTests = {}; // To store results of performed tests for the current compound
+
+        // --- DOM Elements ---
+        const labFlask = document.getElementById('lab-flask');
+        const compoundLabel = document.getElementById('compound-label');
+        const deduceFeedbackMessage = document.getElementById('deduce-feedback-message');
+        const toolkitDiv = document.getElementById('toolkit');
+        const deductionArea = document.getElementById('deduction-area');
+        const newGameButton = document.getElementById('new-game-button');
+        const hintsCheckbox = document.getElementById('hints-checkbox');
+        const deduceButtonsArea = document.getElementById('deduce-buttons-area');
+
+        // --- FUNCTIONS ---
+
+        /**
+         * Formats chemical formulas with subscripts.
+         * @param {string} text - The text containing chemical formulas.
+         * @returns {string} - The formatted text.
+         */
+        function formatChemicalFormula(text) {
+            // Replace numbers with subscripts, but be careful not to break other text
+            return text
+                .replace(/₂/g, '<sub>2</sub>')
+                .replace(/₃/g, '<sub>3</sub>')
+                .replace(/₄/g, '<sub>4</sub>')
+                .replace(/₅/g, '<sub>5</sub>')
+                .replace(/₆/g, '<sub>6</sub>')
+                .replace(/₇/g, '<sub>7</sub>')
+                .replace(/₈/g, '<sub>8</sub>')
+                .replace(/₉/g, '<sub>9</sub>');
+        }
+
+        /**
+         * Starts a new game by selecting a random compound and resetting the UI.
+         */
+        function startNewGame() {
+            playClick();
+            currentCompound = compounds[Math.floor(Math.random() * compounds.length)];
+            performedTests = {}; // Reset performed tests
+            labFlask.classList.remove('shake-animation');
+            compoundLabel.textContent = "Mystery Compound";
+            enableAllTestButtons();
+            clearDeductionArea();
+            renderToolkit(); // Re-render toolkit to clear observations
+            renderDeduceButtons(); // Re-render deduce buttons for new game
+            deductionArea.classList.add('hidden'); // Hide deduction area on new game
+            hintsCheckbox.checked = false; // Uncheck hints checkbox on new game
+            clearDeduceFeedback(); // Clear any previous deduction feedback
+
+            console.log("New game started. Mystery compound is:", currentCompound.name, `(${currentCompound.group})`); // For debugging
+        }
+
+        /**
+         * Renders the toolkit buttons and their associated observation fields.
+         */
+        function renderToolkit() {
+            toolkitDiv.innerHTML = ''; // Clear previous buttons/observations
+            const testButtons = [
+                { id: "alkene", text: "Add Br₂ in CCl₄", reagent: "Br₂ in CCl₄" },
+                { id: "oxidation", text: "Add Acidified K₂Cr₂O₇", reagent: "Acidified K₂Cr₂O₇" },
+                { id: "carbonyl", text: "Add 2,4-dinitrophenylhydrazine", reagent: "2,4-DNP" },
+                { id: "aldehyde", text: "Add Tollen's Reagent", reagent: "Tollen's Reagent" },
+                { id: "acid", text: "Add NaHCO₃ (aq)", reagent: "NaHCO₃ (aq)" },
+                { id: "esterification", text: "Add Carboxylic Acid + conc. H₂SO₄", reagent: "Carboxylic Acid + conc. H₂SO₄" }
+            ];
+
+            testButtons.forEach(test => {
+                const testRow = document.createElement('div');
+                testRow.classList.add('toolkit-item');
+
+                const button = document.createElement('button');
+                button.dataset.test = test.id;
+                button.classList.add('bg-blue-500', 'hover:bg-blue-600', 'text-white', 'py-3', 'px-4', 'rounded-lg');
+                button.innerHTML = formatChemicalFormula(test.text); // Use innerHTML for subscripts
+
+                const observationBox = document.createElement('div');
+                observationBox.id = `observation-${test.id}`;
+                observationBox.classList.add('observation-inline');
+                observationBox.textContent = 'No test performed yet.';
+
+                testRow.appendChild(button);
+                testRow.appendChild(observationBox);
+                toolkitDiv.appendChild(testRow);
+            });
+
+            // Re-attach event listeners after re-rendering
+            attachTestButtonListeners();
+        }
+
+        /**
+         * Attaches event listeners to the test buttons.
+         */
+        function attachTestButtonListeners() {
+            document.querySelectorAll('#toolkit button').forEach(button => {
+                button.removeEventListener('click', handleTestClick); // Prevent duplicate listeners
+                button.addEventListener('click', handleTestClick);
+            });
+        }
+
+        /**
+         * Renders the functional group deduce buttons.
+         */
+        function renderDeduceButtons() {
+            const deduceButtonsContainer = deduceButtonsArea.querySelector('div');
+            deduceButtonsContainer.innerHTML = ''; // Clear previous buttons
+
+            functionalGroups.forEach(group => {
+                const button = document.createElement('button');
+                button.textContent = group;
+                button.classList.add('bg-purple-500', 'hover:bg-purple-600', 'text-white', 'font-bold', 'py-2', 'px-3', 'rounded-lg', 'text-sm');
+                button.addEventListener('click', () => handleDeduce(group));
+                deduceButtonsContainer.appendChild(button);
+            });
+        }
+
+        /**
+         * Handles a click on a test reagent button.
+         * @param {Event} event - The click event.
+         */
+        function handleTestClick(event) {
+            playClick();
+            const testType = event.target.dataset.test;
+            performTest(testType);
+            labFlask.classList.add('shake-animation');
+            setTimeout(() => {
+                labFlask.classList.remove('shake-animation');
+            }, 820); // Duration of shake animation
+        }
+
+        /**
+         * Performs a chemical test and updates the UI with the result.
+         * @param {string} testType - The type of test performed (e.g., 'alkene', 'oxidation').
+         */
+        function performTest(testType) {
+            if (!currentCompound) {
+                return;
+            }
+
+            const result = currentCompound.tests[testType];
+            if (result) {
+                const observationBox = document.getElementById(`observation-${testType}`);
+                observationBox.textContent = result.text;
+
+                // Remove existing color classes
+                observationBox.classList.remove('observation-positive', 'observation-negative');
+
+                // Add new color class based on positive/negative result
+                if (result.positive) {
+                    observationBox.classList.add('observation-positive');
+                } else {
+                    observationBox.classList.add('observation-negative');
+                }
+
+                performedTests[testType] = result; // Store the result
+                updateDeductionArea(); // Update deduction content, but it remains hidden unless hints are shown
+            }
+        }
+
+        /**
+         * Updates the deduction area with deductions based on performed tests.
+         */
+        function updateDeductionArea() {
+            deductionArea.innerHTML = ''; // Clear previous content
+
+            if (Object.keys(performedTests).length > 0) {
+                const deductionContentDiv = document.createElement('div');
+                deductionContentDiv.classList.add('mt-4', 'p-4', 'bg-blue-50', 'rounded-lg', 'text-left');
+                // Updated heading text
+                deductionContentDiv.innerHTML = '<h4 class="font-bold text-blue-700 mb-2">Deductions based on test results:</h4>';
+
+                for (const testType in performedTests) {
+                    const result = performedTests[testType];
+                    const implication = result.positive ? testImplications[testType].positive : testImplications[testType].negative;
+                    const deductionParagraph = document.createElement('p');
+                    deductionParagraph.classList.add('text-gray-700', 'mb-1');
+                    deductionParagraph.innerHTML = `<strong>${testType.charAt(0).toUpperCase() + testType.slice(1)} Test:</strong> ${implication}`;
+                    deductionContentDiv.appendChild(deductionParagraph);
+                }
+
+                const possibleGroups = getPossibleFunctionalGroups();
+                const possibleGroupsList = document.createElement('p');
+                possibleGroupsList.classList.add('text-gray-700', 'mt-3', 'font-semibold');
+                if (possibleGroups.length > 0) {
+                    possibleGroupsList.textContent = `Considering all results, still possible functional groups: ${possibleGroups.join(', ')}`;
+                } else {
+                    possibleGroupsList.textContent = `No functional groups match all observations. Review your tests!`;
+                }
+                deductionContentDiv.appendChild(possibleGroupsList);
+
+                deductionArea.appendChild(deductionContentDiv);
+            }
+        }
+
+        /**
+         * Clears the deduction area.
+         */
+        function clearDeductionArea() {
+            deductionArea.innerHTML = '';
+        }
+
+        /**
+         * Determines the functional groups that are still possible based on performed tests.
+         * @returns {string[]} - An array of possible functional group names.
+         */
+        function getPossibleFunctionalGroups() {
+            return functionalGroups.filter(group => {
+                // Check if this group is consistent with all performed tests
+                for (const testType in performedTests) {
+                    const observedResult = performedTests[testType];
+                    // Find a compound that has this group and matches the observed result for this test
+                    const matchingCompound = compounds.find(c =>
+                        c.group === group &&
+                        c.tests[testType] &&
+                        c.tests[testType].positive === observedResult.positive
+                    );
+                    if (!matchingCompound) {
+                        return false; // This group is inconsistent with at least one test
+                    }
+                }
+                return true; // This group is consistent with all performed tests
+            });
+        }
+
+        /**
+         * Identifies strong guesses based on the current set of observations.
+         * A strong guess is a functional group that matches all performed tests perfectly
+         * and is the *only* group that does so among the compounds in our data.
+         * @returns {string[]} - An array of functional group names that are strong guesses.
+         */
+        function getStrongGuesses() { // This function is currently not used but kept for potential future use.
+            const potentialMatches = functionalGroups.filter(group => {
+                // Check if this group is consistent with all performed tests
+                for (const testType in performedTests) {
+                    const observedResult = performedTests[testType];
+                    const compoundWithGroup = compounds.find(c => c.group === group);
+
+                    if (!compoundWithGroup || !compoundWithGroup.tests[testType] ||
+                        compoundWithGroup.tests[testType].positive !== observedResult.positive) {
+                        return false; // This group is inconsistent with at least one test
+                    }
+                }
+                return true; // This group is consistent with all performed tests
+            });
+
+            // If only one group is a potential match, it's a strong guess
+            if (potentialMatches.length === 1) {
+                return potentialMatches;
+            }
+
+            // More complex logic for strong guesses if multiple groups are consistent
+            // For now, if more than one, we don't declare a "strong guess"
+            return [];
+        }
+
+
+        /**
+         * Handles the user's deduce for the functional group.
+         * @param {string} deducedGroup - The functional group deduced by the user.
+         */
+        function handleDeduce(deducedGroup) {
+            playClick();
+            if (!currentCompound) {
+                return;
+            }
+
+            // Clear any previous feedback message immediately
+            clearDeduceFeedback();
+
+            if (deducedGroup === currentCompound.group) {
+                playCorrect();
+                deduceFeedbackMessage.innerHTML = '&#10004; Correct! Well done, Detective!'; // Add tick symbol
+                deduceFeedbackMessage.classList.add('text-green-700');
+                disableAllTestButtons();
+                createConfetti();
+            } else {
+                playIncorrect();
+                deduceFeedbackMessage.innerHTML = `&#10006; Incorrect. The compound is NOT a ${deducedGroup}. Keep investigating!`; // Add cross symbol
+                deduceFeedbackMessage.classList.add('text-red-700');
+            }
+        }
+
+        /**
+         * Clears the deduction feedback message.
+         */
+        function clearDeduceFeedback() {
+            deduceFeedbackMessage.innerHTML = ''; // Use innerHTML to clear symbols
+            deduceFeedbackMessage.classList.remove('text-green-700', 'text-red-700');
+        }
+
+        /**
+         * Disables all test reagent buttons.
+         */
+        function disableAllTestButtons() {
+            document.querySelectorAll('#toolkit button').forEach(btn => btn.disabled = true);
+        }
+
+        /**
+         * Enables all test reagent buttons.
+         */
+        function enableAllTestButtons() {
+            document.querySelectorAll('#toolkit button').forEach(btn => btn.disabled = false);
+        }
+
+        /**
+         * Creates a confetti animation.
+         */
+        function createConfetti() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800'];
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = Math.random() * -20 + 'vh';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        // --- EVENT LISTENERS --
+        document.body.addEventListener('click', () => {
+            if (!soundsReady) {
+                Tone.start();
+                soundsReady = true;
+                console.log('Audio context started.');
+            }
+        }, { once: true }); // Use { once: true } to ensure it only runs once
+
+        newGameButton.addEventListener('click', startNewGame);
+        // Event listener for the new hints checkbox
+        hintsCheckbox.addEventListener('change', () => {
+            playClick();
+            if (hintsCheckbox.checked) {
+                deductionArea.classList.remove('hidden');
+            } else {
+                deductionArea.classList.add('hidden');
+            }
+        });
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', startNewGame);
+    </script>
+</body>
+</html>

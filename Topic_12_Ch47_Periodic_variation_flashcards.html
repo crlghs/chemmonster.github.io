@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodic Properties Flashcards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #f0f9ff;
+            margin: 0;
+            padding: 0;
+            /* Allows scrolling on smaller screens or in landscape view */
+            overflow: auto;
+        }
+
+        .bubbles-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden;
+        }
+        .bubbles {
+            position: absolute; width: 100%; height: 100%; padding: 0; margin: 0; top: 0; left: 0;
+        }
+        .bubbles li {
+            position: absolute; list-style: none; display: block; width: 20px; height: 20px;
+            background-color: rgba(219, 234, 254, 0.7);
+            bottom: -150px; animation: square 25s infinite; transition-timing-function: linear; border-radius: 50%;
+        }
+        .bubbles li:nth-child(1) { left: 10%; width: 80px; height: 80px; animation-delay: 0s; }
+        .bubbles li:nth-child(2) { left: 20%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+        .bubbles li:nth-child(3) { left: 25%; width: 20px; height: 20px; animation-delay: 4s; }
+        .bubbles li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
+        .bubbles li:nth-child(5) { left: 70%; width: 20px; height: 20px; animation-delay: 0s; }
+        .bubbles li:nth-child(6) { left: 80%; width: 110px; height: 110px; animation-delay: 1s; }
+        .bubbles li:nth-child(7) { left: 32%; width: 150px; height: 150px; animation-delay: 7s; }
+        .bubbles li:nth-child(8) { left: 55%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
+        .bubbles li:nth-child(9) { left: 25%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
+        .bubbles li:nth-child(10) { left: 90%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
+
+        @keyframes square {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(600deg); opacity: 0; }
+        }
+
+        .content-wrapper {
+            position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; min-height: 100vh; width: 100%;
+        }
+        .card-container { perspective: 1000px; cursor: pointer; }
+        .card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex;
+            flex-direction: column; justify-content: center; align-items: center; padding: 1rem; border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .card-front { background-color: #ffffff; }
+        .card-back { background-color: #f0fdf4; transform: rotateY(180deg); }
+        .main-container {
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border-radius: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2); padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        }
+        .flag-btn {
+            position: absolute; top: 1rem; right: 1rem; background: none; border: none; cursor: pointer; z-index: 10;
+        }
+        .flag-btn svg { width: 24px; height: 24px; }
+        
+        /* Styles for the answer content */
+        .answer-content h3 { font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem; color: #1e40af; }
+        .answer-content p { margin-bottom: 0.75rem; }
+        .answer-content ul { list-style-type: disc; margin-left: 1.5rem; }
+        .answer-content li { margin-bottom: 0.5rem; }
+
+    </style>
+</head>
+<body>
+    <div id="introModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full transform transition-all scale-95 opacity-0 animate-fade-in-up">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Welcome to Your Flashcards!</h2>
+            <p class="mb-6 text-gray-600">Here’s a quick guide to the study tools:</p>
+            <ul class="text-left space-y-3 mb-8">
+                <li class="flex items-start">
+                    <span class="text-yellow-500 mr-3 mt-1">&#9733;</span>
+                    <div><b class="text-gray-700">Flag (Star Icon):</b> Click the star on any card to mark it for a custom review session.</div>
+                </li>
+                <li class="flex items-start">
+                     <span class="text-blue-500 mr-3 mt-1">&#128256;</span>
+                     <div><b class="text-gray-700">Shuffle:</b> Randomizes the order of the current deck to test your memory.</div>
+                </li>
+                 <li class="flex items-start">
+                     <span class="text-yellow-500 mr-3 mt-1">&#128269;</span>
+                    <div><b class="text-gray-700">Review Flagged:</b> Starts a new session with only the cards you've flagged.</div>
+                </li>
+                <li class="flex items-start">
+                     <span class="text-green-500 mr-3 mt-1">&#128190;</span>
+                    <div><b class="text-gray-700">Saved Progress:</b> Your flagged cards are automatically saved in your browser for your next visit.</div>
+                </li>
+            </ul>
+            <button id="closeModalBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">Let's Get Started!</button>
+        </div>
+    </div>
+    <style>
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.4s ease-out forwards;
+        }
+    </style>
+
+    <div class="bubbles-container">
+        <ul class="bubbles">
+            <li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li>
+        </ul>
+    </div>
+    <div class="content-wrapper p-4">
+        <div class="w-full max-w-2xl mx-auto main-container">
+            <h1 id="deck-title" class="text-3xl font-bold text-center text-gray-800 mb-2">Periodic Properties</h1>
+            <p id="deck-subtitle" class="text-center text-gray-600 mb-4">Trends in the Periodic Table</p>
+            
+            <div id="flashcard-container" class="mb-4"></div>
+            
+            <div class="flex justify-between items-center mb-4">
+                <button id="prevBtn" class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                <div id="card-counter" class="text-gray-600 font-medium">1 / 7</div>
+                <button id="nextBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Next</button>
+            </div>
+            
+            <div id="revision-scheduler" class="hidden text-center border-t pt-4 mt-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Schedule Your Next Revision!</h3>
+                <p class="text-gray-600 mb-4">Use spaced repetition to improve memory.</p>
+                <div class="flex justify-center items-center space-x-2 md:space-x-4">
+                    <button onclick="generateCalendarLink(1)" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">In 1 Day</button>
+                    <button onclick="generateCalendarLink(3)" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">In 3 Days</button>
+                    <button onclick="generateCalendarLink(7)" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">In 1 Week</button>
+                </div>
+            </div>
+
+            <div id="main-controls" class="flex flex-wrap justify-center items-center gap-2 md:gap-4 border-t pt-4 mt-4">
+                <button id="shuffleBtn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-blue-600">Shuffle</button>
+                <button id="resetBtn" class="bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-600">Reset / Exit</button>
+                <button id="reviewFlaggedBtn" class="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-yellow-600 disabled:opacity-50" disabled>Review Flagged</button>
+                <button id="scheduleBtn" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-teal-600">Schedule Revision</button>
+            </div>
+            <p class="text-center text-gray-500 text-sm mt-4">Click the card to flip it.</p>
+        </div>
+    </div>
+
+    <script>
+        // Deck content for Periodic Properties
+        const initialDeck = [
+            {
+                id: 0,
+                question: "Describe and explain the trend in <strong>melting points</strong> for Period 3 elements (Na to Ar).",
+                answer: `<div class="answer-content"><h3>Melting Point Trend: Period 3</h3><p>The melting point first rises to a peak at Silicon and then falls sharply.</p><ul><li><strong>Na, Mg, Al:</strong> Melting point <strong>increases</strong> due to stronger metallic bonds from an increasing number of delocalized electrons.</li><li><strong>Si:</strong> Has the <strong>highest melting point</strong> because of its giant covalent structure, which requires breaking strong covalent bonds.</li><li><strong>P, S, Cl, Ar:</strong> A <strong>sharp decrease</strong> occurs. These have simple molecular structures with weak van der Waals forces. Sulphur (S<sub>8</sub>) has a higher melting point than phosphorus (P<sub>4</sub>) because its larger molecules have stronger van der Waals forces.</li></ul></div>`
+            },
+            {
+                id: 1,
+                question: "Describe and explain the trend in <strong>electrical conductivity</strong> for Period 3 elements (Na to Ar).",
+                answer: `<div class="answer-content"><h3>Electrical Conductivity Trend: Period 3</h3><p>Conductivity peaks at Aluminium and then drops to nearly zero.</p><ul><li><strong>Na, Mg, Al:</strong> Conductivity <strong>increases</strong>. These metals have giant metallic structures with more delocalized electrons from Na to Al, increasing conductivity.</li><li><strong>Si:</strong> A <strong>metalloid (semiconductor)</strong> with poor conductivity at room temperature due to its giant covalent structure.</li><li><strong>P, S, Cl, Ar:</strong> These are <strong>insulators</strong>. They exist as simple molecules with no mobile electrons.</li></ul></div>`
+            },
+            {
+                id: 2,
+                question: "What are the general trends for <strong>melting points</strong> down these groups?<br>• Group I & II<br>• Group IV<br>• Group VII & 0",
+                answer: `<div class="answer-content"><h3>Melting Point Trends Down Groups</h3><ul><li><strong>Group I & II (Metals):</strong> Melting point <strong>decreases</strong>. As atoms get larger, metallic bonds weaken.</li><li><strong>Group IV (Non-metals/Metalloids):</strong> Melting point <strong>decreases</strong>. As atoms get larger, covalent bonds become weaker.</li><li><strong>Group VII & 0 (Non-metals):</strong> Melting point <strong>increases</strong>. As molecules get larger, van der Waals forces between them become stronger.</li></ul></div>`
+            },
+            {
+                id: 3,
+                question: "Summarize the <strong>structure and bonding</strong> for the elements in Period 2 (Li to Ne).",
+                answer: `<div class="answer-content"><h3>Structure and Bonding: Period 2</h3><ul><li><strong>Lithium (Li), Beryllium (Be):</strong> Giant metallic structure.</li><li><strong>Boron (B), Carbon (C):</strong> Giant covalent structure.</li><li><strong>Nitrogen (N<sub>2</sub>), Oxygen (O<sub>2</sub>), Fluorine (F<sub>2</sub>):</strong> Simple diatomic molecular structures.</li><li><strong>Neon (Ne):</strong> Simple monoatomic structure.</li></ul></div>`
+            },
+            {
+                id: 4,
+                question: "Summarize the <strong>structure and bonding</strong> for the elements in Period 3 (Na to Ar).",
+                answer: `<div class="answer-content"><h3>Structure and Bonding: Period 3</h3><ul><li><strong>Sodium (Na), Magnesium (Mg), Aluminium (Al):</strong> Giant metallic structure.</li><li><strong>Silicon (Si):</strong> Giant covalent structure.</li><li><strong>Phosphorus (P<sub>4</sub>), Sulphur (S<sub>8</sub>), Chlorine (Cl<sub>2</sub>):</strong> Simple molecular structures.</li><li><strong>Argon (Ar):</strong> Simple monoatomic structure.</li></ul></div>`
+            },
+            {
+                id: 5,
+                question: "Explain why <strong>Aluminium (Al)</strong> has a higher boiling point than <strong>Sodium (Na)</strong>.",
+                answer: `<div class="answer-content"><h3>Boiling Point: Al vs. Na</h3><p>Both have giant metallic structures, but the strength of the metallic bond differs.</p><ul><li><strong>Sodium (Na, Group I)</strong> contributes <strong>one</strong> delocalized electron per atom.</li><li><strong>Aluminium (Al, Group III)</strong> contributes <strong>three</strong> delocalized electrons per atom.</li></ul><p>Aluminium's stronger metallic bonding requires more energy to overcome, resulting in a higher boiling point.</p></div>`
+            },
+            {
+                id: 6,
+                question: "Compare the structures of <strong>Carbon (diamond)</strong> and <strong>Nitrogen (N<sub>2</sub>)</strong> and explain the difference in their melting points.",
+                answer: `<div class="answer-content"><h3>Melting Point: Carbon vs. Nitrogen</h3><ul><li><strong>Carbon (diamond):</strong> Has a <strong>giant covalent structure</strong>. Melting requires breaking a vast number of strong covalent bonds, needing immense energy, resulting in a very high melting point.</li><li><strong>Nitrogen (N<sub>2</sub>):</strong> Has a <strong>simple molecular structure</strong>. Melting only requires overcoming weak van der Waals forces between N<sub>2</sub> molecules, needing very little energy, resulting in a very low melting point.</li></ul></div>`
+            }
+        ];
+
+        const flashcardContainer = document.getElementById('flashcard-container');
+        const deckTitle = document.getElementById('deck-title');
+        const deckSubtitle = document.getElementById('deck-subtitle');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const reviewFlaggedBtn = document.getElementById('reviewFlaggedBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const cardCounter = document.getElementById('card-counter');
+        const introModal = document.getElementById('introModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const revisionScheduler = document.getElementById('revision-scheduler');
+        const mainControls = document.getElementById('main-controls');
+        const scheduleBtn = document.getElementById('scheduleBtn');
+
+        // Use a unique key for storing flagged cards for this specific deck
+        const flaggedCardsKey = `flashcardFlags-${deckTitle.textContent.trim()}`;
+        const savedFlags = localStorage.getItem(flaggedCardsKey);
+        let flaggedCardIds = savedFlags ? new Set(JSON.parse(savedFlags)) : new Set();
+        
+        let activeDeck = [...initialDeck];
+        let currentCardIndex = 0;
+
+        function createCardDOM(cardData) {
+            const cardWrapper = document.createElement('div');
+            // Increased height for cards with more content
+            cardWrapper.className = 'card-container h-80 md:h-72';
+            const isFlagged = flaggedCardIds.has(cardData.id);
+            cardWrapper.innerHTML = `
+                <button class="flag-btn" onclick="toggleFlag(${cardData.id}, this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${isFlagged ? '#facc15' : 'gray'}" class="w-6 h-6">
+                        <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.007z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <div class="card">
+                    <div class="card-face card-front">
+                        <div class="text-xl text-center text-gray-800 px-4">${cardData.question}</div>
+                    </div>
+                    <div class="card-face card-back">
+                        <div class="text-left text-sm md:text-base">${cardData.answer}</div>
+                    </div>
+                </div>
+            `;
+            cardWrapper.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    cardWrapper.querySelector('.card').classList.toggle('is-flipped');
+                }
+            });
+            return cardWrapper;
+        }
+
+        function renderCard() {
+            flashcardContainer.innerHTML = '';
+            
+            if (currentCardIndex < activeDeck.length) {
+                const cardData = activeDeck[currentCardIndex];
+                flashcardContainer.appendChild(createCardDOM(cardData));
+            } else {
+                 flashcardContainer.innerHTML = `<div class="h-80 md:h-72 flex items-center justify-center"><p class="text-xl font-semibold text-gray-700">End of deck!</p></div>`;
+            }
+            updateControls();
+        }
+        
+        function updateControls() {
+            cardCounter.textContent = `${Math.min(currentCardIndex + 1, activeDeck.length)} / ${activeDeck.length}`;
+            prevBtn.disabled = currentCardIndex === 0;
+            nextBtn.disabled = currentCardIndex >= activeDeck.length - 1;
+            reviewFlaggedBtn.disabled = flaggedCardIds.size === 0;
+        }
+
+        window.toggleFlag = (cardId, element) => {
+            const svg = element.querySelector('svg');
+            if (flaggedCardIds.has(cardId)) {
+                flaggedCardIds.delete(cardId);
+                svg.setAttribute('fill', 'gray');
+            } else {
+                flaggedCardIds.add(cardId);
+                svg.setAttribute('fill', '#facc15');
+            }
+            localStorage.setItem(flaggedCardsKey, JSON.stringify([...flaggedCardIds]));
+            reviewFlaggedBtn.disabled = flaggedCardIds.size === 0;
+        };
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if(currentCardIndex > 0) {
+                currentCardIndex--;
+                renderCard();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if(currentCardIndex < activeDeck.length - 1) {
+                currentCardIndex++;
+                renderCard();
+            }
+        });
+
+        shuffleBtn.addEventListener('click', () => {
+            resetToFullDeck();
+            shuffleArray(activeDeck);
+            renderCard();
+        });
+
+        reviewFlaggedBtn.addEventListener('click', () => {
+            if (flaggedCardIds.size > 0) {
+                deckTitle.textContent = "Reviewing Flagged Cards";
+                deckSubtitle.textContent = `You flagged ${flaggedCardIds.size} card(s) for review.`;
+                activeDeck = initialDeck.filter(card => flaggedCardIds.has(card.id));
+                currentCardIndex = 0;
+                renderCard();
+            }
+        });
+
+        function resetToFullDeck() {
+            deckTitle.textContent = "Periodic Properties";
+            deckSubtitle.textContent = "Trends in the Periodic Table";
+            activeDeck = [...initialDeck];
+            currentCardIndex = 0;
+            shuffleBtn.style.display = '';
+            reviewFlaggedBtn.style.display = '';
+            scheduleBtn.style.display = '';
+            revisionScheduler.classList.add('hidden');
+        }
+
+        resetBtn.addEventListener('click', () => {
+            if (!revisionScheduler.classList.contains('hidden')) {
+                // This part is for exiting the revision scheduler view
+                revisionScheduler.classList.add('hidden');
+                shuffleBtn.style.display = '';
+                reviewFlaggedBtn.style.display = '';
+                scheduleBtn.style.display = '';
+            } else {
+                // This part is for resetting the main deck
+                resetToFullDeck();
+                renderCard();
+            }
+        });
+        
+        scheduleBtn.addEventListener('click', () => {
+            shuffleBtn.style.display = 'none';
+            reviewFlaggedBtn.style.display = 'none';
+            scheduleBtn.style.display = 'none';
+            revisionScheduler.classList.remove('hidden');
+        });
+
+        window.generateCalendarLink = (days) => {
+            const today = new Date();
+            const futureDate = new Date();
+            futureDate.setDate(today.getDate() + days);
+            const year = futureDate.getFullYear();
+            const month = String(futureDate.getMonth() + 1).padStart(2, '0');
+            const day = String(futureDate.getDate()).padStart(2, '0');
+            
+            const dateString = `${year}${month}${day}`;
+            
+            const title = encodeURIComponent(`Revise: ${deckTitle.textContent}`);
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateString}/${dateString}&allday=true`;
+            
+            window.open(url, '_blank');
+        };
+
+        if (sessionStorage.getItem('introModalSeen')) {
+            introModal.style.display = 'none';
+        }
+
+        closeModalBtn.addEventListener('click', () => {
+            introModal.style.display = 'none';
+            sessionStorage.setItem('introModalSeen', 'true');
+        });
+
+        renderCard();
+    </script>
+</body>
+</html>

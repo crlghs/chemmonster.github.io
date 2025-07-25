@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unknown Gas Challenge Lab</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top to prevent jumping on content change */
+            min-height: 100vh;
+            padding: 5px; /* Further reduced padding */
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem; /* Slightly less rounded corners for compactness */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Slightly smaller shadow */
+            max-width: 580px; /* Adjusted max-width to accommodate two columns of reagents */
+            width: 100%;
+            padding: 1rem; /* Further reduced padding */
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem; /* Further reduced gap */
+        }
+        h1 {
+            font-size: 2.25rem; /* Slightly smaller heading */
+            margin-bottom: 0.75rem; /* Reduced margin */
+        }
+        p.instructions {
+            font-size: 0.95rem; /* Slightly smaller text */
+            margin-bottom: 1rem; /* Reduced margin */
+        }
+        .btn {
+            padding: 0.6rem 1.2rem; /* Reduced button padding */
+            border-radius: 0.6rem; /* Slightly less rounded buttons */
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1); /* Smaller shadow */
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* Indigo */
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #4338ca; /* Darker indigo */
+            transform: translateY(-1px); /* Smaller lift */
+            box-shadow: 0 4px 7px rgba(0, 0, 0, 0.15);
+        }
+        .btn-secondary {
+            background-color: #6b7280; /* Gray */
+            color: white;
+            border: none;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #4b5563; /* Darker gray */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 7px rgba(0, 0, 0, 0.15);
+        }
+        .btn-test {
+            background-color: #d1d5db; /* Light gray */
+            color: #374151; /* Darker text */
+            border: 1px solid #9ca3af;
+            flex-shrink: 0;
+            width: auto; /* Allow width to be determined by content */
+            min-width: 120px; /* Minimum width to ensure readability */
+            max-width: 250px; /* Max width for consistency */
+            text-align: left;
+            justify-content: flex-start;
+            font-weight: bold;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        .btn-test:hover:not(:disabled) {
+            background-color: #e5e7eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+        .btn-test:disabled {
+            background-color: #e0e0e0;
+            color: #a0a0a0;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .btn-test sub { /* Added style for subscripts within test buttons */
+            font-size: 0.7em; /* Increased font size for subscripts */
+        }
+        .btn-gas-guess {
+            background-color: #e0e7ff; /* Light blue for guess buttons */
+            color: #374151;
+            border: 1px solid #93c5fd; /* Blue border */
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+            flex-grow: 1; /* Allow buttons to grow */
+            min-width: 80px; /* Ensure a minimum width */
+        }
+        .btn-gas-guess:hover:not(:disabled) {
+            background-color: #c7d2fe;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+        .btn-gas-guess:disabled {
+            background-color: #e0e0e0;
+            color: #a0a0a0;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .observation-inline {
+            flex-grow: 1;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.4rem;
+            background-color: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            min-height: 35px;
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #475569;
+        }
+        .feedback-box {
+            padding: 0.8rem;
+            border-radius: 0.6rem;
+            font-weight: 600;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .feedback-correct {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .feedback-incorrect {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .feedback-info {
+            background-color: #eff6ff;
+            color: #1e40af;
+        }
+        /* Custom background colors for reagent test pairs */
+        .test-pair-bg-1 { background-color: #e0f2fe; border-color: #93c5fd; }
+        .test-pair-bg-2 { background-color: #e0ffe0; border-color: #a7f3d0; }
+        .test-pair-bg-3 { background-color: #fffbe0; border-color: #fde68a; }
+        .test-pair-bg-4 { background-color: #fee2e2; border-color: #fca5a5; }
+        .test-pair-bg-5 { background-color: #f3e8ff; border-color: #d8b4fe; }
+        .test-pair-bg-6 { background-color: #e2e8f0; border-color: #cbd5e1; }
+        .test-pair-bg-7 { background-color: #ffe4e6; border-color: #fda4af; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="container bg-white p-8 rounded-2xl shadow-xl w-full">
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-4">Unknown Gas Challenge Lab</h1>
+
+        <p class="text-lg leading-relaxed text-gray-700 text-center mb-6">
+            Welcome to the Unknown Gas Challenge! Your mission is to identify the unknown gas X presented to you.
+            Choose from the available reagents to perform tests and observe the results. Based on your observations,
+            identify the gas from the list provided. Good luck!
+        </p>
+
+        <div class="grid grid-cols-1 gap-6">
+            <!-- Reagent Selection Area -->
+            <div class="p-6 rounded-xl border border-indigo-200">
+                <h3 class="text-xl font-semibold text-indigo-800 mb-4">Choose a Reagent/Test:</h3>
+                <div id="reagentTestPairs" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Each test will be a flex row containing button and its observation -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Gas Identification Area -->
+        <div class="mt-6 p-6 bg-blue-50 rounded-xl border border-blue-200">
+            <h3 class="text-xl font-semibold text-blue-800 mb-4">Identify unknown gas X:</h3>
+            <div id="gasIdentificationButtons" class="flex flex-wrap justify-center gap-2">
+                <!-- Gas identification buttons will be injected here by JavaScript -->
+            </div>
+            <div id="feedbackDisplay" class="feedback-box mt-4 hidden">
+                <!-- Feedback will be displayed here -->
+            </div>
+            <div class="flex justify-center mt-6">
+                <button id="startChallengeBtn" class="btn btn-primary w-full md:w-auto">New Challenge</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to format numbers as subscripts
+        function formatSubscripts(text) {
+            return text.replace(/(\d+)/g, '<sub>$1</sub>');
+        }
+
+        // Data for gases and their tests
+        const gases = [
+            {
+                name: "Carbon dioxide",
+                formula: "CO<sub>2</sub>",
+                tests: {
+                    "Limewater": "Turns milky",
+                    "Burning Splint": "Extinguishes",
+                    "Smell": "Odourless",
+                    "Moist pH paper": "Turns slightly red/orange (acidic)"
+                }
+            },
+            {
+                name: "Hydrogen",
+                formula: "H<sub>2</sub>",
+                tests: {
+                    "Burning Splint": "Gives 'pop' sound",
+                    "Glowing Splint": "No change",
+                    "Smell": "Odourless",
+                    "Moist pH paper": "No change (neutral)"
+                }
+            },
+            {
+                name: "Oxygen",
+                formula: "O<sub>2}",
+                tests: {
+                    "Glowing Splint": "Relights",
+                    "Burning Splint": "Burns brighter",
+                    "Smell": "Odourless",
+                    "Moist pH paper": "No change (neutral)"
+                }
+            },
+            {
+                name: "Ammonia",
+                formula: "NH<sub>3</sub>",
+                tests: {
+                    "Near HCl(g)": "Forms dense white fume",
+                    "Smell": "Unpleasant smell",
+                    "Moist pH paper": "Turns blue/purple (alkaline)"
+                }
+            },
+            {
+                name: "Hydrogen chloride",
+                formula: "HCl",
+                tests: {
+                    "Near NH<sub>3</sub>(g)": "Forms dense white fume",
+                    "Smell": "Pungent smell",
+                    "Moist pH paper": "Turns red (strongly acidic)"
+                }
+            },
+            {
+                name: "Chlorine",
+                formula: "Cl<sub>2</sub>",
+                tests: {
+                    "Smell": "Pungent, choking; greenish-yellow (if concentrated)",
+                    "Moist pH paper": "Turns red and then white (bleaching)"
+                }
+            }
+            ,
+            {
+                name: "Sulphur dioxide",
+                formula: "SO<sub>2</sub>",
+                tests: {
+                    "Acidified K<sub>2</sub>Cr<sub>2</sub>O<sub>7</sub>": "Turns from orange to green",
+                    "Smell": "Choking smell",
+                    "Moist pH paper": "Turns red (acidic)"
+                }
+            }
+        ];
+
+        // Collect all unique reagent names for the test buttons
+        // Reordered to group similar tests
+        const allPossibleReagents = [
+            "Burning Splint",
+            "Glowing Splint",
+            "Limewater",
+            "Moist pH paper",
+            "Near HCl(g)",
+            "Near NH<sub>3</sub>(g)",
+            "Acidified K<sub>2</sub>Cr<sub>2</sub>O<sub>7</sub>",
+            "Smell"
+        ];
+
+        // Collect all gas names and formulas for the identification buttons
+        const allGasNamesAndFormulas = gases.map(gas => ({ name: gas.name, formula: gas.formula }));
+
+        // Define a set of colors for the reagent test pair boxes
+        const testPairColors = [
+            'test-pair-bg-1', 'test-pair-bg-2', 'test-pair-bg-3', 'test-pair-bg-4',
+            'test-pair-bg-5', 'test-pair-bg-6', 'test-pair-bg-7'
+        ];
+
+        // DOM elements
+        const unknownGasLabel = document.getElementById('unknownGasLabel');
+        const startChallengeBtn = document.getElementById('startChallengeBtn');
+        const reagentTestPairsContainer = document.getElementById('reagentTestPairs');
+        const gasIdentificationButtonsContainer = document.getElementById('gasIdentificationButtons');
+        const feedbackDisplay = document.getElementById('feedbackDisplay');
+
+        let currentUnknownGas = null;
+        let testedReagents = new Set(); // To keep track of reagents already used
+
+        /**
+         * Initializes a new challenge by selecting a random unknown gas.
+         */
+        function startNewChallenge() {
+            // Reset everything first
+            resetLab();
+
+            // Select a random gas
+            const randomIndex = Math.floor(Math.random() * gases.length);
+            currentUnknownGas = gases[randomIndex];
+
+            // Create reagent buttons with inline observation displays
+            createReagentButtons(allPossibleReagents);
+            // Create gas identification buttons
+            createGasIdentificationButtons(allGasNamesAndFormulas);
+
+            feedbackDisplay.classList.add('hidden');
+        }
+
+        /**
+         * Creates reagent buttons with an associated inline observation display.
+         * @param {string[]} reagents - An array of reagent names.
+         */
+        function createReagentButtons(reagents) {
+            reagentTestPairsContainer.innerHTML = ''; // Clear existing elements
+            reagents.forEach((reagent, index) => {
+                const testPairDiv = document.createElement('div');
+                testPairDiv.classList.add(
+                    'flex', 'items-center', 'gap-2', 'p-2', 'rounded-md', 'border', /* Reduced padding, rounded */
+                    testPairColors[index % testPairColors.length] // Apply cyclical color
+                );
+
+                const button = document.createElement('button');
+                button.innerHTML = formatSubscripts(reagent); /* Use innerHTML for subscript */
+                button.classList.add('btn', 'btn-test');
+                button.dataset.reagent = reagent; // Store original reagent name in dataset
+                button.addEventListener('click', handleReagentTest);
+
+                const observationInlineDiv = document.createElement('div');
+                // Create a unique ID for each inline observation div
+                observationInlineDiv.id = `obs-${reagent.replace(/\s+/g, '-')}`; // Replace spaces with hyphens for ID
+                observationInlineDiv.classList.add('observation-inline', 'text-gray-600', 'italic');
+                observationInlineDiv.textContent = 'Click to test'; // Initial text for inline observation
+
+                testPairDiv.appendChild(button);
+                testPairDiv.appendChild(observationInlineDiv);
+                reagentTestPairsContainer.appendChild(testPairDiv);
+            });
+        }
+
+        /**
+         * Creates gas identification buttons based on the provided list of gas names/formulas.
+         * @param {Array<{name: string, formula: string}>} gasInfo - An array of gas objects.
+         */
+        function createGasIdentificationButtons(gasInfo) {
+            gasIdentificationButtonsContainer.innerHTML = ''; // Clear existing buttons
+            gasInfo.forEach(gas => {
+                const button = document.createElement('button');
+                button.innerHTML = gas.formula; // Display formula with subscript
+                button.classList.add('btn', 'btn-gas-guess'); /* Removed w-full to allow flex-wrap */
+                button.dataset.gasName = gas.name; // Store full name for checking
+                button.addEventListener('click', handleGasGuess);
+                gasIdentificationButtonsContainer.appendChild(button);
+            });
+        }
+
+        /**
+         * Handles the click event for reagent test buttons.
+         * Displays the observation for the selected reagent and disables the button.
+         * @param {Event} event - The click event object.
+         */
+        function handleReagentTest(event) {
+            if (!currentUnknownGas) {
+                displayFeedback("Please start a new challenge first!", "info");
+                return;
+            }
+
+            // Use event.currentTarget to ensure we're getting the dataset from the element the listener is on
+            const clickedButton = event.currentTarget;
+            const reagent = clickedButton.dataset.reagent;
+
+            if (testedReagents.has(reagent)) {
+                displayFeedback("You've already performed this test.", "info");
+                return;
+            }
+
+            // Get the observation for the current unknown gas and the selected reagent
+            const observation = currentUnknownGas.tests[reagent] || "No observable change.";
+
+            // Update the specific inline observation div
+            // Ensure reagent is a string before calling replace, though it should be from dataset
+            const safeReagentId = reagent ? reagent.replace(/\s+/g, '-') : '';
+            const inlineObservationDiv = document.getElementById(`obs-${safeReagentId}`);
+            if (inlineObservationDiv) {
+                inlineObservationDiv.textContent = observation;
+                inlineObservationDiv.classList.remove('italic', 'text-gray-600');
+                inlineObservationDiv.classList.add('font-medium', 'text-gray-800');
+            }
+
+            clickedButton.disabled = true; // Disable the button after use
+            testedReagents.add(reagent); // Add to set of tested reagents
+            displayFeedback("Observation recorded. What's your next move?", "info");
+        }
+
+        /**
+         * Handles the click event for gas identification buttons.
+         * Compares the student's guess with the actual unknown gas and provides feedback.
+         * @param {Event} event - The click event object.
+         */
+        function handleGasGuess(event) {
+            if (!currentUnknownGas) {
+                displayFeedback("Please start a new challenge first!", "info");
+                return;
+            }
+
+            const guessedGasName = event.target.dataset.gasName; // Get the full name from data-gasName
+
+            // Normalize names for comparison (case-insensitive)
+            const correctGasName = currentUnknownGas.name.toLowerCase();
+            const studentGuess = guessedGasName.toLowerCase();
+
+            if (studentGuess === correctGasName) {
+                displayFeedback(`Correct! The unknown gas was ${currentUnknownGas.name}. It is known to: ${Object.values(currentUnknownGas.tests).join('; ')}. Excellent work!`, "correct");
+                // Disable further interaction after correct answer
+                disableAllReagentButtons();
+                disableAllGasGuessButtons();
+            } else {
+                displayFeedback(`Not quite! Your guess "${guessedGasName}" is incorrect. Review your observations and try another test, or make another guess.`, "incorrect");
+            }
+        }
+
+        /**
+         * Displays feedback messages to the user.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of feedback ('correct', 'incorrect', 'info').
+         */
+        function displayFeedback(message, type) {
+            feedbackDisplay.textContent = message;
+            feedbackDisplay.className = 'feedback-box mt-4'; // Reset classes
+            feedbackDisplay.classList.add(`feedback-${type}`);
+            feedbackDisplay.classList.remove('hidden');
+        }
+
+        /**
+         * Resets the lab to its initial state.
+         */
+        function resetLab() {
+            currentUnknownGas = null;
+            testedReagents.clear();
+
+            reagentTestPairsContainer.innerHTML = ''; // Clear reagent buttons and inline observations
+            gasIdentificationButtonsContainer.innerHTML = ''; // Clear gas identification buttons
+
+            disableAllReagentButtons(); // Ensure all are disabled initially
+            disableAllGasGuessButtons(); // Ensure all are disabled initially
+
+            feedbackDisplay.classList.add('hidden');
+        }
+
+        /**
+         * Disables all reagent buttons.
+         */
+        function disableAllReagentButtons() {
+            const buttons = reagentTestPairsContainer.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = true;
+            });
+        }
+
+        /**
+         * Enables all reagent buttons (used when resetting tests or starting new challenge).
+         */
+        function enableAllReagentButtons() {
+            const buttons = reagentTestPairsContainer.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = false;
+            });
+        }
+
+        /**
+         * Disables all gas identification buttons.
+         */
+        function disableAllGasGuessButtons() {
+            const buttons = gasIdentificationButtonsContainer.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = true;
+            });
+        }
+
+        /**
+         * Enables all gas identification buttons.
+         */
+        function enableAllGasGuessButtons() {
+            const buttons = gasIdentificationButtonsContainer.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = false;
+            });
+        }
+
+        // Event Listeners
+        startChallengeBtn.addEventListener('click', startNewChallenge);
+
+        // Initial setup on page load - automatically start a new challenge
+        document.addEventListener('DOMContentLoaded', startNewChallenge);
+    </script>
+</body>
+</html>
