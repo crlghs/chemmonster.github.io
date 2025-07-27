@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Rush - Main Menu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .text-glow {
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.3), 0 0 20px rgba(76, 175, 80, 0.4);
+        }
+        .menu-button {
+            transition: all 0.3s ease;
+        }
+        .menu-button:hover {
+            background-color: #4CAF50;
+            color: #121212;
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(76, 175, 80, 0.7);
+        }
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.5);
+        }
+        .level-preview-svg {
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #000; /* Fallback background */
+        }
+        #game-screen, .modal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #progress-bar-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            height: 30px;
+            background-color: rgba(0,0,0,0.5);
+            border: 2px solid #4CAF50;
+            border-radius: 15px;
+            padding: 4px;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #81C784);
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+        .difficulty-button.active {
+            background-color: #4CAF50;
+            color: #121212;
+            box-shadow: 0 0 25px rgba(76, 175, 80, 0.7);
+        }
+        .keybind-key {
+            background-color: #4a5568;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.75rem;
+            font-weight: bold;
+            border-bottom: 3px solid #2d3748;
+        }
+        .mobile-control {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            user-select: none; /* Prevent text selection */
+        }
+        .mobile-control:active {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Background for menus -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Main Menu Container -->
+    <div id="main-menu" class="relative min-h-screen flex flex-col items-center justify-center p-4">
+        <h1 id="ui-main-title" class="text-5xl sm:text-6xl md:text-8xl font-bold mb-4 text-glow animate-pulse text-center">TANK RUSH</h1>
+        <p id="ui-main-subtitle" class="text-base sm:text-lg md:text-xl text-gray-400 mb-12 text-center">Reach the base before time runs out!</p>
+        <div class="space-y-6 text-center w-full max-w-xs">
+            <button id="start-game-btn" class="menu-button w-full bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-4 px-6 rounded-lg text-xl sm:text-2xl tracking-widest uppercase" data-lang="startGame">Start Game</button>
+            <button id="how-to-play-btn" class="menu-button w-full bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-4 px-6 rounded-lg text-xl sm:text-2xl tracking-widest uppercase" data-lang="howToPlay">How to Play</button>
+            <button id="language-btn" class="menu-button w-full bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-4 px-6 rounded-lg text-xl sm:text-2xl tracking-widest uppercase" data-lang="language">Language</button>
+        </div>
+        <div class="absolute bottom-8 text-center">
+            <p id="ui-best-time-label" class="text-gray-500" data-lang="bestTime">BEST TIME</p>
+            <p id="best-time-menu" class="text-3xl font-bold text-green-400">--:--</p>
+        </div>
+    </div>
+
+    <!-- Background Select Container -->
+    <div id="background-select" class="hidden relative min-h-screen flex-col items-center justify-center p-4">
+        <h2 class="text-4xl sm:text-5xl md:text-7xl font-bold mb-8 text-glow text-center" data-lang="chooseBattleground">CHOOSE YOUR BATTLEGROUND</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 w-full max-w-5xl">
+            <div id="select-forest" class="card bg-gray-800/50 backdrop-blur-sm border-2 border-green-400 rounded-lg p-4 md:p-6 text-center cursor-pointer"><svg viewBox="0 0 400 250" class="level-preview-svg"><rect width="400" height="250" fill="#166534" /><rect x="120" y="0" width="40" height="250" fill="#6b7280" /><rect x="180" y="0" width="40" height="250" fill="#6b7280" /><rect x="240" y="0" width="40" height="250" fill="#6b7280" /><polygon points="20,230 40,180 60,230" fill="#15803d" /><polygon points="50,150 70,100 90,150" fill="#16a34a" /><polygon points="80,240 100,190 120,240" fill="#15803d" /><polygon points="10,100 30,50 50,100" fill="#16a34a" /><polygon points="300,230 320,180 340,230" fill="#15803d" /><polygon points="330,150 350,100 370,150" fill="#16a34a" /><polygon points="360,240 380,190 400,240" fill="#15803d" /><polygon points="290,100 310,50 330,100" fill="#16a34a" /><g transform="translate(190, 200) rotate(180)"><rect x="-10" y="-15" width="20" height="30" fill="#a1a1aa" rx="3"/><rect x="-13" y="-17" width="5" height="34" fill="#71717a" rx="2"/><rect x="8" y="-17" width="5" height="34" fill="#71717a" rx="2"/><rect x="-2" y="-25" width="4" height="15" fill="#4a5568"/><circle cx="0" cy="0" r="7" fill="#4d7c0f"/></g></svg><h3 class="text-2xl md:text-3xl font-bold text-green-300" data-lang="forests">FORESTS</h3></div>
+            <div id="select-plains" class="card bg-gray-800/50 backdrop-blur-sm border-2 border-green-400 rounded-lg p-4 md:p-6 text-center cursor-pointer"><svg viewBox="0 0 400 250" class="level-preview-svg"><rect width="400" height="250" fill="#a16207" /><rect x="120" y="0" width="40" height="250" fill="#d4d4d8" /><rect x="180" y="0" width="40" height="250" fill="#d4d4d8" /><rect x="240" y="0" width="40" height="250" fill="#d4d4d8" /><circle cx="50" cy="50" r="20" fill="#facc15" /></svg><h3 class="text-2xl md:text-3xl font-bold text-green-300" data-lang="plains">PLAINS</h3></div>
+            <div id="select-desert" class="card bg-gray-800/50 backdrop-blur-sm border-2 border-green-400 rounded-lg p-4 md:p-6 text-center cursor-pointer"><svg viewBox="0 0 400 250" class="level-preview-svg"><rect width="400" height="250" fill="#fde68a" /><rect x="120" y="0" width="40" height="250" fill="#e7e5e4" /><rect x="180" y="0" width="40" height="250" fill="#e7e5e4" /><rect x="240" y="0" width="40" height="250" fill="#e7e5e4" /><path d="M 50 200 C 100 150, 150 150, 200 200 S 250 250, 300 200" stroke="#fcd34d" stroke-width="5" fill="none" /><path d="M 150 150 C 200 100, 250 100, 300 150 S 350 200, 400 150" stroke="#fcd34d" stroke-width="5" fill="none" /></svg><h3 class="text-2xl md:text-3xl font-bold text-green-300" data-lang="deserts">DESERTS</h3></div>
+        </div>
+        <div class="mt-8 flex space-x-2 sm:space-x-4">
+            <button id="difficulty-easy" class="difficulty-button menu-button active px-6 sm:px-8 py-3 rounded-lg text-lg sm:text-xl uppercase" data-lang="easy">Easy</button>
+            <button id="difficulty-medium" class="difficulty-button menu-button px-6 sm:px-8 py-3 rounded-lg text-lg sm:text-xl uppercase" data-lang="medium">Medium</button>
+            <button id="difficulty-hard" class="difficulty-button menu-button px-6 sm:px-8 py-3 rounded-lg text-lg sm:text-xl uppercase" data-lang="hard">Hard</button>
+        </div>
+        <button id="back-to-menu-btn" class="menu-button mt-8 bg-gray-800 border-2 border-gray-500 text-gray-400 font-bold py-3 px-8 rounded-lg text-xl uppercase" data-lang="back">Back</button>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div id="how-to-play-modal" class="hidden modal-container bg-black/70 flex flex-col items-center justify-center text-center p-4">
+        <h2 class="text-5xl sm:text-7xl font-bold text-white text-glow mb-8" data-lang="howToPlay">HOW TO PLAY</h2>
+        <div class="bg-gray-800/50 p-6 sm:p-8 rounded-lg w-11/12 max-w-2xl text-base sm:text-lg space-y-6">
+            <div>
+                <h3 class="text-2xl sm:text-3xl font-bold text-green-400 mb-2" data-lang="objective">OBJECTIVE</h3>
+                <p data-lang="objectiveText">Reach the military base before the timer runs out. Dodge the landmines along the way!</p>
+            </div>
+            <div>
+                <h3 class="text-2xl sm:text-3xl font-bold text-green-400 mb-2" data-lang="controls">CONTROLS</h3>
+                <ul class="space-y-2 text-left">
+                    <li><span data-lang="controlsMove">Move Left/Right:</span> <span class="keybind-key">A</span> / <span class="keybind-key">D</span> or <span class="keybind-key">←</span> / <span class="keybind-key">→</span></li>
+                    <li><span data-lang="controlsSpeed">Increase/Decrease Speed:</span> <span class="keybind-key">W</span> / <span class="keybind-key">S</span> or <span class="keybind-key">↑</span> / <span class="keybind-key">↓</span></li>
+                    <li><span data-lang="controlsStart">Start Game (Main Menu):</span> <span class="keybind-key">S</span></li>
+                    <li><span data-lang="controlsHowToPlay">How to Play (Main Menu):</span> <span class="keybind-key">H</span></li>
+                    <li><span data-lang="controlsBack">Back / Pause Game:</span> <span class="keybind-key">B</span></li>
+                </ul>
+            </div>
+            <div id="mobile-controls-info" class="hidden">
+                 <h3 class="text-2xl sm:text-3xl font-bold text-green-400 mb-2" data-lang="mobileControls">MOBILE CONTROLS</h3>
+                 <p data-lang="mobileControlsText">Use the on-screen buttons to control the tank. Left buttons control speed, right buttons control movement.</p>
+            </div>
+        </div>
+        <button id="how-to-play-back-btn" class="menu-button mt-12 bg-gray-800 border-2 border-gray-500 text-gray-400 font-bold py-3 px-8 rounded-lg text-xl uppercase" data-lang="back">Back</button>
+    </div>
+
+    <!-- Language Modal -->
+    <div id="language-modal" class="hidden modal-container bg-black/70 flex flex-col items-center justify-center text-center p-4">
+        <h2 class="text-5xl sm:text-7xl font-bold text-white text-glow mb-10" data-lang="language">LANGUAGE</h2>
+        <div class="space-y-6 w-full max-w-md">
+            <button id="lang-en-btn" class="menu-button w-full bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-4 px-6 rounded-lg text-2xl tracking-widest uppercase">ENGLISH</button>
+            <button id="lang-es-btn" class="menu-button w-full bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-4 px-6 rounded-lg text-2xl tracking-widest uppercase">ESPAÑOL</button>
+            <button id="lang-de-btn" class="menu-button w-full bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-4 px-6 rounded-lg text-2xl tracking-widest uppercase">DEUTSCH</button>
+            <button id="lang-zh-Hant-btn" class="menu-button w-full bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-4 px-6 rounded-lg text-2xl tracking-widest uppercase">繁體中文</button>
+        </div>
+        <button id="language-back-btn" class="menu-button mt-12 bg-gray-800 border-2 border-gray-500 text-gray-400 font-bold py-3 px-8 rounded-lg text-xl uppercase" data-lang="back">Back</button>
+    </div>
+
+    <!-- Game Screen Container -->
+    <div id="game-screen" class="hidden">
+        <canvas id="game-canvas"></canvas>
+        <div id="mobile-controls" class="hidden">
+            <button id="speed-up-btn" class="mobile-control" style="left: 5%; bottom: 18vh;">▲</button>
+            <button id="speed-down-btn" class="mobile-control" style="left: 5%; bottom: 5vh;">▼</button>
+            <button id="move-left-btn" class="mobile-control" style="right: 25%; bottom: 5vh;">◀</button>
+            <button id="move-right-btn" class="mobile-control" style="right: 5%; bottom: 5vh;">▶</button>
+        </div>
+        <div class="absolute top-2 sm:top-5 left-2 sm:left-5 text-white text-lg sm:text-2xl font-bold">
+            <div><span data-lang="score">SCORE</span>: <span id="score">0</span></div>
+            <div class="mt-2"><span data-lang="speed">SPEED</span>: <span id="speed-display">5.0</span>x</div>
+        </div>
+        <div class="absolute top-2 sm:top-5 right-2 sm:right-5 text-white text-2xl sm:text-4xl font-bold">
+             <span data-lang="time">TIME</span>: <span id="timer-display">05:00</span>
+        </div>
+        <button id="quit-game-btn" class="absolute top-14 sm:top-16 right-2 sm:right-5 menu-button bg-red-700 border-2 border-red-400 text-white font-bold py-2 px-4 rounded-lg text-base sm:text-lg uppercase" data-lang="quit">Quit</button>
+        
+        <div id="progress-bar-container"><div id="progress-bar"></div></div>
+
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="hidden modal-container bg-black/70 flex flex-col items-center justify-center text-center p-4">
+            <h2 class="text-5xl sm:text-7xl font-bold text-white text-glow" data-lang="gamePaused">GAME PAUSED</h2>
+            <p class="text-xl sm:text-2xl mt-4" data-lang="quitConfirm">Are you sure you want to quit?</p>
+            <div class="flex space-x-8 mt-8">
+                <button id="pause-yes-btn" class="menu-button bg-red-700 border-2 border-red-400 text-white font-bold py-3 px-10 rounded-lg text-xl uppercase" data-lang="yes">Yes</button>
+                <button id="pause-no-btn" class="menu-button bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-3 px-10 rounded-lg text-xl uppercase" data-lang="no">No</button>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="game-over-modal" class="hidden modal-container bg-black/70 flex flex-col items-center justify-center text-center p-4">
+            <h2 class="text-6xl sm:text-8xl font-bold text-red-500 text-glow" data-lang="missionFailed">MISSION FAILED</h2>
+            <p id="failure-reason" class="text-xl sm:text-3xl mt-4">You ran out of time!</p>
+            <button id="return-to-menu-btn" class="menu-button mt-12 bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-4 px-8 rounded-lg text-2xl uppercase" data-lang="mainMenu">Main Menu</button>
+        </div>
+        
+        <!-- Game Win Modal -->
+        <div id="game-win-modal" class="hidden modal-container bg-black/70 flex flex-col items-center justify-center text-center p-4">
+            <h2 class="text-6xl sm:text-8xl font-bold text-green-500 text-glow" data-lang="missionComplete">MISSION COMPLETE</h2>
+            <p class="text-xl sm:text-2xl mt-4"><span data-lang="timeRemaining">Time Remaining</span>: <span id="time-remaining" class="text-yellow-300">00:00</span></p>
+            <p class="text-xl sm:text-2xl mt-2"><span data-lang="bestTime">Best Time</span>: <span id="best-time-win" class="text-yellow-300">00:00</span></p>
+            <button id="win-return-to-menu-btn" class="menu-button mt-12 bg-gray-800 border-2 border-green-400 text-green-400 font-bold py-4 px-8 rounded-lg text-2xl uppercase" data-lang="mainMenu">Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+        // --- UI Element References ---
+        const mainMenu = document.getElementById('main-menu');
+        const backgroundSelect = document.getElementById('background-select');
+        const gameScreen = document.getElementById('game-screen');
+        const languageModal = document.getElementById('language-modal');
+        const howToPlayModal = document.getElementById('how-to-play-modal');
+        const pauseModal = document.getElementById('pause-modal');
+        const mobileControlsContainer = document.getElementById('mobile-controls');
+        const mobileControlsInfo = document.getElementById('mobile-controls-info');
+
+        const startGameBtn = document.getElementById('start-game-btn');
+        const backToMenuBtn = document.getElementById('back-to-menu-btn');
+        const quitGameBtn = document.getElementById('quit-game-btn');
+        const languageBtn = document.getElementById('language-btn');
+        const howToPlayBtn = document.getElementById('how-to-play-btn');
+        const langEnBtn = document.getElementById('lang-en-btn');
+        const langEsBtn = document.getElementById('lang-es-btn');
+        const langDeBtn = document.getElementById('lang-de-btn');
+        const langZhHantBtn = document.getElementById('lang-zh-Hant-btn');
+        const languageBackBtn = document.getElementById('language-back-btn');
+        const howToPlayBackBtn = document.getElementById('how-to-play-back-btn');
+        const pauseYesBtn = document.getElementById('pause-yes-btn');
+        const pauseNoBtn = document.getElementById('pause-no-btn');
+
+        const difficultyEasyBtn = document.getElementById('difficulty-easy');
+        const difficultyMediumBtn = document.getElementById('difficulty-medium');
+        const difficultyHardBtn = document.getElementById('difficulty-hard');
+        const difficultyButtons = [difficultyEasyBtn, difficultyMediumBtn, difficultyHardBtn];
+
+        const scoreDisplay = document.getElementById('score');
+        const speedDisplay = document.getElementById('speed-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const progressBar = document.getElementById('progress-bar');
+        const bestTimeMenuDisplay = document.getElementById('best-time-menu');
+        
+        const gameOverModal = document.getElementById('game-over-modal');
+        const failureReasonDisplay = document.getElementById('failure-reason');
+        const returnToMenuBtn = document.getElementById('return-to-menu-btn');
+
+        const gameWinModal = document.getElementById('game-win-modal');
+        const timeRemainingDisplay = document.getElementById('time-remaining');
+        const bestTimeWinDisplay = document.getElementById('best-time-win');
+        const winReturnToMenuBtn = document.getElementById('win-return-to-menu-btn');
+
+        const levelSelectCards = {
+            forest: document.getElementById('select-forest'),
+            plains: document.getElementById('select-plains'),
+            desert: document.getElementById('select-desert'),
+        };
+
+        // --- Language Data ---
+        const uiText = {
+            en: { mainTitle: "TANK RUSH", mainSubtitle: "Reach the base before time runs out!", startGame: "Start Game", howToPlay: "How to Play", language: "Language", bestTime: "BEST TIME", chooseBattleground: "CHOOSE YOUR BATTLEGROUND", forests: "FORESTS", plains: "PLAINS", deserts: "DESERTS", back: "Back", score: "SCORE", speed: "SPEED", time: "TIME", quit: "Quit", missionFailed: "MISSION FAILED", missionComplete: "MISSION COMPLETE", timeRemaining: "Time Remaining", mainMenu: "Main Menu", failReasonTime: "You ran out of time!", failReasonMine: "You hit a landmine!", failReasonQuit: "You quit the mission.", easy: "Easy", medium: "Medium", hard: "Hard", gamePaused: "GAME PAUSED", quitConfirm: "Are you sure you want to quit?", yes: "Yes", no: "No", objective: "OBJECTIVE", objectiveText: "Reach the military base before the timer runs out. Dodge the landmines along the way!", controls: "CONTROLS", controlsMove: "Move Left/Right:", controlsSpeed: "Increase/Decrease Speed:", controlsStart: "Start Game (Main Menu):", controlsHowToPlay: "How to Play (Main Menu):", controlsBack: "Back / Pause Game:", mobileControls: "MOBILE CONTROLS", mobileControlsText: "Use the on-screen buttons to control the tank. Left buttons control speed, right buttons control movement." },
+            es: { mainTitle: "FURIA DE TANQUES", mainSubtitle: "¡Llega a la base antes de que se acabe el tiempo!", startGame: "Empezar Juego", howToPlay: "Cómo Jugar", language: "Idioma", bestTime: "MEJOR TIEMPO", chooseBattleground: "ELIGE TU CAMPO DE BATALLA", forests: "BOSQUES", plains: "LLANURAS", deserts: "DESIERTOS", back: "Volver", score: "PUNTOS", speed: "VELOCIDAD", time: "TIEMPO", quit: "Salir", missionFailed: "MISIÓN FALLIDA", missionComplete: "MISIÓN COMPLETA", timeRemaining: "Tiempo Restante", mainMenu: "Menú Principal", failReasonTime: "¡Se te acabó el tiempo!", failReasonMine: "¡Chocaste con una mina!", failReasonQuit: "Saliste de la misión.", easy: "Fácil", medium: "Medio", hard: "Difícil", gamePaused: "JUEGO PAUSADO", quitConfirm: "¿Estás seguro de que quieres salir?", yes: "Sí", no: "No", objective: "OBJETIVO", objectiveText: "Llega a la base militar antes de que se acabe el tiempo. ¡Esquiva las minas por el camino!", controls: "CONTROLES", controlsMove: "Mover Izquierda/Derecha:", controlsSpeed: "Aumentar/Disminuir Velocidad:", controlsStart: "Empezar Juego (Menú Principal):", controlsHowToPlay: "Cómo Jugar (Menú Principal):", controlsBack: "Volver / Pausar Juego:", mobileControls: "CONTROLES MÓVILES", mobileControlsText: "Usa los botones en pantalla para controlar el tanque. Los botones de la izquierda controlan la velocidad, los de la derecha el movimiento." },
+            de: { mainTitle: "PANZERRAUSCH", mainSubtitle: "Erreiche die Basis, bevor die Zeit abläuft!", startGame: "Spiel Starten", howToPlay: "Anleitung", language: "Sprache", bestTime: "BESTZEIT", chooseBattleground: "WÄHLE DEIN SCHLACHTFELD", forests: "WÄLDER", plains: "EBENEN", deserts: "WÜSTEN", back: "Zurück", score: "PUNKTE", speed: "GESCHWINDIGKEIT", time: "ZEIT", quit: "Beenden", missionFailed: "MISSION GESCHEITERT", missionComplete: "MISSION ABGESCHLOSSEN", timeRemaining: "Verbleibende Zeit", mainMenu: "Hauptmenü", failReasonTime: "Die Zeit ist abgelaufen!", failReasonMine: "Du hast eine Mine getroffen!", failReasonQuit: "Du hast die Mission abgebrochen.", easy: "Leicht", medium: "Mittel", hard: "Schwer", gamePaused: "SPIEL PAUSIERT", quitConfirm: "Möchtest du wirklich aufhören?", yes: "Ja", no: "Nein", objective: "ZIEL", objectiveText: "Erreiche die Militärbasis, bevor die Zeit abläuft. Weiche den Landminen auf dem Weg aus!", controls: "STEUERUNG", controlsMove: "Links/Rechts bewegen:", controlsSpeed: "Geschwindigkeit erhöhen/verringern:", controlsStart: "Spiel starten (Hauptmenü):", controlsHowToPlay: "Anleitung (Hauptmenü):", controlsBack: "Zurück / Spiel pausieren:", mobileControls: "MOBILE STEUERUNG", mobileControlsText: "Benutze die Tasten auf dem Bildschirm, um den Panzer zu steuern. Linke Tasten steuern die Geschwindigkeit, rechte Tasten die Bewegung." },
+            'zh-Hant': { mainTitle: "坦克衝鋒", mainSubtitle: "在時間耗盡前抵達基地！", startGame: "開始遊戲", howToPlay: "遊戲說明", language: "語言", bestTime: "最佳時間", chooseBattleground: "選擇你的戰場", forests: "森林", plains: "平原", deserts: "沙漠", back: "返回", score: "分數", speed: "速度", time: "時間", quit: "退出", missionFailed: "任務失敗", missionComplete: "任務完成", timeRemaining: "剩餘時間", mainMenu: "主選單", failReasonTime: "你的時間用完了！", failReasonMine: "你撞到了地雷！", failReasonQuit: "你退出了任務。", easy: "簡單", medium: "中等", hard: "困難", gamePaused: "遊戲暫停", quitConfirm: "你確定要退出嗎？", yes: "是", no: "否", objective: "目標", objectiveText: "在計時器用完之前到達軍事基地。躲開沿途的地雷！", controls: "控制", controlsMove: "向左/向右移動:", controlsSpeed: "增加/減少速度:", controlsStart: "開始遊戲（主選單）:", controlsHowToPlay: "遊戲說明（主選單）:", controlsBack: "返回 / 暫停遊戲:", mobileControls: "移動控制", mobileControlsText: "使用螢幕上的按鈕來控制坦克。左側按鈕控制速度，右側按鈕控制移動。" }
+        };
+        let currentLang = 'en';
+
+        // --- Menu Navigation & Settings ---
+        let selectedDifficulty = 'easy';
+        const difficultyTimes = { easy: 300, medium: 210, hard: 120 };
+
+        startGameBtn.addEventListener('click', () => { mainMenu.classList.add('hidden'); backgroundSelect.classList.remove('hidden'); backgroundSelect.classList.add('flex'); });
+        backToMenuBtn.addEventListener('click', () => { backgroundSelect.classList.add('hidden'); backgroundSelect.classList.remove('flex'); mainMenu.classList.remove('hidden'); });
+        languageBtn.addEventListener('click', () => { mainMenu.classList.add('hidden'); languageModal.classList.remove('hidden'); languageModal.classList.add('flex'); });
+        languageBackBtn.addEventListener('click', () => { languageModal.classList.add('hidden'); languageModal.classList.remove('flex'); mainMenu.classList.remove('hidden'); });
+        howToPlayBtn.addEventListener('click', () => { mainMenu.classList.add('hidden'); howToPlayModal.classList.remove('hidden'); howToPlayModal.classList.add('flex'); });
+        howToPlayBackBtn.addEventListener('click', () => { howToPlayModal.classList.add('hidden'); howToPlayModal.classList.remove('flex'); mainMenu.classList.remove('hidden'); });
+        quitGameBtn.addEventListener('click', () => togglePause(true));
+        returnToMenuBtn.addEventListener('click', () => { gameOverModal.classList.add('hidden'); gameScreen.classList.add('hidden'); mainMenu.classList.remove('hidden'); });
+        winReturnToMenuBtn.addEventListener('click', () => { gameWinModal.classList.add('hidden'); gameScreen.classList.add('hidden'); mainMenu.classList.remove('hidden'); });
+        Object.keys(levelSelectCards).forEach(theme => { levelSelectCards[theme].addEventListener('click', () => { backgroundSelect.classList.add('hidden'); backgroundSelect.classList.remove('flex'); gameScreen.classList.remove('hidden'); startGame(theme); }); });
+        langEnBtn.addEventListener('click', () => setLanguage('en'));
+        langEsBtn.addEventListener('click', () => setLanguage('es'));
+        langDeBtn.addEventListener('click', () => setLanguage('de'));
+        langZhHantBtn.addEventListener('click', () => setLanguage('zh-Hant'));
+        pauseYesBtn.addEventListener('click', () => gameOver(uiText[currentLang].failReasonQuit));
+        pauseNoBtn.addEventListener('click', () => togglePause(false));
+        
+        difficultyEasyBtn.addEventListener('click', () => setDifficulty('easy'));
+        difficultyMediumBtn.addEventListener('click', () => setDifficulty('medium'));
+        difficultyHardBtn.addEventListener('click', () => setDifficulty('hard'));
+        
+        // --- Global Keybinds ---
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (!mainMenu.classList.contains('hidden')) {
+                if (key === 's') {
+                    e.preventDefault();
+                    startGameBtn.click();
+                } else if (key === 'h') {
+                    e.preventDefault();
+                    howToPlayBtn.click();
+                }
+            }
+            if (key === 'b') {
+                e.preventDefault();
+                if (!gameScreen.classList.contains('hidden') && !isGameOver) {
+                    togglePause();
+                } else {
+                    // Go back to main menu from any non-game screen
+                    if (!backgroundSelect.classList.contains('hidden')) { backToMenuBtn.click(); } 
+                    else if (!languageModal.classList.contains('hidden')) { languageBackBtn.click(); } 
+                    else if (!howToPlayModal.classList.contains('hidden')) { howToPlayBackBtn.click(); }
+                    else if (!gameOverModal.classList.contains('hidden')) { returnToMenuBtn.click(); } 
+                    else if (!gameWinModal.classList.contains('hidden')) { winReturnToMenuBtn.click(); }
+                }
+            }
+        });
+
+        // --- Menu Background Animation ---
+        const menuCanvas = document.getElementById('bg-canvas');
+        const menuCtx = menuCanvas.getContext('2d');
+        let particles = [];
+        const numParticles = 100;
+        
+        function resizeMenuCanvas() { menuCanvas.width = window.innerWidth; menuCanvas.height = window.innerHeight; initParticles(); }
+        class Particle { constructor() { this.x = Math.random() * menuCanvas.width; this.y = Math.random() * menuCanvas.height; this.size = Math.random() * 2 + 1; this.speedX = (Math.random() * 2 - 1) * 0.5; this.speedY = (Math.random() * 2 - 1) * 0.5; } update() { this.x += this.speedX; this.y += this.speedY; if (this.x < 0 || this.x > menuCanvas.width || this.y < 0 || this.y > menuCanvas.height) { this.x = Math.random() * menuCanvas.width; this.y = Math.random() * menuCanvas.height; } } draw() { menuCtx.fillStyle = 'rgba(76, 175, 80, 0.5)'; menuCtx.beginPath(); menuCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2); menuCtx.fill(); } }
+        function initParticles() { particles = []; for (let i = 0; i < numParticles; i++) { particles.push(new Particle()); } }
+        function animateParticles() { menuCtx.clearRect(0, 0, menuCanvas.width, menuCanvas.height); for (let i = 0; i < particles.length; i++) { particles[i].update(); particles[i].draw(); } requestAnimationFrame(animateParticles); }
+        
+        // =================================================
+        // =========== GAME LOGIC STARTS HERE ==============
+        // =================================================
+
+        const gameCanvas = document.getElementById('game-canvas');
+        const gameCtx = gameCanvas.getContext('2d');
+
+        let player, currentTheme, score, gameSpeed, gameLoopId, isGameOver, isPaused;
+        let lanes = [], roadMarkings = [], obstacles = [], obstacleSpawnTimer = 0;
+        let timeLeft, targetScore, lastFrameTime;
+        let bestTimes = JSON.parse(localStorage.getItem('tankRushBestTimes')) || { easy: 0, medium: 0, hard: 0 };
+        let actionIntervals = {};
+        let scaleFactor = 1;
+
+        const themeSettings = {
+            forest: { bgColor: '#166534', roadColor: '#6b7280', lineColor: 'rgba(255,255,255,0.2)' },
+            plains: { bgColor: '#a16207', roadColor: '#d4d4d8', lineColor: 'rgba(0,0,0,0.2)' },
+            desert: { bgColor: '#fde68a', roadColor: '#e7e5e4', lineColor: 'rgba(0,0,0,0.2)' }
+        };
+
+        function handleGameResize() {
+            if (isGameOver || isPaused) return;
+
+            gameCanvas.width = window.innerWidth;
+            gameCanvas.height = window.innerHeight;
+
+            scaleFactor = gameCanvas.height / 800; // Base height of 800px
+
+            const laneWidth = gameCanvas.width / 5;
+            lanes = [ laneWidth, laneWidth * 2, laneWidth * 3 ];
+
+            if (player) {
+                player.width = 50 * scaleFactor;
+                player.height = 75 * scaleFactor;
+                player.x = lanes[player.lane];
+                player.y = gameCanvas.height - (150 * scaleFactor);
+            }
+            
+            draw();
+        }
+
+        function startGame(theme) {
+            isPaused = false;
+            
+            player = {
+                lane: 1,
+                x: 0, 
+                y: 0, 
+                width: 50,
+                height: 75
+            };
+
+            handleGameResize();
+
+            currentTheme = theme;
+            score = 0;
+            targetScore = 75000;
+            gameSpeed = 5;
+            isGameOver = false;
+            timeLeft = difficultyTimes[selectedDifficulty];
+            lastFrameTime = performance.now();
+            
+            scoreDisplay.innerText = 0;
+            speedDisplay.innerText = gameSpeed.toFixed(1);
+            gameOverModal.classList.add('hidden');
+            gameWinModal.classList.add('hidden');
+            pauseModal.classList.add('hidden');
+            
+            roadMarkings = [];
+            for (let i = 0; i < gameCanvas.height / 50; i++) {
+                roadMarkings.push({ y: i * 70, height: 40 });
+            }
+            
+            obstacles = [];
+            obstacleSpawnTimer = 0;
+            
+            window.addEventListener('keydown', handlePlayerInput);
+            window.addEventListener('resize', handleGameResize);
+            if ('ontouchstart' in window) {
+                mobileControlsContainer.classList.remove('hidden');
+            }
+            gameLoop(lastFrameTime);
+        }
+
+        function stopGame() {
+            cancelAnimationFrame(gameLoopId);
+            gameLoopId = null;
+            window.removeEventListener('resize', handleGameResize);
+        }
+
+        function resumeGame() {
+            if (!gameLoopId) {
+                lastFrameTime = performance.now(); // Reset time to avoid a large jump
+                window.addEventListener('resize', handleGameResize);
+                gameLoopId = requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        function togglePause(force) {
+            isPaused = typeof force === 'boolean' ? force : !isPaused;
+            if (isPaused) {
+                stopGame();
+                pauseModal.classList.remove('hidden');
+                pauseModal.classList.add('flex');
+            } else {
+                pauseModal.classList.add('hidden');
+                pauseModal.classList.remove('flex');
+                resumeGame();
+            }
+        }
+
+        function gameOver(reason) {
+            isGameOver = true;
+            stopGame();
+            failureReasonDisplay.innerText = reason;
+            gameOverModal.classList.remove('hidden');
+            mobileControlsContainer.classList.add('hidden');
+        }
+
+        function gameWin() {
+            isGameOver = true;
+            stopGame();
+
+            const timeTaken = difficultyTimes[selectedDifficulty] - timeLeft;
+            if (bestTimes[selectedDifficulty] == 0 || timeTaken < bestTimes[selectedDifficulty]) {
+                bestTimes[selectedDifficulty] = timeTaken;
+                localStorage.setItem('tankRushBestTimes', JSON.stringify(bestTimes));
+                updateBestTimeDisplay();
+            }
+
+            timeRemainingDisplay.innerText = formatTime(timeLeft);
+            bestTimeWinDisplay.innerText = formatTimeTaken(bestTimes[selectedDifficulty]);
+            gameWinModal.classList.remove('hidden');
+            mobileControlsContainer.classList.add('hidden');
+        }
+
+        function handlePlayerInput(e) {
+            if (isGameOver || isPaused) return;
+            const key = e.key.toLowerCase();
+            switch (key) {
+                case 'a': case 'arrowleft': player.lane = Math.max(0, player.lane - 1); break;
+                case 'd': case 'arrowright': player.lane = Math.min(lanes.length - 1, player.lane + 1); break;
+                case 'w': case 'arrowup': gameSpeed = Math.min(20, gameSpeed + 0.5); break;
+                case 's': case 'arrowdown': gameSpeed = Math.max(1, gameSpeed - 0.5); break;
+            }
+            player.x = lanes[player.lane];
+        }
+        
+        function updatePositions(deltaTime) {
+            timeLeft -= deltaTime;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                gameOver(uiText[currentLang].failReasonTime);
+            }
+
+            score += gameSpeed * 50 * deltaTime;
+            if (score >= targetScore) {
+                score = targetScore;
+                gameWin();
+            }
+            
+            scoreDisplay.innerText = Math.floor(score);
+            speedDisplay.innerText = gameSpeed.toFixed(1);
+            progressBar.style.width = `${(score / targetScore) * 100}%`;
+
+            roadMarkings.forEach(mark => { mark.y += gameSpeed; if (mark.y > gameCanvas.height) mark.y = -mark.height; });
+            obstacleSpawnTimer++;
+            if (obstacleSpawnTimer > Math.max(30, 120 - gameSpeed * 5)) { obstacleSpawnTimer = 0; spawnObstacles(); }
+            obstacles.forEach(obstacle => obstacle.y += gameSpeed);
+            obstacles = obstacles.filter(o => o.y < gameCanvas.height + 50);
+            
+            checkCollisions();
+        }
+        
+        function spawnObstacles() {
+            const availableLanes = [0, 1, 2];
+            const numToSpawn = Math.random() < 0.7 ? 1 : 2;
+            for (let i=0; i < numToSpawn; i++) {
+                const laneIndex = Math.floor(Math.random() * availableLanes.length);
+                const chosenLane = availableLanes.splice(laneIndex, 1)[0];
+                obstacles.push({ lane: chosenLane, x: lanes[chosenLane], y: -50, radius: 20 * scaleFactor });
+            }
+        }
+        
+        function checkCollisions() {
+            const p = player;
+            for (const o of obstacles) {
+                if (p.lane === o.lane) {
+                    const playerTop = p.y - p.height / 2;
+                    const playerBottom = p.y + p.height / 2;
+                    const obstacleTop = o.y - o.radius;
+                    const obstacleBottom = o.y + o.radius;
+                    if (playerTop < obstacleBottom && playerBottom > obstacleTop) { gameOver(uiText[currentLang].failReasonMine); return; }
+                }
+            }
+        }
+
+        function draw() {
+            gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+            drawBackground();
+            drawMilitaryBase();
+            drawObstacles();
+            drawPlayer();
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+        
+        function formatTimeTaken(seconds) {
+             const mins = Math.floor(seconds / 60);
+             const secs = Math.floor(seconds % 60);
+             return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function drawBackground() {
+            const settings = themeSettings[currentTheme];
+            const roadWidth = gameCanvas.width / 5;
+            gameCtx.fillStyle = settings.bgColor;
+            gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+            gameCtx.fillStyle = settings.roadColor;
+            lanes.forEach(laneX => gameCtx.fillRect(laneX - roadWidth / 2, 0, roadWidth, gameCanvas.height));
+            gameCtx.fillStyle = settings.lineColor;
+            roadMarkings.forEach(mark => {
+                gameCtx.fillRect(lanes[0] + roadWidth / 2 - 2.5, mark.y, 5, mark.height);
+                gameCtx.fillRect(lanes[1] + roadWidth / 2 - 2.5, mark.y, 5, mark.height);
+            });
+        }
+
+        function drawMilitaryBase() {
+            const progress = score / targetScore;
+            if (progress < 0.75) return;
+            const revealProgress = (progress - 0.75) / 0.25;
+            const baseHeight = 400 * scaleFactor;
+            const baseY = -baseHeight * (1 - revealProgress);
+            const roadWidth = gameCanvas.width / 5;
+            const roadStart = lanes[0] - roadWidth / 2;
+            const roadEnd = lanes[2] + roadWidth / 2;
+            const roadTotalWidth = roadEnd - roadStart;
+            gameCtx.fillStyle = '#4a5568';
+            gameCtx.fillRect(0, baseY, gameCanvas.width, 200 * scaleFactor);
+            gameCtx.fillStyle = '#2d3748';
+            gameCtx.fillRect(roadStart, baseY + 150 * scaleFactor, roadTotalWidth, 50 * scaleFactor);
+            gameCtx.fillStyle = '#4a5568';
+            gameCtx.fillRect(roadStart + roadTotalWidth/2 - 50 * scaleFactor, baseY + 150 * scaleFactor, 100 * scaleFactor, 50 * scaleFactor);
+            const turretY = baseY + 130 * scaleFactor;
+            gameCtx.fillStyle = '#718096';
+            gameCtx.fillRect(roadStart - 60 * scaleFactor, turretY, 60 * scaleFactor, 40 * scaleFactor);
+            gameCtx.beginPath();
+            gameCtx.arc(roadStart - 30 * scaleFactor, turretY, 25 * scaleFactor, Math.PI, 2 * Math.PI);
+            gameCtx.fill();
+            gameCtx.fillStyle = '#2d3748';
+            gameCtx.fillRect(roadStart - 35 * scaleFactor, turretY - 30 * scaleFactor, 10 * scaleFactor, 30 * scaleFactor);
+            gameCtx.fillStyle = '#718096';
+            gameCtx.fillRect(roadEnd, turretY, 60 * scaleFactor, 40 * scaleFactor);
+            gameCtx.beginPath();
+            gameCtx.arc(roadEnd + 30 * scaleFactor, turretY, 25 * scaleFactor, Math.PI, 2 * Math.PI);
+            gameCtx.fill();
+            gameCtx.fillStyle = '#2d3748';
+            gameCtx.fillRect(roadEnd + 25 * scaleFactor, turretY - 30 * scaleFactor, 10 * scaleFactor, 30 * scaleFactor);
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(o => {
+                gameCtx.fillStyle = '#dc2626';
+                gameCtx.beginPath();
+                gameCtx.arc(o.x, o.y, o.radius, 0, Math.PI * 2);
+                gameCtx.fill();
+                gameCtx.fillStyle = '#f87171';
+                gameCtx.beginPath();
+                gameCtx.arc(o.x, o.y, o.radius * 0.6, 0, Math.PI * 2);
+                gameCtx.fill();
+            });
+        }
+
+        function drawPlayer() {
+            gameCtx.save();
+            const tankX = player.x - player.width / 2;
+            const tankY = player.y - player.height / 2;
+            gameCtx.fillStyle = '#a1a1aa';
+            gameCtx.fillRect(tankX, tankY, player.width, player.height);
+            gameCtx.fillStyle = '#71717a';
+            gameCtx.fillRect(tankX - 8 * scaleFactor, tankY - 2 * scaleFactor, 8 * scaleFactor, player.height + 4 * scaleFactor);
+            gameCtx.fillRect(tankX + player.width, tankY - 2 * scaleFactor, 8 * scaleFactor, player.height + 4 * scaleFactor);
+            gameCtx.fillStyle = '#4d7c0f';
+            gameCtx.beginPath();
+            gameCtx.arc(player.x, player.y, player.width / 2.5, 0, 2 * Math.PI);
+            gameCtx.fill();
+            gameCtx.fillStyle = '#4a5568';
+            gameCtx.fillRect(player.x - 5 * scaleFactor, tankY - 25 * scaleFactor, 10 * scaleFactor, 25 * scaleFactor);
+            gameCtx.restore();
+        }
+
+        function gameLoop(timestamp) {
+            if (isGameOver || isPaused) return;
+            const deltaTime = (timestamp - lastFrameTime) / 1000;
+            lastFrameTime = timestamp;
+            updatePositions(deltaTime);
+            draw();
+            timerDisplay.innerText = formatTime(timeLeft);
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+        
+        function updateBestTimeDisplay() {
+            const bestTimeForDifficulty = bestTimes[selectedDifficulty];
+            if (bestTimeForDifficulty > 0) {
+                bestTimeMenuDisplay.innerText = formatTimeTaken(bestTimeForDifficulty);
+            } else {
+                bestTimeMenuDisplay.innerText = '--:--';
+            }
+        }
+
+        function setDifficulty(difficulty) {
+            selectedDifficulty = difficulty;
+            difficultyButtons.forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`difficulty-${difficulty}`).classList.add('active');
+            updateBestTimeDisplay();
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('tankRushLanguage', lang);
+            
+            if (lang === 'zh-Hant') {
+                document.body.style.fontFamily = "'Noto Sans TC', sans-serif";
+            } else {
+                document.body.style.fontFamily = "'Orbitron', sans-serif";
+            }
+
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (uiText[lang][key]) {
+                    // For the controls list, we need to handle it specially
+                    if (el.parentElement.tagName === 'LI' && el.parentElement.parentElement.parentElement.querySelector('[data-lang="controls"]')) {
+                        // This is a control description, just update the text content of this span
+                        el.textContent = uiText[lang][key];
+                    } else {
+                        el.innerText = uiText[lang][key];
+                    }
+                }
+            });
+            // Handle non-data-lang elements separately
+            document.getElementById('ui-main-title').innerText = uiText[lang].mainTitle;
+            document.getElementById('ui-main-subtitle').innerText = uiText[lang].mainSubtitle;
+        }
+        
+        // --- Initial Setup ---
+        function initialize() {
+            const savedLang = localStorage.getItem('tankRushLanguage') || 'en';
+            setLanguage(savedLang);
+            setDifficulty('easy');
+            if ('ontouchstart' in window) {
+                mobileControlsInfo.classList.remove('hidden');
+            }
+            resizeMenuCanvas(); 
+            animateParticles(); 
+            window.addEventListener('resize', resizeMenuCanvas);
+        }
+
+        // --- Mobile Controls ---
+        function handleTouch(action, start) {
+            if (start) {
+                if (actionIntervals[action]) return; // Already running
+                actionIntervals[action] = setInterval(() => {
+                    handlePlayerInput({ key: action });
+                }, 100); // Repeat action every 100ms
+            } else {
+                clearInterval(actionIntervals[action]);
+                delete actionIntervals[action];
+            }
+        }
+
+        document.getElementById('speed-up-btn').addEventListener('touchstart', (e) => { e.preventDefault(); handleTouch('w', true); });
+        document.getElementById('speed-up-btn').addEventListener('touchend', () => handleTouch('w', false));
+        document.getElementById('speed-down-btn').addEventListener('touchstart', (e) => { e.preventDefault(); handleTouch('s', true); });
+        document.getElementById('speed-down-btn').addEventListener('touchend', () => handleTouch('s', false));
+        document.getElementById('move-left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); handlePlayerInput({key: 'a'}); }); // Single tap for movement
+        document.getElementById('move-right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); handlePlayerInput({key: 'd'}); }); // Single tap for movement
+
+        initialize();
+    </script>
+</body>
+</html>
