@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Architect: The First 20</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #f0f4f8; /* Light blue-grey background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        /* Custom styles for electron visualization */
+        .electron-shell {
+            position: absolute;
+            border: 1px solid rgba(100, 116, 139, 0.3); /* Slate-400 with transparency */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .electron {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #3b82f6; /* Blue-500 */
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.7);
+        }
+
+        /* Drag and drop feedback */
+        .periodic-table-cell.drag-over-correct {
+            border: 2px dashed #3b82f6; /* Blue-500 */
+            background-color: rgba(59, 130, 246, 0.1); /* Light blue overlay */
+        }
+        .periodic-table-cell.drag-over-incorrect {
+            border: 2px dashed #dc2626; /* Brighter Red-600 */
+            background-color: rgba(239, 68, 68, 0.25); /* Brighter Light red overlay (Red-500 with higher opacity) */
+        }
+
+        /* Hide scrollbar for aesthetics */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+
+        /* Specific grid layout for the simplified periodic table */
+        #periodic-table {
+            display: grid;
+            /* 1st col for Period labels, then 8 columns for elements (G1, G2, G3-G8) */
+            grid-template-columns: 28px repeat(8, minmax(38px, 1fr));
+            gap: 3px;
+            grid-auto-rows: minmax(38px, 1fr);
+        }
+
+        /* Style for grid labels */
+        .grid-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+    <div id="game-container" class="bg-white p-6 rounded-xl shadow-lg w-full max-w-5xl flex flex-col lg:flex-row gap-6">
+        <!-- Left Panel: Periodic Table, Game Title, Instructions/Feedback, Progress, Controls -->
+        <div class="flex-1 flex flex-col">
+            <!-- Game Title with Icon -->
+            <h1 class="text-3xl font-extrabold mb-4 text-center text-teal-600 lg:text-left flex items-center justify-center lg:justify-start">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 mr-2 text-blue-500">
+                    <circle cx="12" cy="12" r="2"></circle>
+                    <path d="M16 12a4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4 4 4 0 0 1 4 4z"></path>
+                    <path d="M12 2v2"></path>
+                    <path d="M12 20v2"></path>
+                    <path d="M20 12h2"></path>
+                    <path d="M2 12h2"></path>
+                    <path d="m18.36 5.64-.7.7"></path>
+                    <path d="m5.64 18.36.7-.7"></path>
+                    <path d="m18.36 18.36-.7-.7"></path>
+                    <path d="m5.64 5.64.7.7"></path>
+                </svg>
+                Element Architect
+            </h1>
+            <h2 class="text-2xl font-bold mb-4 text-center text-gray-900 lg:text-left">Periodic Table</h2>
+
+            <!-- Instructions / Feedback Area -->
+            <div id="feedback-area" class="w-full bg-blue-100 p-3 rounded-lg text-center text-blue-800 font-medium mb-4 min-h-[60px] flex items-center justify-center text-sm transition-all duration-300 ease-in-out">
+                <!-- Initial instructions or dynamic feedback appear here -->
+            </div>
+
+            <!-- Progress Bar, Timer, and Controls on the same row -->
+            <div class="w-full flex items-center justify-between gap-3 mb-6">
+                <!-- Progress Bar -->
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-600 mb-1">Progress: <span id="progress-text">0/20</span></p>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progress-bar" class="bg-teal-500 h-2 rounded-full transition-all duration-300 ease-out" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <!-- Timer Display -->
+                <div class="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                    Time: <span id="timer-display">00:00</span>
+                </div>
+                <!-- Controls (Restart Button) -->
+                <div>
+                    <button id="restart-button" class="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition-all duration-200 font-semibold text-sm">Restart</button>
+                </div>
+            </div>
+
+            <div id="periodic-table">
+                <!-- Group Labels (Row 1) -->
+                <div class="grid-label"></div> <!-- Empty cell for top-left corner -->
+                <div class="grid-label">1</div>
+                <div class="grid-label">2</div>
+                <div class="grid-label">3</div>
+                <div class="grid-label">4</div>
+                <div class="grid-label">5</div>
+                <div class="grid-label">6</div>
+                <div class="grid-label">7</div>
+                <div class="grid-label">8</div>
+
+                <!-- Periodic Table Cells will be generated here by JS -->
+            </div>
+        </div>
+
+        <!-- Right Panel: Workbench and Element Card -->
+        <div class="w-full lg:w-72 flex flex-col items-center p-4 bg-gray-50 rounded-lg shadow-inner">
+            <!-- Element Card Workbench -->
+            <div class="w-full bg-white p-4 rounded-xl shadow-lg border border-gray-200 flex flex-col items-center" id="workbench-area">
+                <h3 class="text-lg font-semibold mb-3 text-gray-700">Place This Element:</h3>
+                <div id="element-card"
+                     draggable="true"
+                     class="w-64 h-64 bg-blue-50 border border-blue-200 rounded-lg shadow-md flex flex-col items-center justify-center cursor-grab transition-all duration-200 hover:shadow-lg active:cursor-grabbing">
+                    <p class="text-xs text-gray-500 mb-0.5">Atomic Number:</p>
+                    <p id="atomic-number" class="text-4xl font-bold text-blue-700 mb-1"></p>
+                    <p class="text-xs text-gray-500 mb-0.5">Electron Config:</p>
+                    <p id="electron-notation" class="text-base font-semibold text-gray-700 mb-3"></p>
+                    <div id="electron-diagram" class="relative w-full h-full flex items-center justify-center overflow-hidden">
+                        <!-- Electron shells and electrons will be drawn here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Leaderboard Button -->
+            <button id="leaderboard-button" class="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 font-semibold text-lg disabled:bg-gray-400 disabled:cursor-not-allowed">View Leaderboard</button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-7 rounded-xl shadow-2xl max-w-sm w-full text-center">
+            <h3 id="modal-title" class="text-xl font-bold mb-3 text-gray-900"></h3>
+            <p id="modal-message" class="text-gray-700 mb-5 text-sm"></p>
+            <button id="modal-close-button" class="bg-teal-500 text-white px-5 py-2.5 rounded-lg shadow-md hover:bg-teal-600 transition-all duration-200 font-semibold text-base">Got It!</button>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-lg w-full text-center">
+            <h3 class="text-2xl font-bold mb-6 text-gray-900">Leaderboard</h3>
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left">Rank</th>
+                            <th class="py-3 px-6 text-left">Player</th>
+                            <th class="py-3 px-6 text-left">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body" class="text-gray-700 text-sm font-light">
+                        <!-- Leaderboard entries will be inserted here by JS -->
+                        <tr><td colspan="3" class="py-4 text-center">Loading leaderboard...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <button id="leaderboard-close-button" class="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition-all duration-200 font-semibold text-lg">Close</button>
+        </div>
+    </div>
+
+    <!-- Nickname Input Modal for Game Over -->
+    <div id="nickname-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+        <form id="nickname-form" class="relative bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full h-auto max-h-[90vh] flex flex-col justify-between text-center overflow-y-auto">
+            <button type="button" id="nickname-close-button" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div>
+                <h3 class="text-2xl font-bold mb-4 text-gray-900">New High Score!</h3>
+                <p class="text-gray-700 mb-6 text-base">Enter your nickname to save your time: <span id="final-time-display" class="font-semibold"></span></p>
+                <input type="text" id="nickname-input" placeholder="Your Nickname" maxlength="15" class="w-full p-3 border border-gray-300 rounded-lg mb-6 text-center text-lg focus:ring-blue-500 focus:border-blue-500" required />
+            </div>
+            <button type="submit" id="submit-score-button" class="bg-teal-500 text-white px-5 py-2.5 rounded-lg shadow-md hover:bg-teal-600 transition-all duration-200 font-semibold text-base w-full mt-auto disabled:bg-gray-400 disabled:cursor-not-allowed">Submit Score</button>
+        </form>
+    </div>
+
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase variables
+        let app;
+        let db;
+        let auth;
+        let userId; // User ID for Firestore operations
+        let isFirebaseAvailable = false;
+
+        // IMPORTANT: These variables are provided by the Canvas environment.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'element-architect-standalone';
+        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+
+        // Game state variables
+        let shuffledElements = [];
+        let currentElementIndex = 0;
+        let placedElementsCount = 0;
+        let gameActive = false;
+        let startTime;
+        let timerInterval;
+        const initialInstructions = 'Drag the element card to its correct spot on the Periodic Table! Match the number of shells to the Period, and outermost electrons to the Group.';
+
+        // Audio context for sound effects
+        let audioContext;
+
+        // UI elements
+        const periodicTable = document.getElementById('periodic-table');
+        const elementCard = document.getElementById('element-card');
+        const atomicNumberDisplay = document.getElementById('atomic-number');
+        const electronNotationDisplay = document.getElementById('electron-notation');
+        const electronDiagram = document.getElementById('electron-diagram');
+        const feedbackArea = document.getElementById('feedback-area');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const restartButton = document.getElementById('restart-button');
+        const timerDisplay = document.getElementById('timer-display');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseButton = document.getElementById('modal-close-button');
+
+        // Leaderboard UI elements
+        const leaderboardButton = document.getElementById('leaderboard-button');
+        const leaderboardModalOverlay = document.getElementById('leaderboard-modal-overlay');
+        const leaderboardCloseButton = document.getElementById('leaderboard-close-button');
+        const leaderboardBody = document.getElementById('leaderboard-body');
+
+        // Nickname input modal elements
+        const nicknameModalOverlay = document.getElementById('nickname-modal-overlay');
+        const nicknameForm = document.getElementById('nickname-form');
+        const nicknameInput = document.getElementById('nickname-input');
+        const submitScoreButton = document.getElementById('submit-score-button');
+        const finalTimeDisplay = document.getElementById('final-time-display');
+        const nicknameCloseButton = document.getElementById('nickname-close-button');
+
+        // Define the first 20 elements with simplified electron configurations
+        const allElements = [
+            // Period 1
+            { id: 1, name: 'Hydrogen', symbol: 'H', atomicNumber: 1, config: [1], period: 1, group: 1, gridRow: 2, gridCol: 2 },
+            { id: 2, name: 'Helium', symbol: 'He', atomicNumber: 2, config: [2], period: 1, group: 8, gridRow: 2, gridCol: 9 }, // Group 18 -> 8
+            // Period 2
+            { id: 3, name: 'Lithium', symbol: 'Li', atomicNumber: 3, config: [2, 1], period: 2, group: 1, gridRow: 3, gridCol: 2 },
+            { id: 4, name: 'Beryllium', symbol: 'Be', atomicNumber: 4, config: [2, 2], period: 2, group: 2, gridRow: 3, gridCol: 3 },
+            { id: 5, name: 'Boron', symbol: 'B', atomicNumber: 5, config: [2, 3], period: 2, group: 3, gridRow: 3, gridCol: 4 }, // Group 13 -> 3
+            { id: 6, name: 'Carbon', symbol: 'C', atomicNumber: 6, config: [2, 4], period: 2, group: 4, gridRow: 3, gridCol: 5 }, // Group 14 -> 4
+            { id: 7, name: 'Nitrogen', symbol: 'N', atomicNumber: 7, config: [2, 5], period: 2, group: 5, gridRow: 3, gridCol: 6 }, // Group 15 -> 5
+            { id: 8, name: 'Oxygen', symbol: 'O', atomicNumber: 8, config: [2, 6], period: 2, group: 6, gridRow: 3, gridCol: 7 }, // Group 16 -> 6
+            { id: 9, name: 'Fluorine', symbol: 'F', atomicNumber: 9, config: [2, 7], period: 2, group: 7, gridRow: 3, gridCol: 8 }, // Group 17 -> 7
+            { id: 10, name: 'Neon', symbol: 'Ne', atomicNumber: 10, config: [2, 8], period: 2, group: 8, gridRow: 3, gridCol: 9 }, // Group 18 -> 8
+            // Period 3
+            { id: 11, name: 'Sodium', symbol: 'Na', atomicNumber: 11, config: [2, 8, 1], period: 3, group: 1, gridRow: 4, gridCol: 2 },
+            { id: 12, name: 'Magnesium', symbol: 'Mg', atomicNumber: 12, config: [2, 8, 2], period: 3, group: 2, gridRow: 4, gridCol: 3 },
+            { id: 13, name: 'Aluminum', symbol: 'Al', atomicNumber: 13, config: [2, 8, 3], period: 3, group: 3, gridRow: 4, gridCol: 4 }, // Group 13 -> 3
+            { id: 14, name: 'Silicon', symbol: 'Si', atomicNumber: 14, config: [2, 8, 4], period: 3, group: 4, gridRow: 4, gridCol: 5 }, // Group 14 -> 4
+            { id: 15, name: 'Phosphorus', symbol: 'P', atomicNumber: 15, config: [2, 8, 5], period: 3, group: 5, gridRow: 4, gridCol: 6 }, // Group 15 -> 5
+            { id: 16, name: 'Sulfur', symbol: 'S', atomicNumber: 16, config: [2, 8, 6], period: 3, group: 6, gridRow: 4, gridCol: 7 }, // Group 16 -> 6
+            { id: 17, name: 'Chlorine', symbol: 'Cl', atomicNumber: 17, config: [2, 8, 7], period: 3, group: 7, gridRow: 4, gridCol: 8 }, // Group 17 -> 7
+            { id: 18, name: 'Argon', symbol: 'Ar', atomicNumber: 18, config: [2, 8, 8], period: 3, group: 8, gridRow: 4, gridCol: 9 }, // Group 18 -> 8
+            // Period 4
+            { id: 19, name: 'Potassium', symbol: 'K', atomicNumber: 19, config: [2, 8, 8, 1], period: 4, group: 1, gridRow: 5, gridCol: 2 },
+            { id: 20, name: 'Calcium', symbol: 'Ca', atomicNumber: 20, config: [2, 8, 8, 2], period: 4, group: 2, gridRow: 5, gridCol: 3 }
+        ];
+
+        // --- Firebase Initialization ---
+        const initializeFirebase = async () => {
+            // Check if a valid Firebase config is available from the Canvas environment
+            try {
+                const firebaseConfig = JSON.parse(firebaseConfigStr);
+                if (Object.keys(firebaseConfig).length === 0) {
+                    throw new Error("Empty Firebase config.");
+                }
+                isFirebaseAvailable = true;
+            } catch (e) {
+                isFirebaseAvailable = false;
+            }
+
+            if (!isFirebaseAvailable) {
+                console.warn("Firebase config not found or invalid. Leaderboard and online features will be disabled.");
+                leaderboardButton.disabled = true;
+                leaderboardButton.textContent = 'Leaderboard Offline';
+                return; // Exit initialization
+            }
+
+            try {
+                const firebaseConfig = JSON.parse(firebaseConfigStr);
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Sign in with custom token if available, otherwise sign in anonymously
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase initialized. User ID:", userId);
+                    }
+                });
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                isFirebaseAvailable = false;
+                leaderboardButton.disabled = true;
+                leaderboardButton.textContent = 'Leaderboard Offline';
+                showModal("Connection Error", "Could not connect to the server. Online features are disabled.");
+            }
+        };
+
+        // --- Helper Functions ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(frequency, duration, type = 'sine') {
+            if(!audioContext) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function displayFeedback(message, isCorrect) {
+            feedbackArea.textContent = message;
+            feedbackArea.classList.remove('bg-blue-100', 'text-blue-800', 'bg-red-100', 'text-red-800', 'bg-teal-100', 'text-teal-800');
+            if (isCorrect) {
+                feedbackArea.classList.add('bg-teal-100', 'text-teal-800');
+                playTone(880, 0.1, 'sine');
+            } else {
+                feedbackArea.classList.add('bg-red-100', 'text-red-800');
+                playTone(220, 0.2, 'square');
+            }
+            setTimeout(() => {
+                feedbackArea.classList.remove('bg-teal-100', 'text-teal-800', 'bg-red-100', 'text-red-800');
+                feedbackArea.classList.add('bg-blue-100', 'text-blue-800');
+                feedbackArea.textContent = initialInstructions;
+            }, 3000);
+        }
+
+        function updateProgressBar() {
+            const progress = (placedElementsCount / allElements.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${placedElementsCount}/${allElements.length}`;
+        }
+
+        function formatTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            if (!gameActive) return;
+            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            timerDisplay.textContent = formatTime(elapsedTime);
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function showModal(title, message, isGameOver = false) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalCloseButton.textContent = isGameOver ? 'Play Again!' : 'Got It!';
+            modalOverlay.classList.remove('hidden');
+        }
+
+        function hideModal() {
+            modalOverlay.classList.add('hidden');
+        }
+
+        function showLeaderboardModal() {
+            leaderboardModalOverlay.classList.remove('hidden');
+            fetchLeaderboard();
+        }
+
+        function hideLeaderboardModal() {
+            leaderboardModalOverlay.classList.add('hidden');
+        }
+
+        function showNicknameModal(finalTime) {
+            finalTimeDisplay.textContent = finalTime;
+            nicknameInput.value = '';
+            nicknameModalOverlay.classList.remove('hidden');
+            nicknameInput.focus();
+        }
+
+        function hideNicknameModal() {
+            nicknameModalOverlay.classList.add('hidden');
+        }
+
+        /**
+         * Creates the visual representation of electron shells and electrons.
+         * @param {Array<number>} config An array representing electrons in each shell (e.g., [2, 8, 1]).
+         */
+        function createElectronVisualization(config) {
+            electronDiagram.innerHTML = ''; // Clear previous diagram
+            const cardSize = 256; // w-64 h-64 is 256px by 256px
+            const maxShellSize = cardSize * 0.5;
+
+            config.forEach((electronsInShell, shellIndex) => {
+                const shellCount = config.length;
+                const shellDiameter = maxShellSize * ((shellIndex + 1) / shellCount);
+                const shellDiv = document.createElement('div');
+                shellDiv.classList.add('electron-shell');
+                shellDiv.style.width = `${shellDiameter}px`;
+                shellDiv.style.height = `${shellDiameter}px`;
+                shellDiv.style.left = `calc(50% - ${shellDiameter / 2}px)`;
+                shellDiv.style.top = `calc(50% - ${shellDiameter / 2}px)`;
+
+                for (let i = 0; i < electronsInShell; i++) {
+                    const electronDiv = document.createElement('div');
+                    electronDiv.classList.add('electron');
+                    const angle = (i / electronsInShell) * 2 * Math.PI;
+                    const radius = shellDiameter / 2;
+                    
+                    // FIX: The positioning logic was incorrect. Reverted to using left/top.
+                    // The center of the shell div is at (radius, radius).
+                    // We calculate the position on the circumference and offset by half the electron size to center it.
+                    const x = radius + radius * Math.cos(angle) - 5; // 5 is half of electron width (10px)
+                    const y = radius + radius * Math.sin(angle) - 5; // 5 is half of electron height (10px)
+
+                    electronDiv.style.left = `${x}px`;
+                    electronDiv.style.top = `${y}px`;
+
+                    shellDiv.appendChild(electronDiv);
+                }
+                electronDiagram.appendChild(shellDiv);
+            });
+        }
+
+        function createPeriodicTableGrid() {
+            periodicTable.querySelectorAll('.periodic-table-cell, .grid-label.period-label').forEach(el => el.remove());
+
+            for (let i = 1; i <= 4; i++) {
+                const periodLabel = document.createElement('div');
+                periodLabel.classList.add('grid-label', 'period-label');
+                periodLabel.textContent = i;
+                periodLabel.style.gridRow = i + 1;
+                periodLabel.style.gridColumn = 1;
+                periodicTable.appendChild(periodLabel);
+            }
+
+            allElements.forEach(element => {
+                const cell = document.createElement('div');
+                cell.classList.add('periodic-table-cell', 'bg-gray-100', 'border', 'border-gray-300', 'rounded-md', 'flex', 'flex-col', 'items-center', 'justify-center', 'text-sm', 'font-semibold', 'text-gray-600', 'min-w-[38px]', 'min-h-[38px]', 'transition-all', 'duration-100', 'ease-in-out', 'hover:bg-gray-200');
+                cell.style.gridRow = element.gridRow;
+                cell.style.gridColumn = element.gridCol;
+                cell.dataset.period = element.period;
+                cell.dataset.group = element.group;
+
+                cell.addEventListener('dragover', handleDragOver);
+                cell.addEventListener('dragleave', handleDragLeave);
+                cell.addEventListener('drop', handleDrop);
+                periodicTable.appendChild(cell);
+            });
+        }
+
+        function displayCurrentElement() {
+            if (currentElementIndex < shuffledElements.length) {
+                const element = shuffledElements[currentElementIndex];
+                atomicNumberDisplay.textContent = element.atomicNumber;
+                electronNotationDisplay.textContent = element.config.join(',');
+                elementCard.dataset.elementId = element.id;
+                createElectronVisualization(element.config);
+                elementCard.classList.remove('opacity-0', 'scale-90');
+            } else {
+                gameActive = false;
+                stopTimer();
+                if (isFirebaseAvailable) {
+                    showNicknameModal(timerDisplay.textContent);
+                } else {
+                    showModal('Game Over!', `Your final time was ${timerDisplay.textContent}. Online features are disabled, so your score was not saved.`, true);
+                }
+            }
+        }
+
+        function handleDragStart(e) {
+            if (!e.target.closest('#element-card') || !gameActive) {
+                e.preventDefault();
+                return;
+            }
+            initAudioContext();
+            e.dataTransfer.setData('text/plain', e.target.closest('#element-card').dataset.elementId);
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => e.target.closest('#element-card').classList.add('opacity-50'), 0);
+        }
+
+        function handleDragEnd(e) {
+            e.target.closest('#element-card').classList.remove('opacity-50');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const draggedElement = shuffledElements[currentElementIndex];
+            const targetCell = e.currentTarget;
+            if (targetCell.classList.contains('bg-teal-200')) return;
+
+            const isCorrect = parseInt(targetCell.dataset.period) === draggedElement.period && parseInt(targetCell.dataset.group) === draggedElement.group;
+            targetCell.classList.add(isCorrect ? 'drag-over-correct' : 'drag-over-incorrect');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over-correct', 'drag-over-incorrect');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            handleDragLeave(e);
+            const droppedElementId = parseInt(e.dataTransfer.getData('text/plain'));
+            const droppedElement = allElements.find(el => el.id === droppedElementId);
+            const targetCell = e.currentTarget;
+
+            if (targetCell.classList.contains('bg-teal-200')) {
+                displayFeedback('This spot is already taken!', false);
+                return;
+            }
+
+            const isCorrect = droppedElement.period === parseInt(targetCell.dataset.period) && droppedElement.group === parseInt(targetCell.dataset.group);
+
+            if (isCorrect) {
+                displayFeedback(`Correct! ${droppedElement.name} belongs here.`, true);
+                placedElementsCount++;
+                updateProgressBar();
+                targetCell.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+                targetCell.classList.add('bg-teal-200', 'text-teal-900', 'shadow-inner');
+                targetCell.innerHTML = `<p class="text-xl font-bold">${droppedElement.symbol}</p><p class="text-xs">${droppedElement.name}</p>`;
+                targetCell.removeEventListener('dragover', handleDragOver);
+                targetCell.removeEventListener('dragleave', handleDragLeave);
+                targetCell.removeEventListener('drop', handleDrop);
+                currentElementIndex++;
+                displayCurrentElement();
+            } else {
+                displayFeedback(`Not quite! Remember: Period = # of shells, Group = # of outermost electrons.`, false);
+            }
+        }
+
+        async function submitScore(nickname, timeString) {
+            if (!isFirebaseAvailable || !db) {
+                hideNicknameModal();
+                showModal("Submission Error", "Could not connect to the leaderboard server. Your score was not saved.", true);
+                return;
+            }
+
+            const [minutes, seconds] = timeString.split(':').map(Number);
+            const totalSeconds = (minutes * 60) + seconds;
+
+            try {
+                const leaderboardCollectionRef = collection(db, `artifacts/${appId}/public/data/leaderboard`);
+                await addDoc(leaderboardCollectionRef, {
+                    nickname: nickname,
+                    time: totalSeconds,
+                    timeString: timeString,
+                    timestamp: Date.now(),
+                    userId: userId
+                });
+                hideNicknameModal();
+                showModal('Score Submitted!', `Your time of ${timeString} is on the leaderboard!`, true);
+            } catch (e) {
+                console.error("Error adding document to Firestore: ", e);
+                hideNicknameModal();
+                showModal("Submission Error", "Failed to submit score due to a server error. Please try again later.", true);
+            }
+        }
+
+        function fetchLeaderboard() {
+            if (!isFirebaseAvailable || !db) {
+                leaderboardBody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-red-500">Leaderboard is offline.</td></tr>';
+                return;
+            }
+
+            const leaderboardCollectionRef = collection(db, `artifacts/${appId}/public/data/leaderboard`);
+            const q = query(leaderboardCollectionRef, orderBy("time", "asc"), limit(10));
+
+            onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    leaderboardBody.innerHTML = '<tr><td colspan="3" class="py-4 text-center">No scores yet. Be the first!</td></tr>';
+                    return;
+                }
+                leaderboardBody.innerHTML = '';
+                snapshot.forEach((doc, index) => {
+                    const score = doc.data();
+                    const row = `<tr class="border-b border-gray-200 hover:bg-gray-50"><td class="py-3 px-6 text-left">${index + 1}.</td><td class="py-3 px-6 text-left">${score.nickname}</td><td class="py-3 px-6 text-left">${score.timeString}</td></tr>`;
+                    leaderboardBody.innerHTML += row;
+                });
+            }, (error) => {
+                console.error("Error fetching leaderboard: ", error);
+                leaderboardBody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-red-500">Failed to load leaderboard.</td></tr>';
+            });
+        }
+
+        function resetGame() {
+            gameActive = true;
+            shuffledElements = shuffleArray([...allElements]);
+            currentElementIndex = 0;
+            placedElementsCount = 0;
+            updateProgressBar();
+            createPeriodicTableGrid();
+            displayCurrentElement();
+            feedbackArea.textContent = initialInstructions;
+            feedbackArea.classList.remove('bg-red-100', 'text-red-800', 'bg-teal-100', 'text-teal-800');
+            feedbackArea.classList.add('bg-blue-100', 'text-blue-800');
+            startTimer();
+            updateTimer();
+        }
+
+        // --- Event Listeners ---
+        elementCard.addEventListener('dragstart', handleDragStart);
+        elementCard.addEventListener('dragend', handleDragEnd);
+        restartButton.addEventListener('click', resetGame);
+        
+        modalCloseButton.addEventListener('click', () => {
+            hideModal();
+            if (!gameActive && placedElementsCount === allElements.length) {
+                resetGame();
+            }
+        });
+
+        leaderboardButton.addEventListener('click', showLeaderboardModal);
+        leaderboardCloseButton.addEventListener('click', hideLeaderboardModal);
+
+        nicknameCloseButton.addEventListener('click', () => {
+            hideNicknameModal();
+            showModal('Game Over!', `Your final time was ${timerDisplay.textContent}.`, true);
+        });
+
+        nicknameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nickname = nicknameInput.value.trim();
+            if (nickname) {
+                submitScoreButton.disabled = true;
+                submitScoreButton.textContent = 'Submitting...';
+                try {
+                    await submitScore(nickname, timerDisplay.textContent);
+                } finally {
+                    submitScoreButton.disabled = false;
+                    submitScoreButton.textContent = 'Submit Score';
+                }
+            }
+        });
+
+        // --- Initial Game Setup ---
+        window.onload = async () => {
+            await initializeFirebase();
+            resetGame();
+            showModal('Welcome, Element Architect!', initialInstructions);
+        };
+    </script>
+</body>
+</html>

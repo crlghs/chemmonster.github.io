@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Blaster</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        /* Custom styles for the game */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a202c, #2d3748); /* Dark gradient background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars from falling elements */
+        }
+
+        #game-container {
+            background-color: #2f3e4e; /* Slightly lighter dark background for container */
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            padding: 1.5rem;
+            text-align: center;
+            color: #e2e8f0; /* Light text color */
+            width: 90%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        #game-area {
+            background-color: #1a202c; /* Darker background for game play area */
+            border: 2px solid #4a5568;
+            border-radius: 10px;
+            width: 100%;
+            height: 500px; /* Increased height for dropping zone */
+            position: relative;
+            overflow: hidden;
+            margin-top: 0.5rem; /* Reduced margin */
+        }
+
+        .element-name {
+            position: absolute;
+            background-color: #4299e1; /* Blue element background */
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            white-space: nowrap; /* Prevent text wrapping */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px; /* Ensure consistent size */
+            height: 40px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .element-name.hit {
+            background-color: #48bb78; /* Green on hit */
+        }
+
+        .element-name.missed {
+            background-color: #e53e3e; /* Red on missed */
+        }
+
+        #input-area {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            width: 100%;
+            justify-content: center;
+        }
+
+        #symbol-input {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 2px solid #4a5568;
+            background-color: #2d3748;
+            color: #e2e8f0;
+            font-size: 1.1rem;
+            flex-grow: 1;
+            max-width: 200px;
+            text-align: center;
+        }
+
+        .game-button {
+            background-color: #63b3ed; /* Light blue button */
+            color: #1a202c;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border: none;
+        }
+
+        .game-button:hover {
+            background-color: #4299e1; /* Darker blue on hover */
+            transform: translateY(-2px);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .info-item {
+            background-color: #2d3748;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* New styles for selection options */
+        .selection-group {
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .selection-option {
+            background-color: #4a5568;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .selection-option.selected {
+            background-color: #63b3ed;
+            color: #1a202c;
+            border-color: #90cdf4;
+        }
+        
+        .selection-description {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+        
+        .selection-option.selected .selection-description {
+            color: #2d3748;
+        }
+
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure modal is on top */
+        }
+
+        .modal-content {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+            color: #e2e8f0;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: 150px; /* Ensure a minimum height for content visibility */
+            justify-content: center; /* Center content vertically if space allows */
+        }
+
+        /* Confetti styles */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00; /* Default red, will be overridden by JS */
+            border-radius: 50%; /* Make it round */
+            opacity: 0;
+            animation: confetti-fall 2s ease-out forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #game-container {
+                padding: 1rem;
+            }
+            #game-area {
+                height: 400px; /* Adjusted height for smaller screens */
+            }
+            .element-name {
+                font-size: 1rem;
+                padding: 0.4rem 0.8rem;
+                height: 35px;
+            }
+            #symbol-input {
+                font-size: 1rem;
+                padding: 0.6rem 0.8rem;
+            }
+            .game-button {
+                font-size: 1rem;
+                padding: 0.6rem 1rem;
+            }
+            #game-info {
+                font-size: 0.9rem;
+            }
+            .modal-content {
+                padding: 1.5rem;
+            }
+            .selection-group h3 {
+                font-size: 1.1rem; /* Smaller headings on mobile */
+            }
+            .selection-option {
+                padding: 0.75rem;
+                text-align: left; /* Align text left for better readability on small screens */
+            }
+            .selection-option .font-bold {
+                font-size: 1rem;
+            }
+            .selection-description {
+                font-size: 0.85rem;
+            }
+            #start-game-button {
+                width: 100%;
+                font-size: 1.2rem;
+                padding: 0.75rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container" class="relative">
+        <h1 class="text-3xl font-bold mb-4 text-white">Element Blaster</h1>
+
+        <div id="start-screen" class="game-screen">
+            <p class="text-lg text-gray-300 mb-4">Welcome, aspiring chemist! Choose your challenge:</p>
+            
+            <!-- Game Mode Selection -->
+            <div class="selection-group">
+                <h3 class="text-xl font-bold mb-2">1. Choose a Game Mode</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="game-mode-options">
+                    <div class="selection-option" data-value="symbol-sprint">
+                        <div class="font-bold">Symbol Sprint</div>
+                        <div class="selection-description">Elements fall from the sky. Type their symbol before they hit the bottom!</div>
+                    </div>
+                    <div class="selection-option" data-value="atomic-puzzle">
+                        <div class="font-bold">Atomic Puzzle</div>
+                        <div class="selection-description">A classic memory game. Match the element names to their symbols.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Difficulty Level Selection -->
+            <div class="selection-group">
+                <h3 class="text-xl font-bold mb-2 mt-4">2. Choose a Difficulty</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="difficulty-options">
+                    <div class="selection-option" data-value="20">
+                        <div class="font-bold">First 20 Elements</div>
+                        <div class="selection-description">A great place to start for beginners.</div>
+                    </div>
+                    <div class="selection-option" data-value="118">
+                        <div class="font-bold">All 118 Elements</div>
+                        <div class="selection-description">The ultimate test for chemistry wizards.</div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="start-game-button" class="game-button mt-8 text-2xl py-4 px-8">Start Game</button>
+        </div>
+
+        <div id="main-game-screen" class="game-screen hidden">
+            <div id="game-info">
+                <div class="info-item">Score: <span id="score">0</span></div>
+                <div class="info-item">Lives: <span id="lives">5</span></div>
+                <div class="info-item" id="timer-display-container">Time: <span id="time-left">60</span>s</div>
+            </div>
+            <div id="game-area">
+            </div>
+            <div id="input-area" class="w-full">
+                <input type="text" id="symbol-input" placeholder="Type symbol and press Enter">
+            </div>
+            <button id="pause-button" class="game-button mt-4 bg-yellow-600 hover:bg-yellow-700">Pause</button>
+        </div>
+
+        <div id="atomic-puzzle-screen" class="game-screen hidden">
+            <h2 class="text-2xl font-bold text-white">Atomic Puzzle: Match the Pairs!</h2>
+            <p class="text-lg text-gray-300">Match element names with their symbols.</p>
+            <div id="puzzle-grid" class="grid grid-cols-4 gap-4 w-full max-w-md">
+            </div>
+            <button id="atomic-puzzle-reset" class="game-button mt-4">Reset Puzzle</button>
+            <button id="back-to-start-from-puzzle" class="game-button mt-4 bg-gray-600 hover:bg-gray-700">Back to Start</button>
+        </div>
+
+        <div id="game-over-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h2 class="text-3xl font-bold text-red-400">GAME OVER!</h2>
+                <p class="text-xl">Your final score: <span id="final-score" class="font-bold text-blue-300"></span></p>
+                <p class="text-lg text-gray-300">Great effort! Every attempt makes you a better chemist. 🧪</p>
+                <div class="flex gap-4 justify-center">
+                    <button id="play-again-button" class="game-button">Try Again?</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="pause-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h2 class="text-3xl font-bold text-yellow-300">PAUSED</h2>
+                <p class="text-xl">Game is paused. Take a breath!</p>
+                <div class="flex gap-4 justify-center">
+                    <button id="resume-game-button" class="game-button">Resume Game</button>
+                    <button id="quit-to-start-button" class="game-button bg-gray-600 hover:bg-gray-700">Quit to Start</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Element Data
+        const ALL_ELEMENTS = [
+            { name: "Hydrogen", symbol: "H", atomicNumber: 1, category: "Nonmetal", funFact: "The most abundant chemical substance in the universe." },
+            { name: "Helium", symbol: "He", atomicNumber: 2, category: "Noble Gas", funFact: "Used to inflate balloons and blimps." },
+            { name: "Lithium", symbol: "Li", atomicNumber: 3, category: "Alkali Metal", funFact: "Used in rechargeable batteries." },
+            { name: "Beryllium", symbol: "Be", atomicNumber: 4, category: "Alkaline Earth Metal", funFact: "Used in aerospace components due to its lightness." },
+            { name: "Boron", symbol: "B", atomicNumber: 5, category: "Metalloid", funFact: "Found in borax, used in detergents." },
+            { name: "Carbon", symbol: "C", atomicNumber: 6, category: "Nonmetal", funFact: "The basis of all known life on Earth." },
+            { name: "Nitrogen", symbol: "N", atomicNumber: 7, category: "Nonmetal", funFact: "Makes up about 78% of Earth's atmosphere." },
+            { name: "Oxygen", symbol: "O", atomicNumber: 8, category: "Nonmetal", funFact: "Essential for respiration in most living organisms." },
+            { name: "Fluorine", symbol: "F", atomicNumber: 9, category: "Halogen", funFact: "The most reactive chemical element." },
+            { name: "Neon", symbol: "Ne", atomicNumber: 10, category: "Noble Gas", funFact: "Produces a distinctive orange-red glow in neon lights." },
+            { name: "Sodium", symbol: "Na", atomicNumber: 11, category: "Alkali Metal", funFact: "Highly reactive, found in table salt (NaCl)." },
+            { name: "Magnesium", symbol: "Mg", atomicNumber: 12, category: "Alkaline Earth Metal", funFact: "Used in lightweight alloys and fireworks." },
+            { name: "Aluminum", symbol: "Al", atomicNumber: 13, category: "Post-transition Metal", funFact: "Lightweight and corrosion-resistant, used in cans." },
+            { name: "Silicon", symbol: "Si", atomicNumber: 14, category: "Metalloid", funFact: "Basis of most semiconductors and computer chips." },
+            { name: "Phosphorus", symbol: "P", atomicNumber: 15, category: "Nonmetal", funFact: "Essential for DNA, RNA, and ATP." },
+            { name: "Sulphur", symbol: "S", atomicNumber: 16, category: "Nonmetal", funFact: "Known for its distinctive smell, used in gunpowder." },
+            { name: "Chlorine", symbol: "Cl", atomicNumber: 17, category: "Halogen", funFact: "Used to disinfect water." },
+            { name: "Argon", symbol: "Ar", atomicNumber: 18, category: "Noble Gas", funFact: "Used in incandescent and fluorescent lighting." },
+            { name: "Potassium", symbol: "K", atomicNumber: 19, category: "Alkali Metal", funFact: "Vital for nerve function and heart health." },
+            { name: "Calcium", symbol: "Ca", atomicNumber: 20, category: "Alkaline Earth Metal", funFact: "Main component of bones and teeth." },
+            { name: "Scandium", symbol: "Sc", atomicNumber: 21, category: "Transition Metal", funFact: "Used in aerospace components and sports equipment." },
+            { name: "Titanium", symbol: "Ti", atomicNumber: 22, category: "Transition Metal", funFact: "Known for its high strength-to-weight ratio and corrosion resistance." },
+            { name: "Vanadium", symbol: "V", atomicNumber: 23, category: "Transition Metal", funFact: "Used in steel alloys to increase strength." },
+            { name: "Chromium", symbol: "Cr", atomicNumber: 24, category: "Transition Metal", funFact: "Gives rubies their red color and is used in stainless steel." },
+            { name: "Manganese", symbol: "Mn", atomicNumber: 25, category: "Transition Metal", funFact: "Essential for plant photosynthesis and used in steel production." },
+            { name: "Iron", symbol: "Fe", atomicNumber: 26, category: "Transition Metal", funFact: "The main component of steel and essential in hemoglobin." },
+            { name: "Cobalt", symbol: "Co", atomicNumber: 27, category: "Transition Metal", funFact: "Used in batteries and as a blue pigment." },
+            { name: "Nickel", symbol: "Ni", atomicNumber: 28, category: "Transition Metal", funFact: "Used in coins and stainless steel." },
+            { name: "Copper", symbol: "Cu", atomicNumber: 29, category: "Transition Metal", funFact: "Excellent conductor of electricity, used in wiring." },
+            { name: "Zinc", symbol: "Zn", atomicNumber: 30, category: "Transition Metal", funFact: "Used to galvanize steel and in brass." },
+            { name: "Bromine", symbol: "Br", atomicNumber: 35, category: "Halogen", funFact: "The only non-metallic element that is liquid at room temperature." },
+            { name: "Krypton", symbol: "Kr", atomicNumber: 36, category: "Noble Gas", funFact: "Used in some types of electric lights and lasers." },
+            { name: "Silver", symbol: "Ag", atomicNumber: 47, category: "Transition Metal", funFact: "Known for its excellent electrical conductivity and reflectivity." },
+            { name: "Gold", symbol: "Au", atomicNumber: 79, category: "Transition Metal", funFact: "A precious metal, highly malleable and resistant to corrosion." },
+            { name: "Uranium", symbol: "U", atomicNumber: 92, category: "Actinide", funFact: "A radioactive element used as fuel in nuclear power plants." },
+            { name: "Plutonium", symbol: "Pu", atomicNumber: 94, category: "Actinide", funFact: "A radioactive element primarily used in nuclear weapons." },
+            { name: "Oganesson", symbol: "Og", atomicNumber: 118, category: "Noble Gas (predicted)", funFact: "A synthetic, highly radioactive element, the heaviest known." }
+        ];
+
+        // Global Game State
+        let currentElements = [];
+        let gameMode = '';
+        let score = 0;
+        let lives = 5;
+        let gameActive = false;
+        let gameInterval;
+        let animationFrameId;
+        let fallingElements = [];
+        let elementSpeed = 1;
+        let spawnRate = 2000;
+        let maxFallingElements = 5;
+        let currentLevel = 1;
+
+        // Time Limit variables
+        const GAME_DURATION = 60;
+        let timeLeft = GAME_DURATION;
+        let timerInterval;
+
+        // Sound Synths
+        let correctSound;
+        let incorrectSound;
+
+        // UI Elements
+        const startScreen = document.getElementById('start-screen');
+        const mainGameScreen = document.getElementById('main-game-screen');
+        const atomicPuzzleScreen = document.getElementById('atomic-puzzle-screen');
+        
+        const gameModeOptions = document.getElementById('game-mode-options');
+        const difficultyOptions = document.getElementById('difficulty-options');
+        const startGameButton = document.getElementById('start-game-button');
+
+        const scoreDisplay = document.getElementById('score');
+        const livesDisplay = document.getElementById('lives');
+        const timeLeftDisplay = document.getElementById('time-left');
+        const timerDisplayContainer = document.getElementById('timer-display-container');
+        const gameArea = document.getElementById('game-area');
+        const inputArea = document.getElementById('input-area');
+        const symbolInput = document.getElementById('symbol-input');
+        const pauseButton = document.getElementById('pause-button');
+
+        const gameOverModal = document.getElementById('game-over-modal');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const playAgainButton = document.getElementById('play-again-button');
+
+        const pauseModal = document.getElementById('pause-modal');
+        const resumeGameButton = document.getElementById('resume-game-button');
+        const quitToStartButton = document.getElementById('quit-to-start-button');
+
+        const puzzleGrid = document.getElementById('puzzle-grid');
+        const atomicPuzzleResetBtn = document.getElementById('atomic-puzzle-reset');
+        const backToStartFromPuzzleBtn = document.getElementById('back-to-start-from-puzzle');
+
+        // --- Core Game Functions ---
+
+        function hideAllScreens() {
+            startScreen.classList.add('hidden');
+            mainGameScreen.classList.add('hidden');
+            atomicPuzzleScreen.classList.add('hidden');
+            gameOverModal.classList.add('hidden');
+            pauseModal.classList.add('hidden');
+        }
+
+        function showScreen(screenElement) {
+            hideAllScreens();
+            screenElement.classList.remove('hidden');
+        }
+
+        function initGame() {
+            score = 0;
+            lives = 5;
+            timeLeft = GAME_DURATION;
+            scoreDisplay.textContent = score;
+            livesDisplay.textContent = lives;
+            timeLeftDisplay.textContent = timeLeft;
+            fallingElements = [];
+            gameArea.innerHTML = '';
+            elementSpeed = 1;
+            spawnRate = 2000;
+            maxFallingElements = 5;
+            currentLevel = 1;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            cancelAnimationFrame(animationFrameId);
+            gameActive = false;
+            timerDisplayContainer.classList.add('hidden');
+        }
+
+        function endGame() {
+            stopGameLoop();
+            gameActive = false;
+            finalScoreDisplay.textContent = score;
+            if (score >= 50) {
+                spawnConfetti();
+            }
+            showScreen(gameOverModal);
+        }
+
+        function loseLife() {
+            lives--;
+            livesDisplay.textContent = lives;
+            if (lives <= 0) {
+                endGame();
+            }
+        }
+
+        function checkGameEnd() {
+            if (lives <= 0 || (gameMode === 'symbol-sprint' && timeLeft <= 0)) {
+                endGame();
+            }
+        }
+
+        function startGameLoop() {
+            if (gameActive) return;
+            gameActive = true;
+
+            clearInterval(gameInterval);
+            gameInterval = setInterval(() => {
+                spawnElement();
+                adjustDifficultyAndRestartSpawn();
+                checkGameEnd();
+            }, spawnRate);
+
+            if (gameMode === 'symbol-sprint') {
+                timerDisplayContainer.classList.remove('hidden');
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    timeLeftDisplay.textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        endGame();
+                    }
+                }, 1000);
+            } else {
+                timerDisplayContainer.classList.add('hidden');
+            }
+
+            animationFrameId = requestAnimationFrame(animateFallingElements);
+        }
+
+        function stopGameLoop() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            cancelAnimationFrame(animationFrameId);
+        }
+
+        function animateFallingElements() {
+            if (!gameActive) return;
+
+            let elementsToKeep = [];
+            fallingElements.forEach(element => {
+                if (element.isHit || element.isMissed) {
+                    if (element.elementDiv && element.elementDiv.parentNode) {
+                        setTimeout(() => {
+                            element.elementDiv.remove();
+                        }, 300);
+                    }
+                } else {
+                    element.yPos += element.speed;
+                    element.elementDiv.style.transform = `translateY(${element.yPos}px)`;
+
+                    if (element.yPos > gameArea.offsetHeight - element.elementDiv.offsetHeight) {
+                        element.elementDiv.classList.add('missed');
+                        element.isMissed = true;
+                        loseLife();
+                    } else {
+                        elementsToKeep.push(element);
+                    }
+                }
+            });
+
+            fallingElements = elementsToKeep;
+            animationFrameId = requestAnimationFrame(animateFallingElements);
+        }
+
+        function spawnElement() {
+            if (fallingElements.length >= maxFallingElements) return;
+
+            const fallingSymbols = new Set(fallingElements.map(el => el.symbol));
+            const availableElements = currentElements.filter(el => !fallingSymbols.has(el.symbol));
+
+            if (availableElements.length === 0) {
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * availableElements.length);
+            const elementData = availableElements[randomIndex];
+
+            const elementDiv = document.createElement('div');
+            elementDiv.classList.add('element-name');
+            elementDiv.textContent = elementData.name;
+            elementDiv.style.left = `${Math.random() * (gameArea.offsetWidth - 100)}px`;
+            elementDiv.style.top = `0px`;
+
+            gameArea.appendChild(elementDiv);
+
+            const newElement = {
+                name: elementData.name,
+                symbol: elementData.symbol,
+                elementDiv: elementDiv,
+                yPos: 0,
+                speed: elementSpeed,
+                isHit: false,
+                isMissed: false
+            };
+            fallingElements.push(newElement);
+        }
+
+        function adjustDifficultyAndRestartSpawn() {
+            let difficultyChanged = false;
+            if (score > currentLevel * 10) {
+                currentLevel++;
+                elementSpeed += 0.2;
+                if (spawnRate > 500) {
+                    spawnRate -= 100;
+                    difficultyChanged = true;
+                }
+                if (maxFallingElements < 10) {
+                    maxFallingElements++;
+                }
+            }
+
+            if (difficultyChanged && gameActive) {
+                clearInterval(gameInterval);
+                gameInterval = setInterval(() => {
+                    spawnElement();
+                    adjustDifficultyAndRestartSpawn();
+                    checkGameEnd();
+                }, spawnRate);
+            }
+        }
+
+        function handleAnswer(inputSymbol) {
+            if (gameMode !== 'symbol-sprint' || !inputSymbol) return;
+
+            let hit = false;
+            for (let i = 0; i < fallingElements.length; i++) {
+                const element = fallingElements[i];
+                if (!element.isHit && !element.isMissed && element.symbol.toLowerCase() === inputSymbol.toLowerCase()) {
+                    element.isHit = true;
+                    element.elementDiv.classList.add('hit');
+                    score += 10;
+                    scoreDisplay.textContent = score;
+                    correctSound.triggerAttackRelease('C5', '8n');
+                    hit = true;
+                    break;
+                }
+            }
+
+            if (!hit) {
+                incorrectSound.triggerAttackRelease('C3', '8n');
+                loseLife();
+            }
+        }
+
+        function renderInputArea() {
+            inputArea.innerHTML = ''; // Clear previous content
+            const inputField = document.createElement('input');
+            inputField.type = 'text';
+            inputField.id = 'symbol-input';
+            inputField.placeholder = 'Type symbol...';
+            inputField.classList.add('symbol-input', 'bg-gray-800', 'text-white', 'rounded-lg', 'p-2', 'text-center', 'w-full', 'max-w-xs');
+            inputArea.appendChild(inputField);
+            inputField.focus();
+
+            inputField.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && gameActive) {
+                    handleAnswer(inputField.value.trim());
+                    inputField.value = '';
+                }
+            });
+        }
+
+        function spawnConfetti() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#795548', '#9E9E9E', '#607D8B'];
+            const confettiContainer = document.body;
+
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.top = `${Math.random() * -100}px`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                confetti.style.animationDuration = `${2 + Math.random() * 2}s`;
+                confetti.style.animationName = 'confetti-fall';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                confettiContainer.appendChild(confetti);
+                confetti.addEventListener('animationend', () => {
+                    confetti.remove();
+                });
+            }
+        }
+
+        function setupAtomicPuzzle() {
+            puzzleGrid.innerHTML = '';
+            const elementsForPuzzle = [...currentElements];
+            elementsForPuzzle.sort(() => 0.5 - Math.random());
+
+            const numPuzzleElements = Math.min(8, elementsForPuzzle.length);
+            const selectedPuzzleElements = elementsForPuzzle.slice(0, numPuzzleElements);
+
+            let cards = [];
+            selectedPuzzleElements.forEach(element => {
+                cards.push({ type: 'name', value: element.name, match: element.symbol, id: element.symbol + '_name' });
+                cards.push({ type: 'symbol', value: element.symbol, match: element.name, id: element.symbol + '_symbol' });
+            });
+
+            cards.sort(() => 0.5 - Math.random());
+
+            let flippedCards = [];
+            let matchesFound = 0;
+
+            cards.forEach((cardData) => {
+                const card = document.createElement('div');
+                card.classList.add('puzzle-card', 'bg-blue-500', 'text-white', 'p-4', 'rounded-lg', 'cursor-pointer', 'flex', 'items-center', 'justify-center', 'font-bold', 'text-xl', 'aspect-square', 'transition-all', 'duration-300', 'transform', 'hover:scale-105');
+                card.dataset.value = cardData.value;
+                card.dataset.match = cardData.match;
+                card.dataset.type = cardData.type;
+                card.textContent = '?';
+
+                card.addEventListener('click', () => {
+                    if (flippedCards.length < 2 && !card.classList.contains('flipped') && !card.classList.contains('matched')) {
+                        card.classList.add('flipped');
+                        card.textContent = cardData.value;
+                        flippedCards.push(card);
+
+                        if (flippedCards.length === 2) {
+                            const [card1, card2] = flippedCards;
+                            if (card1.dataset.match === card2.dataset.value && card2.dataset.match === card1.dataset.value && card1.dataset.type !== card2.dataset.type) {
+                                card1.classList.add('matched', 'bg-green-500');
+                                card2.classList.add('matched', 'bg-green-500');
+                                matchesFound++;
+                                if (matchesFound === numPuzzleElements) {
+                                    const customAlertModal = document.createElement('div');
+                                    customAlertModal.classList.add('modal-overlay');
+                                    customAlertModal.innerHTML = `
+                                        <div class="modal-content">
+                                            <h2 class="text-3xl font-bold text-green-400">Puzzle Complete!</h2>
+                                            <p class="text-xl">You've matched all the pairs!</p>
+                                            <button id="close-puzzle-complete-modal" class="game-button mt-4">Great!</button>
+                                        </div>
+                                    `;
+                                    document.body.appendChild(customAlertModal);
+                                    document.getElementById('close-puzzle-complete-modal').addEventListener('click', () => {
+                                        customAlertModal.remove();
+                                    });
+                                }
+                                flippedCards = [];
+                            } else {
+                                setTimeout(() => {
+                                    card1.classList.remove('flipped');
+                                    card2.classList.remove('flipped');
+                                    card1.textContent = '?';
+                                    card2.textContent = '?';
+                                    flippedCards = [];
+                                }, 1000);
+                            }
+                        }
+                    }
+                });
+                puzzleGrid.appendChild(card);
+            });
+        }
+
+        // --- Event Listeners ---
+
+        window.onload = function() {
+            correctSound = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.1 }
+            }).toDestination();
+            incorrectSound = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: 'triangle' },
+                envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.1 }
+            }).toDestination();
+            showScreen(startScreen);
+        };
+        
+        function handleSelection(event) {
+            const container = event.currentTarget.parentElement;
+            // Remove 'selected' from all siblings
+            [...container.children].forEach(child => child.classList.remove('selected'));
+            // Add 'selected' to the clicked element
+            event.currentTarget.classList.add('selected');
+        }
+
+        gameModeOptions.querySelectorAll('.selection-option').forEach(option => {
+            option.addEventListener('click', handleSelection);
+        });
+
+        difficultyOptions.querySelectorAll('.selection-option').forEach(option => {
+            option.addEventListener('click', handleSelection);
+        });
+
+
+        startGameButton.addEventListener('click', () => {
+            const selectedModeEl = gameModeOptions.querySelector('.selected');
+            const selectedDifficultyEl = difficultyOptions.querySelector('.selected');
+
+            if (!selectedModeEl || !selectedDifficultyEl) {
+                // Using a custom modal instead of alert()
+                const customAlertModal = document.createElement('div');
+                customAlertModal.classList.add('modal-overlay');
+                customAlertModal.innerHTML = `
+                    <div class="modal-content">
+                        <h2 class="text-2xl font-bold text-yellow-400">Selection Needed!</h2>
+                        <p class="text-lg">Please select a game mode and a difficulty level to start.</p>
+                        <button id="close-selection-alert-modal" class="game-button mt-4">Got It</button>
+                    </div>
+                `;
+                document.body.appendChild(customAlertModal);
+                document.getElementById('close-selection-alert-modal').addEventListener('click', () => {
+                    customAlertModal.remove();
+                });
+                return;
+            }
+
+            const selectedMode = selectedModeEl.dataset.value;
+            const selectedDifficulty = selectedDifficultyEl.dataset.value;
+
+            currentElements = selectedDifficulty === '20' ? ALL_ELEMENTS.slice(0, 20) : ALL_ELEMENTS;
+            gameMode = selectedMode;
+            
+            initGame();
+
+            if (gameMode === 'symbol-sprint') {
+                showScreen(mainGameScreen);
+                renderInputArea();
+                startGameLoop();
+            } else if (gameMode === 'atomic-puzzle') {
+                showScreen(atomicPuzzleScreen);
+                setupAtomicPuzzle();
+            }
+        });
+
+        pauseButton.addEventListener('click', () => {
+            if (gameActive) {
+                stopGameLoop();
+                pauseModal.classList.remove('hidden');
+            }
+        });
+
+        playAgainButton.addEventListener('click', () => {
+            gameOverModal.classList.add('hidden');
+            initGame();
+            showScreen(startScreen);
+        });
+
+        resumeGameButton.addEventListener('click', () => {
+            pauseModal.classList.add('hidden');
+            startGameLoop();
+            const symbolInput = document.getElementById('symbol-input');
+            if (symbolInput) symbolInput.focus();
+        });
+
+        quitToStartButton.addEventListener('click', () => {
+            pauseModal.classList.add('hidden');
+            initGame();
+            showScreen(startScreen);
+        });
+
+        atomicPuzzleResetBtn.addEventListener('click', () => {
+            setupAtomicPuzzle();
+        });
+
+        backToStartFromPuzzleBtn.addEventListener('click', () => {
+            showScreen(startScreen);
+        });
+
+    </script>
+</body>
+</html>

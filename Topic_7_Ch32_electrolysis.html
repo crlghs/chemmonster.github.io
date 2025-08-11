@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Electrolysis Lab (Canvas)</title>
+    <style>
+        /* --- General Styling --- */
+        :root {
+            --primary-bg: #f0f4f8;
+            --secondary-bg: #ffffff;
+            --border-color: #b0c4de;
+            --text-color: #333;
+            --accent-color: #4a90e2;
+            --anode-color: #e74c3c; /* Red for positive */
+            --cathode-color: #3498db; /* Blue for negative */
+            --copper-color: #e67e22;
+            --electron-color: #f1c40f;
+            --explain-btn-color: #8A2BE2;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .panel {
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 20px 0;
+        }
+
+        /* --- Controls Panel --- */
+        #controls {
+            grid-column: 1 / -1; /* Span full width */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        #controls > div {
+            display: flex;
+            align-items: center;
+        }
+
+        #controls label {
+            font-weight: bold;
+            width: 90px;
+            text-align: right;
+            margin-right: 8px;
+        }
+
+        #controls select, #controls button {
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #start-btn {
+            background-color: var(--accent-color);
+            color: white;
+            transition: background-color 0.3s;
+        }
+        
+        #start-btn:hover {
+            background-color: #357ABD;
+        }
+
+        #explain-btn {
+            background-color: var(--explain-btn-color);
+            color: white;
+            transition: background-color 0.3s;
+            display: none; /* Initially hidden */
+        }
+        #explain-btn:hover {
+            background-color: #7325b8;
+        }
+
+        /* --- Canvas & Explanation --- */
+        #simulation-canvas {
+            background-color: #e0f7fa; /* Light blue for water */
+            border-radius: 4px;
+            width: 100%;
+            height: auto;
+        }
+
+        #explanation {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 200px; /* Ensure panel has height */
+        }
+
+        #explanation h3 { margin: 0 0 5px 0; }
+        #explanation h3.anode { color: var(--anode-color); }
+        #explanation h3.cathode { color: var(--cathode-color); }
+        #explanation p { margin: 0; line-height: 1.5; }
+
+        #explanation .rule {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        #explanation .equation {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #ecf0f1;
+            padding: 5px;
+            border-radius: 4px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        #explanation sup, #explanation sub {
+            position: relative;
+            font-size: 75%;
+            line-height: 0;
+            vertical-align: baseline;
+        }
+        #explanation sup {
+            top: -0.5em;
+        }
+        #explanation sub {
+            bottom: -0.25em;
+        }
+
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            #controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🧪 Virtual Electrolysis Lab</h1>
+
+    <div class="container">
+        <div id="controls" class="panel">
+            <div>
+                <label for="electrolyte-select">Electrolyte:</label>
+                <select id="electrolyte-select">
+                    <option value="molten_nacl">Molten NaCl</option>
+                    <option value="conc_nacl">Concentrated NaCl(aq)</option>
+                    <option value="dilute_nacl">Dilute NaCl(aq)</option>
+                    <option value="cuso4">Aqueous CuSO₄(aq)</option>
+                    <option value="dilute_h2so4">Dilute H₂SO₄(aq)</option>
+                </select>
+            </div>
+            <div>
+                <label for="electrode-select">Electrodes:</label>
+                <select id="electrode-select">
+                    <option value="graphite">Inert (Graphite)</option>
+                    <option value="copper">Active (Copper)</option>
+                </select>
+            </div>
+            <button id="start-btn">Start Electrolysis</button>
+            <button id="explain-btn">✨ Explain the Experiment</button>
+        </div>
+
+        <div id="simulation" class="panel">
+            <canvas id="simulation-canvas" width="550" height="400"></canvas>
+        </div>
+
+        <div id="explanation" class="panel">
+            <!-- Content will be dynamically inserted here by JavaScript -->
+            <p id="explanation-placeholder">Select an experiment and click "Start Electrolysis" to see the details.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA "BRAIN" with detailed explanations ---
+        const experiments = {
+            'molten_nacl_graphite': { ions: { 'Na+': 8, 'Cl-': 8 }, cathode: { competing: "Only Na⁺ ions present.", rule: "Cations are reduced at the cathode.", equation: "Na⁺(l) + e⁻ → Na(l)", visual: "plate", dischargedIon: "Na+" }, anode: { competing: "Only Cl⁻ ions present.", rule: "Anions are oxidized at the anode.", equation: "2Cl⁻(l) → Cl₂(g) + 2e⁻", visual: "gas", dischargedIon: "Cl-" }, detailedExplanation: "In molten sodium chloride, only sodium (Na⁺) and chloride (Cl⁻) ions are present. The positive Na⁺ cations are attracted to the negative cathode, where they gain electrons to form molten sodium metal. The negative Cl⁻ anions are attracted to the positive anode, where they lose electrons to form chlorine gas.", valid: true },
+            'conc_nacl_graphite': { ions: { 'Na+': 8, 'Cl-': 8, 'H+': 2, 'OH-': 2 }, cathode: { competing: "Na⁺ and H⁺", rule: "H⁺ is preferentially discharged as it's lower in the ECS.", equation: "2H⁺(aq) + 2e⁻ → H₂(g)", visual: "gas", dischargedIon: "H+" }, anode: { competing: "Cl⁻ and OH⁻", rule: "CONCENTRATION EFFECT: The high concentration of Cl⁻ forces its discharge over OH⁻.", equation: "2Cl⁻(aq) → Cl₂(g) + 2e⁻", visual: "gas", dischargedIon: "Cl-" }, detailedExplanation: "At the cathode, H⁺ is discharged over Na⁺ because it is lower in the Electrochemical Series (ECS). At the anode, the **concentration effect** is significant; the very high concentration of Cl⁻ ions allows them to be discharged over OH⁻ ions, even though OH⁻ is lower in the ECS.", valid: true },
+            'dilute_nacl_graphite': { ions: { 'Na+': 2, 'Cl-': 2, 'H+': 8, 'OH-': 8 }, cathode: { competing: "Na⁺ and H⁺", rule: "H⁺ is preferentially discharged as it's lower in the ECS.", equation: "2H⁺(aq) + 2e⁻ → H₂(g)", visual: "gas", dischargedIon: "H+" }, anode: { competing: "Cl⁻ and OH⁻", rule: "OH⁻ is preferentially discharged as it's lower in the ECS.", equation: "4OH⁻(aq) → O₂(g) + 2H₂O(l) + 4e⁻", visual: "gas", dischargedIon: "OH-" }, detailedExplanation: "In dilute solution, the concentration of Cl⁻ is too low to overcome the ECS. At the cathode, H⁺ is discharged over Na⁺ as it is lower in the ECS. At the anode, OH⁻ is discharged over Cl⁻ because it is lower in the ECS, producing oxygen gas.", valid: true },
+            'cuso4_graphite': { ions: { 'Cu2+': 4, 'SO4^2-': 4, 'H+': 4, 'OH-': 4 }, cathode: { competing: "Cu²⁺ and H⁺", rule: "Cu²⁺ is preferentially discharged as it's lower in the ECS.", equation: "Cu²⁺(aq) + 2e⁻ → Cu(s)", visual: "plate", dischargedIon: "Cu2+" }, anode: { competing: "SO₄²⁻ and OH⁻", rule: "OH⁻ is preferentially discharged as it's lower in the ECS.", equation: "4OH⁻(aq) → O₂(g) + 2H₂O(l) + 4e⁻", visual: "gas", dischargedIon: "OH-" }, detailedExplanation: "At the cathode, Cu²⁺ is discharged over H⁺ because it is lower in the Electrochemical Series, causing a layer of copper metal to deposit. At the anode, OH⁻ is discharged over the very stable SO₄²⁻ ion because it is much easier to oxidize, forming oxygen gas.", valid: true },
+            'cuso4_copper': { ions: { 'Cu2+': 4, 'SO4^2-': 4, 'H+': 4, 'OH-': 4 }, cathode: { competing: "Cu²⁺ and H⁺", rule: "Cu²⁺ is preferentially discharged as it's lower in the ECS.", equation: "Cu²⁺(aq) + 2e⁻ → Cu(s)", visual: "plate", dischargedIon: "Cu2+" }, anode: { competing: "SO₄²⁻, OH⁻, and the Cu anode", rule: "ACTIVE ELECTRODE: The copper anode itself is oxidized.", equation: "Cu(s) → Cu²⁺(aq) + 2e⁻", visual: "dissolve", dischargedIon: null }, detailedExplanation: "At the cathode, Cu²⁺ ions are plated as copper metal. However, at the **active copper anode**, it is easier for the copper atoms of the electrode to lose electrons and dissolve as Cu²⁺ ions than it is for either OH⁻ or SO₄²⁻ ions to be discharged. This is a key example of an active electrode participating in the reaction.", valid: true },
+            'dilute_h2so4_graphite': { ions: { 'H+': 12, 'SO4^2-': 4, 'OH-': 4 }, cathode: { competing: "Only H⁺ ions present.", rule: "Cations are reduced at the cathode.", equation: "2H⁺(aq) + 2e⁻ → H₂(g)", visual: "gas", dischargedIon: "H+" }, anode: { competing: "SO₄²⁻ and OH⁻", rule: "OH⁻ is preferentially discharged as it's lower in the ECS.", equation: "4OH⁻(aq) → O₂(g) + 2H₂O(l) + 4e⁻", visual: "gas", dischargedIon: "OH-" }, detailedExplanation: "In dilute sulfuric acid, H⁺ ions are discharged at the cathode to form hydrogen gas. At the anode, OH⁻ ions (from water) are preferentially discharged over the more stable SO₄²⁻ ions to form oxygen gas. This is effectively the electrolysis of water.", valid: true },
+            'invalid_combo': { valid: false, message: "This combination is not typically studied or is invalid. Please select another combination." }
+        };
+
+        // --- DOM & Canvas Setup ---
+        const electrolyteSelect = document.getElementById('electrolyte-select');
+        const electrodeSelect = document.getElementById('electrode-select');
+        const startBtn = document.getElementById('start-btn');
+        const explainBtn = document.getElementById('explain-btn');
+        const explanationPanel = document.getElementById('explanation');
+        const canvas = document.getElementById('simulation-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- Simulation State Variables ---
+        let ions = [], bubbles = [], electrons = [];
+        let animationFrameId;
+        let simulationRunning = false;
+        let frameCount = 0;
+        let anodeVisual = '', cathodeVisual = '';
+        let anodeDissolveFactor = 1.0;
+        let currentExperiment = null;
+
+        // --- Constants for Drawing ---
+        const ANODE_X = 125;
+        const CATHODE_X = 425;
+        const ELECTRODE_Y = 175;
+        const ELECTRODE_WIDTH = 25;
+        const ELECTRODE_HEIGHT = 150; 
+        const POWER_SUPPLY_Y = 70;
+        const POS_TERMINAL_X = canvas.width / 2 - 15;
+        const NEG_TERMINAL_X = canvas.width / 2 + 15;
+        const BEAKER_LEFT = 50, BEAKER_RIGHT = 500, BEAKER_TOP = 125, BEAKER_BOTTOM = 375;
+        
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', runSimulation);
+        explainBtn.addEventListener('click', showDetailedExplanation);
+        electrolyteSelect.addEventListener('change', stopSimulation);
+        electrodeSelect.addEventListener('change', stopSimulation);
+
+        // --- Drawing Functions ---
+        function drawScene() {
+            ctx.strokeStyle = getCssVar('--border-color');
+            ctx.lineWidth = 3;
+            ctx.strokeRect(BEAKER_LEFT, BEAKER_TOP, BEAKER_RIGHT - BEAKER_LEFT, BEAKER_BOTTOM - BEAKER_TOP);
+            ctx.strokeStyle = '#333';
+            ctx.beginPath();
+            ctx.moveTo(POS_TERMINAL_X, POWER_SUPPLY_Y - 20);
+            ctx.lineTo(POS_TERMINAL_X, POWER_SUPPLY_Y + 20);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(NEG_TERMINAL_X, POWER_SUPPLY_Y - 10);
+            ctx.lineTo(NEG_TERMINAL_X, POWER_SUPPLY_Y + 10);
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.font = 'bold 20px sans-serif';
+            ctx.fillStyle = getCssVar('--anode-color');
+            ctx.fillText('+', POS_TERMINAL_X, POWER_SUPPLY_Y - 25);
+            ctx.fillStyle = getCssVar('--cathode-color');
+            ctx.fillText('-', NEG_TERMINAL_X, POWER_SUPPLY_Y - 25);
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(ANODE_X, ELECTRODE_Y);
+            ctx.lineTo(ANODE_X, POWER_SUPPLY_Y);
+            ctx.lineTo(POS_TERMINAL_X, POWER_SUPPLY_Y);
+            ctx.moveTo(CATHODE_X, ELECTRODE_Y);
+            ctx.lineTo(CATHODE_X, POWER_SUPPLY_Y);
+            ctx.lineTo(NEG_TERMINAL_X, POWER_SUPPLY_Y);
+            ctx.stroke();
+            ctx.fillStyle = getCssVar('--anode-color');
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Anode', ANODE_X, ELECTRODE_Y + ELECTRODE_HEIGHT + 20);
+            ctx.fillStyle = getCssVar('--cathode-color');
+            ctx.fillText('Cathode', CATHODE_X, ELECTRODE_Y + ELECTRODE_HEIGHT + 20);
+            ctx.fillStyle = '#d1d1d1';
+            ctx.fillRect(ANODE_X - ELECTRODE_WIDTH / 2, ELECTRODE_Y, ELECTRODE_WIDTH, ELECTRODE_HEIGHT * anodeDissolveFactor);
+            
+            if (simulationRunning && cathodeVisual === 'plate') {
+                const thickness = 4;
+                ctx.fillStyle = getCssVar('--copper-color');
+                ctx.fillRect(
+                    CATHODE_X - (ELECTRODE_WIDTH / 2) - thickness, 
+                    ELECTRODE_Y - thickness, 
+                    ELECTRODE_WIDTH + (thickness * 2), 
+                    ELECTRODE_HEIGHT + (thickness * 2)
+                );
+            }
+
+            ctx.fillStyle = '#d1d1d1';
+            ctx.fillRect(CATHODE_X - ELECTRODE_WIDTH / 2, ELECTRODE_Y, ELECTRODE_WIDTH, ELECTRODE_HEIGHT);
+        }
+        
+        function drawIonFormula(ctx, formula, x, y) {
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const mainFont = 'bold 14px sans-serif';
+            const scriptFont = '11px sans-serif';
+            if (formula === 'SO4^2-') {
+                const mainText = "SO";
+                const subText = "4";
+                const superText = "2-";
+                ctx.font = mainFont;
+                const mainWidth = ctx.measureText(mainText).width;
+                const totalWidth = mainWidth + ctx.measureText(subText).width;
+                ctx.fillText(mainText, x - totalWidth / 4, y);
+                ctx.font = scriptFont;
+                ctx.fillText(subText, x + mainWidth / 2 - 2, y + 6);
+                ctx.fillText(superText, x + mainWidth / 2 + 5, y - 6);
+                return;
+            }
+            const match = formula.match(/([A-Za-z]+)(.*)/);
+            if (match) {
+                const mainText = match[1];
+                const scriptText = match[2];
+                ctx.font = mainFont;
+                const mainWidth = ctx.measureText(mainText).width;
+                const totalWidth = mainWidth + ctx.measureText(scriptText).width;
+                ctx.fillText(mainText, x - totalWidth / 4, y);
+                ctx.font = scriptFont;
+                ctx.fillText(scriptText, x + mainWidth / 2, y - 6);
+            }
+        }
+
+        function drawParticles() {
+            ions.forEach(ion => {
+                ctx.beginPath();
+                ctx.arc(ion.x, ion.y, ion.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ion.color;
+                ctx.fill();
+                drawIonFormula(ctx, ion.text, ion.x, ion.y);
+            });
+            bubbles.forEach(bubble => {
+                ctx.beginPath();
+                ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.fill();
+            });
+            electrons.forEach(e => {
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, 5, 0, Math.PI * 2); 
+                ctx.fillStyle = getCssVar('--electron-color');
+                ctx.fill();
+            });
+        }
+        
+        function update() {
+            frameCount++;
+
+            ions.forEach(ion => {
+                if (ion.isNewlyFormed) {
+                    ion.newlyFormedFrames++;
+                    if (ion.newlyFormedFrames > 30) {
+                        ion.isNewlyFormed = false;
+                        const targetX = CATHODE_X;
+                        const dx = targetX - ion.x;
+                        const dy = (Math.random() * ELECTRODE_HEIGHT + ELECTRODE_Y) - ion.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        ion.vx = (dx / dist) * 0.8; 
+                        ion.vy = (dy / dist) * 0.8;
+                    }
+                }
+                ion.x += ion.vx;
+                ion.y += ion.vy;
+
+                if (ion.isCation && ion.x + ion.radius >= CATHODE_X - ELECTRODE_WIDTH / 2) {
+                    if (ion.text === currentExperiment.cathode.dischargedIon) {
+                        ion.toRemove = true;
+                    } else {
+                        ion.vx *= -1; 
+                        ion.x = CATHODE_X - ELECTRODE_WIDTH / 2 - ion.radius;
+                    }
+                } else if (!ion.isCation && ion.x - ion.radius <= ANODE_X + ELECTRODE_WIDTH / 2) {
+                    if (ion.text === currentExperiment.anode.dischargedIon) {
+                        ion.toRemove = true;
+                    } else {
+                        ion.vx *= -1;
+                        ion.x = ANODE_X + ELECTRODE_WIDTH / 2 + ion.radius;
+                    }
+                }
+                if (ion.x + ion.radius > BEAKER_RIGHT || ion.x - ion.radius < BEAKER_LEFT) {
+                    ion.vx *= -1;
+                }
+                if (ion.y + ion.radius > BEAKER_BOTTOM || ion.y - ion.radius < BEAKER_TOP) {
+                    ion.vy *= -1;
+                }
+            });
+
+            ions = ions.filter(ion => !ion.toRemove);
+            
+            bubbles.forEach(bubble => {
+                bubble.y -= bubble.vy;
+                if (bubble.y < 125) { 
+                     bubble.y = ELECTRODE_Y + ELECTRODE_HEIGHT;
+                     bubble.x = bubble.startX;
+                }
+            });
+
+            electrons.forEach(e => updateElectronPath(e));
+
+            if (simulationRunning && anodeVisual === 'dissolve') {
+                if (anodeDissolveFactor > 0.7) {
+                    anodeDissolveFactor -= 0.002;
+                }
+                if (frameCount % 45 === 0) {
+                    createDissolvedIons();
+                }
+            }
+
+            if (anodeVisual !== 'dissolve') {
+                let reactingIonsExist = ions.some(ion =>
+                    ion.text === currentExperiment.cathode.dischargedIon ||
+                    ion.text === currentExperiment.anode.dischargedIon
+                );
+
+                if (!reactingIonsExist) {
+                    const spectatorIons = ions;
+                    ions = [];
+                    createIons(currentExperiment.ions);
+                    
+                    ions.forEach(ion => {
+                        const targetX = ion.isCation ? CATHODE_X : ANODE_X;
+                        const dx = targetX - ion.x;
+                        const dy = (Math.random() * ELECTRODE_HEIGHT + ELECTRODE_Y) - ion.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        ion.vx = (dx / dist) * 0.8;
+                        ion.vy = (dy / dist) * 0.8;
+                    });
+                }
+            }
+        }
+
+        function animate() {
+            animationFrameId = requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawScene();
+            drawParticles();
+            if(simulationRunning) {
+                update();
+            }
+        }
+
+        function runSimulation() {
+            resetSimulation();
+            const electrolyte = electrolyteSelect.value;
+            const electrode = electrodeSelect.value;
+            const experimentKey = `${electrolyte}_${electrode}`;
+            currentExperiment = experiments[experimentKey];
+            if (!currentExperiment || !currentExperiment.valid) {
+                 explanationPanel.innerHTML = `<p>${currentExperiment ? currentExperiment.message : "Invalid selection."}</p>`;
+                 return;
+            }
+            simulationRunning = true;
+            anodeVisual = currentExperiment.anode.visual;
+            cathodeVisual = currentExperiment.cathode.visual;
+            createIons(currentExperiment.ions);
+            populateElectronCircuits();
+            displayExplanation(currentExperiment);
+            explainBtn.style.display = 'inline-block';
+            setTimeout(() => {
+                ions.forEach(ion => {
+                    if (ion.isNewlyFormed) return;
+                    const targetX = ion.isCation ? CATHODE_X : ANODE_X;
+                    const dx = targetX - ion.x;
+                    const dy = (Math.random() * ELECTRODE_HEIGHT + ELECTRODE_Y) - ion.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    ion.vx = (dx / dist) * 0.8; 
+                    ion.vy = (dy / dist) * 0.8; 
+                });
+            }, 500);
+            setTimeout(() => {
+                if (anodeVisual === 'gas') createBubbles(ANODE_X);
+                if (cathodeVisual === 'gas') createBubbles(CATHODE_X);
+            }, 2500);
+        }
+
+        function stopSimulation() {
+            if (simulationRunning) {
+                simulationRunning = false;
+                resetSimulation();
+            }
+        }
+
+        function resetSimulation() {
+            simulationRunning = false;
+            ions = [];
+            bubbles = [];
+            electrons = [];
+            anodeDissolveFactor = 1.0;
+            frameCount = 0;
+            currentExperiment = null;
+            explainBtn.style.display = 'none';
+            explanationPanel.innerHTML = '<p id="explanation-placeholder">Select an experiment and click "Start Electrolysis" to see the details.</p>';
+        }
+        
+        function createIons(ionData) {
+            const ionColors = { 'Na+': '#f1c40f', 'Cl-': '#2ecc71', 'H+': '#e74c3c', 'OH-': '#3498db', 'Cu2+': getCssVar('--copper-color'), 'SO4^2-': '#9b59b6' };
+            for (const [ionText, count] of Object.entries(ionData)) {
+                for (let i = 0; i < count; i++) {
+                    ions.push({
+                        x: Math.random() * 250 + 150,
+                        y: Math.random() * 200 + 150,
+                        vx: 0,
+                        vy: 0,
+                        radius: 16,
+                        color: ionColors[ionText],
+                        text: ionText,
+                        isCation: ionText.includes('+') || ionText.includes('2+')
+                    });
+                }
+            }
+        }
+
+        function createDissolvedIons() {
+            ions.push({
+                x: ANODE_X + (ELECTRODE_WIDTH / 2) + 10,
+                y: Math.random() * ELECTRODE_HEIGHT + ELECTRODE_Y,
+                vx: 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: 16,
+                color: getCssVar('--copper-color'),
+                text: 'Cu2+',
+                isCation: true,
+                isNewlyFormed: true,
+                newlyFormedFrames: 0
+            });
+        }
+
+        function createBubbles(electrodeX) {
+            for (let i = 0; i < 15; i++) {
+                const startX = electrodeX + (Math.random() - 0.5) * ELECTRODE_WIDTH;
+                bubbles.push({
+                    x: startX,
+                    y: Math.random() * ELECTRODE_HEIGHT + ELECTRODE_Y,
+                    radius: Math.random() * 3 + 2,
+                    vy: Math.random() * 1 + 0.5,
+                    startX: startX
+                });
+            }
+        }
+
+        function populateElectronCircuits() {
+            const spacing = 30;
+            const path1_length = (ELECTRODE_Y - POWER_SUPPLY_Y) + (POS_TERMINAL_X - ANODE_X);
+            const numElectrons1 = Math.floor(path1_length / spacing);
+            for (let i = 0; i < numElectrons1; i++) {
+                let pos = i * spacing;
+                let x, y, phase;
+                const pathAnodeUp = ELECTRODE_Y - POWER_SUPPLY_Y;
+                if (pos < pathAnodeUp) {
+                    phase = 1; x = ANODE_X; y = ELECTRODE_Y - pos;
+                } else {
+                    phase = 2; x = ANODE_X + (pos - pathAnodeUp); y = POWER_SUPPLY_Y;
+                }
+                electrons.push({ path: 'from_anode', x, y, phase });
+            }
+            const path2_length = (CATHODE_X - NEG_TERMINAL_X) + (ELECTRODE_Y - POWER_SUPPLY_Y);
+            const numElectrons2 = Math.floor(path2_length / spacing);
+             for (let i = 0; i < numElectrons2; i++) {
+                let pos = i * spacing;
+                let x, y, phase;
+                const pathAcross = CATHODE_X - NEG_TERMINAL_X;
+                if (pos < pathAcross) {
+                    phase = 1; x = NEG_TERMINAL_X + pos; y = POWER_SUPPLY_Y;
+                } else {
+                    phase = 2; x = CATHODE_X; y = POWER_SUPPLY_Y + (pos - pathAcross);
+                }
+                electrons.push({ path: 'to_cathode', x, y, phase });
+            }
+        }
+
+        function updateElectronPath(e) {
+            const speed = 1.5;
+            if (e.path === 'from_anode') {
+                switch(e.phase) {
+                    case 1: 
+                        e.y -= speed;
+                        if (e.y <= POWER_SUPPLY_Y) { e.y = POWER_SUPPLY_Y; e.phase = 2; }
+                        break;
+                    case 2: 
+                        e.x += speed;
+                        if (e.x >= POS_TERMINAL_X) {
+                            e.x = ANODE_X; e.y = ELECTRODE_Y; e.phase = 1;
+                        }
+                        break;
+                }
+            } else { 
+                switch(e.phase) {
+                    case 1: 
+                        e.x += speed;
+                        if (e.x >= CATHODE_X) { e.x = CATHODE_X; e.phase = 2; }
+                        break;
+                    case 2: 
+                        e.y += speed;
+                        if (e.y >= ELECTRODE_Y) {
+                            e.x = NEG_TERMINAL_X; e.y = POWER_SUPPLY_Y; e.phase = 1;
+                        }
+                        break;
+                }
+            }
+        }
+        
+        function formatEquationString(eq) {
+            return eq
+                .replace(/→/g, '&rarr;')
+                .replace(/⁺/g, '<sup>+</sup>')
+                .replace(/⁻/g, '<sup>-</sup>')
+                .replace(/²⁺/g, '<sup>2+</sup>')
+                .replace(/²⁻/g, '<sup>2-</sup>')
+                .replace(/₄/g, '<sub>4</sub>')
+                .replace(/₂/g, '<sub>2</sub>');
+        }
+
+        function displayExplanation(experiment) {
+            const { cathode, anode } = experiment;
+            const formattedCathodeEq = formatEquationString(cathode.equation);
+            const formattedAnodeEq = formatEquationString(anode.equation);
+            explanationPanel.innerHTML = `
+                <div>
+                    <h3 class="cathode">At the Cathode (-)</h3>
+                    <p><strong>Competing Ions:</strong> ${cathode.competing}</p>
+                    <p class="rule"><strong>Rule:</strong> ${cathode.rule}</p>
+                    <p><strong>Half-Equation:</strong><span class="equation">${formattedCathodeEq}</span></p>
+                </div>
+                <hr>
+                <div>
+                    <h3 class="anode">At the Anode (+)</h3>
+                    <p><strong>Competing Ions:</strong> ${anode.competing}</p>
+                    <p class="rule"><strong>Rule:</strong> ${anode.rule}</p>
+                    <p><strong>Half-Equation:</strong><span class="equation">${formattedAnodeEq}</span></p>
+                </div>
+            `;
+        }
+        
+        function showDetailedExplanation() {
+            if (!currentExperiment) return;
+            explanationPanel.innerHTML = `<p>${formatEquationString(currentExperiment.detailedExplanation)}</p>`;
+        }
+
+        function getCssVar(varName) {
+            return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+        }
+
+        window.onload = function() {
+            animate();
+        }
+
+    </script>
+</body>
+</html>

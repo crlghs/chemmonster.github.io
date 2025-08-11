@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Voltaic Cell</title>
+    <!-- Using Tailwind CSS for a clean, modern layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Using Inter font as the base */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for the simulation */
+        #voltmeter-display {
+            font-weight: bold;
+            fill: #1e3a8a; /* Dark blue for text */
+        }
+        .electron {
+            fill: #facc15; /* Yellow for electrons */
+            stroke: #ca8a04;
+            stroke-width: 1;
+        }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center p-4 md:p-8">
+
+    <div class="w-full max-w-7xl mx-auto">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">The Voltaic Cell</h1>
+            <p class="text-gray-600 mt-2">Build, test, and understand electrochemical cells interactively.</p>
+        </header>
+
+        <main class="flex flex-col md:flex-row gap-8">
+            <!-- Left Column: Simulation -->
+            <div class="md:w-3/5">
+                <section id="lab-workspace" class="bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-gray-200 h-full">
+                    <div id="simulation-container" class="w-full h-full">
+                        <svg id="svg-canvas" viewBox="0 0 800 400" class="w-full h-full">
+                            <!-- Wires connecting electrodes to the voltmeter. These are for display only. -->
+                            <path id="display-wire-1" d="M 175 150 Q 250 50 360 50" stroke="#374151" stroke-width="4" fill="none" />
+                            <path id="display-wire-2" d="M 625 150 Q 550 50 440 50" stroke="#374151" stroke-width="4" fill="none" />
+
+                            <!-- Voltmeter -->
+                            <rect id="voltmeter-body" x="350" y="30" width="100" height="50" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="2" />
+                            <text id="voltmeter-display" x="400" y="65" text-anchor="middle" font-size="18">Voltmeter</text>
+                            <!-- Voltmeter Terminals -->
+                            <text id="left-terminal-label" x="360" y="25" text-anchor="middle" font-size="20" font-weight="bold" fill="black">-</text>
+                            <text id="right-terminal-label" x="440" y="25" text-anchor="middle" font-size="20" font-weight="bold" fill="red">+</text>
+
+
+                            <!-- Beakers containing electrolyte solutions -->
+                            <rect id="anode-beaker-bg" x="100" y="200" width="150" height="150" rx="5" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2" />
+                            <rect id="cathode-beaker-bg" x="550" y="200" width="150" height="150" rx="5" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2" />
+                            <text id="anode-label" x="175" y="370" text-anchor="middle" font-size="18" fill="#555">Left Beaker</text>
+                            <text id="cathode-label" x="625" y="370" text-anchor="middle" font-size="18" fill="#555">Right Beaker</text>
+
+
+                            <!-- Metal Electrodes -->
+                            <rect id="anode-electrode" x="165" y="150" width="20" height="150" rx="3" fill="#9ca3af" stroke="#4b5563" stroke-width="2" />
+                            <rect id="cathode-electrode" x="615" y="150" width="20" height="150" rx="3" fill="#9ca3af" stroke="#4b5563" stroke-width="2" />
+
+                            <!-- Salt Bridge connecting the two beakers -->
+                            <path id="salt-bridge" d="M 220 220 V 190 A 10 10 0 0 1 230 180 H 570 A 10 10 0 0 1 580 190 V 220" stroke="#a3a3a3" stroke-width="20" fill="none" />
+                            <text x="400" y="188" text-anchor="middle" font-size="18" fill="#fff" class="font-semibold">Salt Bridge</text>
+                            
+                            <!-- Container for electron animations -->
+                            <g id="electron-container"></g>
+
+                            <!-- Dynamic Labels -->
+                            <text id="left-electrode-label" x="175" y="225" text-anchor="middle" font-size="18" fill="#333" visibility="hidden"></text>
+                            <text id="right-electrode-label" x="625" y="225" text-anchor="middle" font-size="18" fill="#333" visibility="hidden"></text>
+                            <text id="left-solution-label" x="175" y="335" text-anchor="middle" font-size="18" fill="#0284c7" visibility="hidden"></text>
+                            <text id="right-solution-label" x="625" y="335" text-anchor="middle" font-size="18" fill="#0284c7" visibility="hidden"></text>
+                        </svg>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Controls and Data -->
+            <div class="md:w-2/5 flex flex-col gap-6">
+                <section id="control-panel" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    <div class="flex flex-col sm:flex-row justify-around items-center gap-8">
+                        <div class="control-group w-full sm:w-auto">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3 text-center">Left Beaker</h3>
+                            <div class="mb-3">
+                                <label for="left-metal" class="block text-sm font-medium text-gray-700 mb-1">Metal Electrode:</label>
+                                <select id="left-metal" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="Zn">Zinc (Zn)</option>
+                                    <option value="Cu">Copper (Cu)</option>
+                                    <option value="Fe">Iron (Fe)</option>
+                                    <option value="Ag">Silver (Ag)</option>
+                                    <option value="Mg">Magnesium (Mg)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="left-solution" class="block text-sm font-medium text-gray-700 mb-1">Electrolyte Solution (1.0M):</label>
+                                <select id="left-solution" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="Zn">Zn(NO₃)₂</option>
+                                    <option value="Cu">Cu(NO₃)₂</option>
+                                    <option value="Fe">Fe(NO₃)₂</option>
+                                    <option value="Ag">AgNO₃</option>
+                                    <option value="Mg">Mg(NO₃)₂</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="control-group w-full sm:w-auto">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3 text-center">Right Beaker</h3>
+                            <div class="mb-3">
+                                <label for="right-metal" class="block text-sm font-medium text-gray-700 mb-1">Metal Electrode:</label>
+                                <select id="right-metal" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="Cu" selected>Copper (Cu)</option>
+                                    <option value="Zn">Zinc (Zn)</option>
+                                    <option value="Fe">Iron (Fe)</option>
+                                    <option value="Ag">Silver (Ag)</option>
+                                    <option value="Mg">Magnesium (Mg)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="right-solution" class="block text-sm font-medium text-gray-700 mb-1">Electrolyte Solution (1.0M):</label>
+                                <select id="right-solution" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="Cu" selected>Cu(NO₃)₂</option>
+                                    <option value="Zn">Zn(NO₃)₂</option>
+                                    <option value="Fe">Fe(NO₃)₂</option>
+                                    <option value="Ag">AgNO₃</option>
+                                    <option value="Mg">Mg(NO₃)₂</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
+                        <button id="run-button" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">Run Simulation</button>
+                        <button id="swap-leads-button" class="w-full sm:w-auto bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 transition-transform transform hover:scale-105">Swap Leads</button>
+                        <button id="reset-button" class="w-full sm:w-auto bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-transform transform hover:scale-105">Reset</button>
+                    </div>
+                </section>
+
+                <section id="info-display" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    <div id="error-message" class="text-center text-red-600 font-semibold mb-4 hidden"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+                        <div class="bg-gray-50 p-4 rounded-lg"><h3 class="text-md font-semibold text-gray-600">Voltmeter Reading</h3><p id="voltage-output" class="text-2xl font-bold text-blue-800 mt-1">0.00 V</p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg"><h3 class="text-md font-semibold text-gray-600">Electron Flow</h3><p id="electron-flow-direction" class="text-lg font-medium text-gray-800 mt-1">N/A</p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg sm:col-span-2"><h3 class="text-md font-semibold text-gray-600">Left Beaker Half-Equation</h3><p id="left-beaker-equation" class="text-lg font-mono text-gray-800 mt-1">N/A</p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg sm:col-span-2"><h3 class="text-md font-semibold text-gray-600">Right Beaker Half-Equation</h3><p id="right-beaker-equation" class="text-lg font-mono text-gray-800 mt-1">N/A</p></div>
+                    </div>
+                    <div id="gemini-features" class="mt-6 hidden flex flex-col sm:flex-row justify-center items-center gap-4">
+                        <button id="explain-button" class="w-full sm:w-auto bg-purple-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-purple-700 transition-transform transform hover:scale-105">✨ Explain This Cell</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Gemini Modal -->
+    <div id="gemini-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center"><h2 id="modal-title" class="text-xl font-bold">AI Explanation</h2><button id="close-modal-button" class="text-2xl font-bold">&times;</button></div>
+            <div id="modal-content" class="p-6 overflow-y-auto"><div id="loader" class="loader mx-auto"></div><div id="gemini-response" class="prose max-w-none"></div></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const metals = {
+                'Zn': { symbol: 'Zn', name: 'Zinc', potential: -0.76, color: '#a0aec0', charge: 2 },
+                'Fe': { symbol: 'Fe', name: 'Iron', potential: -0.44, color: '#718096', charge: 2 },
+                'Cu': { symbol: 'Cu', name: 'Copper', potential: +0.34, color: '#d69e2e', charge: 2 },
+                'Ag': { symbol: 'Ag', name: 'Silver', potential: +0.80, color: '#e2e8f0', charge: 1 },
+                'Mg': { symbol: 'Mg', name: 'Magnesium', potential: -2.37, color: '#d1d5db', charge: 2 }
+            };
+
+            let areLeadsSwapped = false;
+            let lastRunState = null;
+
+            const runButton = document.getElementById('run-button');
+            const resetButton = document.getElementById('reset-button');
+            const swapLeadsButton = document.getElementById('swap-leads-button');
+            const errorMessage = document.getElementById('error-message');
+            const voltageOutput = document.getElementById('voltage-output');
+            const voltmeterDisplay = document.getElementById('voltmeter-display');
+            const leftBeakerEquation = document.getElementById('left-beaker-equation');
+            const rightBeakerEquation = document.getElementById('right-beaker-equation');
+            const electronFlow = document.getElementById('electron-flow-direction');
+            const electronContainer = document.getElementById('electron-container');
+            const leftTerminalLabel = document.getElementById('left-terminal-label');
+            const rightTerminalLabel = document.getElementById('right-terminal-label');
+            const svgNS = "http://www.w3.org/2000/svg";
+            
+            const leftMetalSelect = document.getElementById('left-metal');
+            const leftSolutionSelect = document.getElementById('left-solution');
+            const rightMetalSelect = document.getElementById('right-metal');
+            const rightSolutionSelect = document.getElementById('right-solution');
+            
+            const leftElectrodeLabel = document.getElementById('left-electrode-label');
+            const rightElectrodeLabel = document.getElementById('right-electrode-label');
+            const leftSolutionLabel = document.getElementById('left-solution-label');
+            const rightSolutionLabel = document.getElementById('right-solution-label');
+
+            const geminiFeaturesDiv = document.getElementById('gemini-features');
+            const explainButton = document.getElementById('explain-button');
+            const geminiModal = document.getElementById('gemini-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const closeModalButton = document.getElementById('close-modal-button');
+            const geminiResponseDiv = document.getElementById('gemini-response');
+            const loader = document.getElementById('loader');
+
+            function handleDropdownChange(source, target) {
+                syncDropdowns(source, target);
+                stopSimulation();
+            }
+
+            runButton.addEventListener('click', runSimulation);
+            resetButton.addEventListener('click', resetSimulation);
+            swapLeadsButton.addEventListener('click', swapLeads);
+            
+            leftMetalSelect.addEventListener('change', () => handleDropdownChange(leftMetalSelect, leftSolutionSelect));
+            leftSolutionSelect.addEventListener('change', () => handleDropdownChange(leftSolutionSelect, leftMetalSelect));
+            rightMetalSelect.addEventListener('change', () => handleDropdownChange(rightMetalSelect, rightSolutionSelect));
+            rightSolutionSelect.addEventListener('change', () => handleDropdownChange(rightSolutionSelect, rightMetalSelect));
+
+            explainButton.addEventListener('click', handleExplainClick);
+            closeModalButton.addEventListener('click', () => geminiModal.classList.remove('active'));
+            
+            resetSimulation();
+
+            function formatIon(metal) {
+                if (metal.charge === 1) return `${metal.symbol}<sup>+</sup>`;
+                return `${metal.symbol}<sup>${metal.charge}+</sup>`;
+            }
+
+            function formatElectrons(charge) {
+                if (charge === 1) return 'e<sup>-</sup>';
+                return `${charge}e<sup>-</sup>`;
+            }
+            
+            function syncDropdowns(source, target) { target.value = source.value; }
+
+            function stopSimulation() {
+                lastRunState = null;
+                voltageOutput.textContent = '0.00 V';
+                voltmeterDisplay.textContent = 'Voltmeter';
+                voltmeterDisplay.setAttribute('font-size', '18');
+                leftBeakerEquation.innerHTML = 'N/A';
+                rightBeakerEquation.innerHTML = 'N/A';
+                electronFlow.textContent = 'N/A';
+                errorMessage.classList.add('hidden');
+                geminiFeaturesDiv.classList.add('hidden');
+                document.getElementById('anode-label').textContent = 'Left Beaker';
+                document.getElementById('cathode-label').textContent = 'Right Beaker';
+                document.getElementById('anode-electrode').setAttribute('fill', '#9ca3af');
+                document.getElementById('cathode-electrode').setAttribute('fill', '#9ca3af');
+                
+                leftElectrodeLabel.setAttribute('visibility', 'hidden');
+                rightElectrodeLabel.setAttribute('visibility', 'hidden');
+                leftSolutionLabel.setAttribute('visibility', 'hidden');
+                rightSolutionLabel.setAttribute('visibility', 'hidden');
+
+                clearAnimations();
+            }
+
+            function resetSimulation() {
+                leftMetalSelect.value = 'Zn';
+                syncDropdowns(leftMetalSelect, leftSolutionSelect);
+                rightMetalSelect.value = 'Cu';
+                syncDropdowns(rightMetalSelect, rightSolutionSelect);
+                areLeadsSwapped = false;
+                updateTerminalColors();
+                stopSimulation();
+            }
+            
+            function runSimulation() {
+                clearAnimations();
+                errorMessage.classList.add('hidden');
+                geminiFeaturesDiv.classList.add('hidden');
+
+                const leftMetalKey = leftMetalSelect.value;
+                const rightMetalKey = rightMetalSelect.value;
+
+                if (leftMetalKey === rightMetalKey) {
+                    showError("Cannot create a cell from two identical half-cells.");
+                    lastRunState = null;
+                    return;
+                }
+
+                const leftMetal = metals[leftMetalKey];
+                const rightMetal = metals[rightMetalKey];
+
+                let anode, cathode, anodeSide;
+                if (leftMetal.potential < rightMetal.potential) {
+                    anode = leftMetal;
+                    cathode = rightMetal;
+                    anodeSide = 'left';
+                } else {
+                    anode = rightMetal;
+                    cathode = leftMetal;
+                    anodeSide = 'right';
+                }
+
+                const cellPotential = cathode.potential - anode.potential;
+                lastRunState = { anode, cathode, anodeSide, cellPotential, leftMetal, rightMetal };
+
+                updateDisplay(lastRunState);
+                animateElectrons(anodeSide);
+                geminiFeaturesDiv.classList.remove('hidden');
+            }
+            
+            function swapLeads() {
+                areLeadsSwapped = !areLeadsSwapped;
+                updateTerminalColors();
+                if (lastRunState) {
+                    updateDisplay(lastRunState);
+                }
+            }
+            
+            function updateTerminalColors() {
+                const leftColor = areLeadsSwapped ? 'red' : 'black';
+                const rightColor = areLeadsSwapped ? 'black' : 'red';
+                const leftSymbol = areLeadsSwapped ? '+' : '-';
+                const rightSymbol = areLeadsSwapped ? '-' : '+';
+                leftTerminalLabel.setAttribute('fill', leftColor);
+                rightTerminalLabel.setAttribute('fill', rightColor);
+                leftTerminalLabel.textContent = leftSymbol;
+                rightTerminalLabel.textContent = rightSymbol;
+            }
+
+            function updateDisplay({ anode, cathode, anodeSide, cellPotential, leftMetal, rightMetal }) {
+                const positiveTerminalSide = areLeadsSwapped ? 'left' : 'right';
+                const isAnodeOnPositive = (anodeSide === positiveTerminalSide);
+                const displayVoltage = isAnodeOnPositive ? -cellPotential : cellPotential;
+                const formattedVoltage = `${displayVoltage.toFixed(2)} V`;
+                
+                voltageOutput.textContent = formattedVoltage;
+                voltmeterDisplay.textContent = formattedVoltage;
+                voltmeterDisplay.setAttribute('font-size', '24');
+                
+                const anodeEqString = `${anode.symbol}(s) &rarr; ${formatIon(anode)}(aq) + ${formatElectrons(anode.charge)}`;
+                const cathodeEqString = `${formatIon(cathode)}(aq) + ${formatElectrons(cathode.charge)} &rarr; ${cathode.symbol}(s)`;
+
+                if (anodeSide === 'left') {
+                    leftBeakerEquation.innerHTML = anodeEqString;
+                    rightBeakerEquation.innerHTML = cathodeEqString;
+                    document.getElementById('anode-label').textContent = 'Anode (Oxidation)';
+                    document.getElementById('cathode-label').textContent = 'Cathode (Reduction)';
+                    document.getElementById('anode-electrode').setAttribute('fill', anode.color);
+                    document.getElementById('cathode-electrode').setAttribute('fill', cathode.color);
+                } else { 
+                    leftBeakerEquation.innerHTML = cathodeEqString;
+                    rightBeakerEquation.innerHTML = anodeEqString;
+                    document.getElementById('anode-label').textContent = 'Cathode (Reduction)';
+                    document.getElementById('cathode-label').textContent = 'Anode (Oxidation)';
+                    document.getElementById('anode-electrode').setAttribute('fill', cathode.color);
+                    document.getElementById('cathode-electrode').setAttribute('fill', anode.color);
+                }
+                
+                electronFlow.innerHTML = `${anode.symbol} &rarr; ${cathode.symbol}`;
+
+                // Update and show diagram labels
+                leftElectrodeLabel.textContent = leftMetal.symbol;
+                rightElectrodeLabel.textContent = rightMetal.symbol;
+                leftSolutionLabel.textContent = leftSolutionSelect.options[leftSolutionSelect.selectedIndex].text;
+                rightSolutionLabel.textContent = rightSolutionSelect.options[rightSolutionSelect.selectedIndex].text;
+
+                leftElectrodeLabel.setAttribute('visibility', 'visible');
+                rightElectrodeLabel.setAttribute('visibility', 'visible');
+                leftSolutionLabel.setAttribute('visibility', 'visible');
+                rightSolutionLabel.setAttribute('visibility', 'visible');
+            }
+            
+            function animateElectrons(anodeSide) {
+                clearAnimations();
+                const path1_d = (anodeSide === 'left') ? "M 175 150 Q 250 50 360 50" : "M 625 150 Q 550 50 440 50";
+                const path2_d = (anodeSide === 'left') ? "M 440 50 Q 550 50 625 150" : "M 360 50 Q 250 50 175 150";
+
+                let animationPath1 = document.createElementNS(svgNS, 'path');
+                animationPath1.id = 'animation-path-1';
+                animationPath1.setAttribute('d', path1_d);
+                animationPath1.setAttribute('fill', 'none');
+                animationPath1.setAttribute('stroke', 'none');
+                electronContainer.appendChild(animationPath1);
+                
+                let animationPath2 = document.createElementNS(svgNS, 'path');
+                animationPath2.id = 'animation-path-2';
+                animationPath2.setAttribute('d', path2_d);
+                animationPath2.setAttribute('fill', 'none');
+                animationPath2.setAttribute('stroke', 'none');
+                electronContainer.appendChild(animationPath2);
+
+                for (let i = 0; i < 4; i++) {
+                    const electron1 = document.createElementNS(svgNS, 'circle');
+                    electron1.setAttribute('r', '5');
+                    electron1.setAttribute('class', 'electron');
+                    const animate1 = document.createElementNS(svgNS, 'animateMotion');
+                    animate1.setAttribute('dur', '2s');
+                    animate1.setAttribute('begin', `${i * 0.5}s`);
+                    animate1.setAttribute('repeatCount', 'indefinite');
+                    const mpath1 = document.createElementNS(svgNS, 'mpath');
+                    mpath1.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#animation-path-1');
+                    animate1.appendChild(mpath1);
+                    electron1.appendChild(animate1);
+                    electronContainer.appendChild(electron1);
+
+                    const electron2 = document.createElementNS(svgNS, 'circle');
+                    electron2.setAttribute('r', '5');
+                    electron2.setAttribute('class', 'electron');
+                    const animate2 = document.createElementNS(svgNS, 'animateMotion');
+                    animate2.setAttribute('dur', '2s');
+                    animate2.setAttribute('begin', `${i * 0.5}s`);
+                    animate2.setAttribute('repeatCount', 'indefinite');
+                    const mpath2 = document.createElementNS(svgNS, 'mpath');
+                    mpath2.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#animation-path-2');
+                    animate2.appendChild(mpath2);
+                    electron2.appendChild(animate2);
+                    electronContainer.appendChild(electron2);
+                }
+            }
+
+            function clearAnimations() { electronContainer.innerHTML = ''; }
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+                voltageOutput.textContent = '0.00 V';
+                voltmeterDisplay.textContent = 'Voltmeter';
+                voltmeterDisplay.setAttribute('font-size', '18');
+                leftBeakerEquation.innerHTML = 'N/A';
+                rightBeakerEquation.innerHTML = 'N/A';
+                electronFlow.textContent = 'N/A';
+            }
+
+            // --- Local AI Functions ---
+            function handleExplainClick() {
+                if (!lastRunState) return;
+                const { anode, cathode } = lastRunState;
+                modalTitle.textContent = "✨ Explanation";
+                const response = getLocalExplanation(anode, cathode);
+                displayLocalResponse(response);
+            }
+
+            function displayLocalResponse(text) {
+                geminiModal.classList.add('active');
+                loader.style.display = 'block';
+                geminiResponseDiv.innerHTML = '';
+                
+                // Simulate a short delay
+                setTimeout(() => {
+                    geminiResponseDiv.innerHTML = formatAIResponse(text);
+                    loader.style.display = 'none';
+                }, 500);
+            }
+
+            function getLocalExplanation(anode, cathode) {
+                return `
+**1. Why ${anode.name} is the anode:**
+* ${anode.name} has a more negative electrode potential (${anode.potential}V) compared to ${cathode.name} (${cathode.potential}V). This means it has a stronger tendency to lose electrons (oxidize), making it the anode (the negative electrode).
+
+**2. The reaction at the anode (Oxidation):**
+* ${anode.name} atoms lose electrons and become ${anode.symbol}${anode.charge}+ ions, which dissolve into the solution.
+* ${anode.symbol}(s) -> ${anode.symbol}${anode.charge}+(aq) + ${anode.charge}e-
+
+**3. The reaction at the cathode (Reduction):**
+* Electrons travel through the wire to the ${cathode.name} electrode. Here, ${cathode.symbol}${cathode.charge}+ ions from the solution gain these electrons and are deposited as solid ${cathode.name} metal.
+* ${cathode.symbol}${cathode.charge}+(aq) + ${cathode.charge}e- -> ${cathode.symbol}(s)
+
+**4. The purpose of the salt bridge:**
+* The salt bridge allows ions to flow between the two beakers to balance the charge. Without it, charge would build up and the electron flow would stop almost immediately.
+                `;
+            }
+
+            function formatAIResponse(text) {
+                let html = text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\* (.*?)(?=\n\* |$)/g, '<li>$1</li>')
+                    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+                    .replace(/->/g, '&rarr;')
+                    .replace(/(\w+)\((\w)\)/g, '$1<sub>($2)</sub>')
+                    .replace(/(\w+)(\d+)([+-])/g, '$1<sup>$2$3</sup>')
+                    .replace(/(\s)e-/g, '$1e<sup>-</sup>')
+                    .replace(/\n/g, '<br>');
+                return html;
+            }
+        });
+    </script>
+</body>
+</html>
