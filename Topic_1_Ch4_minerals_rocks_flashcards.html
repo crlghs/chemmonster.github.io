@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rocks & Minerals Flashcards</title>
+    <title>Minerals & Rocks Flashcards</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -14,7 +14,7 @@
             background-color: #f0f9ff;
             margin: 0;
             padding: 0;
-            overflow: hidden;
+            overflow: auto;
         }
 
         .bubbles-container {
@@ -57,6 +57,7 @@
         }
         .card-front { background-color: #ffffff; }
         .card-back { background-color: #f0fdf4; transform: rotateY(180deg); }
+        .latex { font-family: "Times New Roman", serif; }
         .main-container {
             background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border-radius: 1.5rem;
             border: 1px solid rgba(255, 255, 255, 0.2); padding: 2rem;
@@ -112,11 +113,13 @@
     </div>
     <div class="content-wrapper p-4">
         <div class="w-full max-w-2xl mx-auto main-container">
+            <h1 id="deck-title" class="text-3xl font-bold text-center text-gray-800 mb-2"></h1>
+            <p id="deck-subtitle" class="text-center text-gray-600 mb-4"></p>
             <div id="flashcard-container" class="mb-4"></div>
             
             <div class="flex justify-between items-center mb-4">
                 <button id="prevBtn" class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
-                <div id="card-counter" class="text-gray-600 font-medium">1 / 18</div>
+                <div id="card-counter" class="text-gray-600 font-medium"></div>
                 <button id="nextBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Next</button>
             </div>
             
@@ -131,7 +134,7 @@
                     </div>
                 </div>
 
-                <div id="main-controls" class="flex justify-center items-center space-x-2 md:space-x-4">
+                <div id="main-controls" class="flex flex-wrap justify-center items-center gap-2 md:gap-4">
                     <button id="shuffleBtn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-blue-600">Shuffle</button>
                     <button id="resetBtn" class="bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-gray-600">Reset / Exit</button>
                     <button id="reviewFlaggedBtn" class="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-yellow-600 disabled:opacity-50" disabled>Review Flagged</button>
@@ -143,8 +146,8 @@
     </div>
 
     <script>
-        const DECK_TITLE = "Chemistry Flashcards";
-        const DECK_SUBTITLE = "Rocks, Minerals & Reactions";
+        const DECK_TITLE = "Chemistry of Rocks and Minerals";
+        const DECK_SUBTITLE = "Limestone, Weathering, and Reactions";
 
         const initialDeck = [
             { id: 0, question: "Name three common rocks that contain the mineral calcite (calcium carbonate).", answer: "1. Limestone<br>2. Chalk<br>3. Marble" },
@@ -168,6 +171,8 @@
         ];
 
         const flashcardContainer = document.getElementById('flashcard-container');
+        const deckTitle = document.getElementById('deck-title');
+        const deckSubtitle = document.getElementById('deck-subtitle');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const shuffleBtn = document.getElementById('shuffleBtn');
@@ -277,8 +282,8 @@
 
         reviewFlaggedBtn.addEventListener('click', () => {
             if (flaggedCardIds.size > 0) {
-                modalTitle.textContent = "Reviewing Flagged Cards";
-                modalSubtitle.textContent = `You flagged ${flaggedCardIds.size} card(s) for review.`;
+                deckTitle.textContent = "Reviewing Flagged Cards";
+                deckSubtitle.textContent = `You flagged ${flaggedCardIds.size} card(s) for review.`;
                 activeDeck = initialDeck.filter(card => flaggedCardIds.has(card.id));
                 currentCardIndex = 0;
                 renderCard();
@@ -286,8 +291,8 @@
         });
 
         function resetToFullDeck() {
-            modalTitle.textContent = DECK_TITLE;
-            modalSubtitle.textContent = DECK_SUBTITLE;
+            deckTitle.textContent = DECK_TITLE;
+            deckSubtitle.textContent = DECK_SUBTITLE;
             activeDeck = [...initialDeck];
             currentCardIndex = 0;
             mainControls.classList.remove('hidden');
@@ -325,9 +330,11 @@
             window.open(url, '_blank');
         };
 
-        // Initialize Modal Title and Subtitle
+        // --- Initialization ---
         modalTitle.textContent = DECK_TITLE;
         modalSubtitle.textContent = DECK_SUBTITLE;
+        deckTitle.textContent = DECK_TITLE;
+        deckSubtitle.textContent = DECK_SUBTITLE;
         
         if (sessionStorage.getItem('introModalSeen')) {
             introModal.style.display = 'none';
