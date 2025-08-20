@@ -14,7 +14,6 @@
             background-color: #f0f9ff;
             margin: 0;
             padding: 0;
-            /* Allows scrolling on smaller screens or in landscape view */
             overflow: auto;
         }
 
@@ -68,17 +67,15 @@
         }
         .flag-btn svg { width: 24px; height: 24px; }
         
-        /* Styles for the answer content */
         .answer-content h3 { font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem; color: #1e40af; }
         .answer-content p { margin-bottom: 0.75rem; }
         .answer-content ul { list-style-type: disc; margin-left: 1.5rem; }
         .answer-content li { margin-bottom: 0.5rem; }
-
     </style>
 </head>
 <body>
     <div id="introModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full transform transition-all scale-95 opacity-0 animate-fade-in-up">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full transform transition-all scale-95 opacity-0">
             <h2 class="text-2xl font-bold mb-4 text-gray-800">Welcome to Your Flashcards!</h2>
             <p class="mb-6 text-gray-600">Here’s a quick guide to the study tools:</p>
             <ul class="text-left space-y-3 mb-8">
@@ -109,6 +106,12 @@
         }
         .animate-fade-in-up {
             animation: fade-in-up 0.4s ease-out forwards;
+        }
+        #introModal.opacity-0 {
+            opacity: 0;
+        }
+        #introModal .transform {
+            transform: scale(0.95);
         }
     </style>
 
@@ -154,39 +157,39 @@
         // Deck content for Periodic Properties
         const initialDeck = [
             {
+                id: 1,
+                question: "Summarize the <strong>structure and bonding</strong> for the elements in Period 2 (Li to Ne).",
+                answer: `<div class="answer-content"><h3>Structure and Bonding: Period 2</h3><ul><li><strong>Lithium (Li), Beryllium (Be):</strong> Giant metallic structure.</li><li><strong>Boron (B), Carbon (C):</strong> Giant covalent structure.</li><li><strong>Nitrogen (N<sub>2</sub>), Oxygen (O<sub>2</sub>), Fluorine (F<sub>2</sub>):</strong> Simple diatomic molecular structures.</li><li><strong>Neon (Ne):</strong> Simple monoatomic structure.</li></ul></div>`
+            },
+            {
+                id: 2,
+                question: "Summarize the <strong>structure and bonding</strong> for the elements in Period 3 (Na to Ar).",
+                answer: `<div class="answer-content"><h3>Structure and Bonding: Period 3</h3><ul><li><strong>Sodium (Na), Magnesium (Mg), Aluminium (Al):</strong> Giant metallic structure.</li><li><strong>Silicon (Si):</strong> Giant covalent structure.</li><li><strong>Phosphorus (P<sub>4</sub>), Sulphur (S<sub>8</sub>), Chlorine (Cl<sub>2</sub>):</strong> Simple molecular structures.</li><li><strong>Argon (Ar):</strong> Simple monoatomic structure.</li></ul></div>`
+            },
+            {
                 id: 0,
                 question: "Describe and explain the trend in <strong>melting points</strong> for Period 3 elements (Na to Ar).",
                 answer: `<div class="answer-content"><h3>Melting Point Trend: Period 3</h3><p>The melting point first rises to a peak at Silicon and then falls sharply.</p><ul><li><strong>Na, Mg, Al:</strong> Melting point <strong>increases</strong> due to stronger metallic bonds from an increasing number of delocalized electrons.</li><li><strong>Si:</strong> Has the <strong>highest melting point</strong> because of its giant covalent structure, which requires breaking strong covalent bonds.</li><li><strong>P, S, Cl, Ar:</strong> A <strong>sharp decrease</strong> occurs. These have simple molecular structures with weak van der Waals forces. Sulphur (S<sub>8</sub>) has a higher melting point than phosphorus (P<sub>4</sub>) because its larger molecules have stronger van der Waals forces.</li></ul></div>`
             },
             {
-                id: 1,
-                question: "Describe and explain the trend in <strong>electrical conductivity</strong> for Period 3 elements (Na to Ar).",
-                answer: `<div class="answer-content"><h3>Electrical Conductivity Trend: Period 3</h3><p>Conductivity peaks at Aluminium and then drops to nearly zero.</p><ul><li><strong>Na, Mg, Al:</strong> Conductivity <strong>increases</strong>. These metals have giant metallic structures with more delocalized electrons from Na to Al, increasing conductivity.</li><li><strong>Si:</strong> A <strong>metalloid (semiconductor)</strong> with poor conductivity at room temperature due to its giant covalent structure.</li><li><strong>P, S, Cl, Ar:</strong> These are <strong>insulators</strong>. They exist as simple molecules with no mobile electrons.</li></ul></div>`
-            },
-            {
-                id: 2,
-                question: "What are the general trends for <strong>melting points</strong> down these groups?<br>• Group I & II<br>• Group IV<br>• Group VII & 0",
-                answer: `<div class="answer-content"><h3>Melting Point Trends Down Groups</h3><ul><li><strong>Group I & II (Metals):</strong> Melting point <strong>decreases</strong>. As atoms get larger, metallic bonds weaken.</li><li><strong>Group IV (Non-metals/Metalloids):</strong> Melting point <strong>decreases</strong>. As atoms get larger, covalent bonds become weaker.</li><li><strong>Group VII & 0 (Non-metals):</strong> Melting point <strong>increases</strong>. As molecules get larger, van der Waals forces between them become stronger.</li></ul></div>`
-            },
-            {
                 id: 3,
-                question: "Summarize the <strong>structure and bonding</strong> for the elements in Period 2 (Li to Ne).",
-                answer: `<div class="answer-content"><h3>Structure and Bonding: Period 2</h3><ul><li><strong>Lithium (Li), Beryllium (Be):</strong> Giant metallic structure.</li><li><strong>Boron (B), Carbon (C):</strong> Giant covalent structure.</li><li><strong>Nitrogen (N<sub>2</sub>), Oxygen (O<sub>2</sub>), Fluorine (F<sub>2</sub>):</strong> Simple diatomic molecular structures.</li><li><strong>Neon (Ne):</strong> Simple monoatomic structure.</li></ul></div>`
-            },
-            {
-                id: 4,
-                question: "Summarize the <strong>structure and bonding</strong> for the elements in Period 3 (Na to Ar).",
-                answer: `<div class="answer-content"><h3>Structure and Bonding: Period 3</h3><ul><li><strong>Sodium (Na), Magnesium (Mg), Aluminium (Al):</strong> Giant metallic structure.</li><li><strong>Silicon (Si):</strong> Giant covalent structure.</li><li><strong>Phosphorus (P<sub>4</sub>), Sulphur (S<sub>8</sub>), Chlorine (Cl<sub>2</sub>):</strong> Simple molecular structures.</li><li><strong>Argon (Ar):</strong> Simple monoatomic structure.</li></ul></div>`
-            },
-            {
-                id: 5,
                 question: "Explain why <strong>Aluminium (Al)</strong> has a higher boiling point than <strong>Sodium (Na)</strong>.",
                 answer: `<div class="answer-content"><h3>Boiling Point: Al vs. Na</h3><p>Both have giant metallic structures, but the strength of the metallic bond differs.</p><ul><li><strong>Sodium (Na, Group I)</strong> contributes <strong>one</strong> delocalized electron per atom.</li><li><strong>Aluminium (Al, Group III)</strong> contributes <strong>three</strong> delocalized electrons per atom.</li></ul><p>Aluminium's stronger metallic bonding requires more energy to overcome, resulting in a higher boiling point.</p></div>`
             },
             {
-                id: 6,
+                id: 4,
+                question: "What are the general trends for <strong>melting points</strong> down these groups?<br>• Group I & II<br>• Group IV<br>• Group VII & 0",
+                answer: `<div class="answer-content"><h3>Melting Point Trends Down Groups</h3><ul><li><strong>Group I & II (Metals):</strong> Melting point <strong>decreases</strong>. As atoms get larger, delocalised electrons become further away from nucleus, metallic bonds weaken.</li><li><strong>Group IV (Non-metals/Metalloids):</strong> Melting point <strong>decreases</strong>. As atoms get larger, bonding electrons become further away from nuclei, covalent bonds become weaker.</li><li><strong>Group VII & 0 (Non-metals):</strong> Melting point <strong>increases</strong>. As molecules get larger, van der Waals forces between them become stronger.</li></ul></div>`
+            },
+            {
+                id: 5,
                 question: "Compare the structures of <strong>Carbon (diamond)</strong> and <strong>Nitrogen (N<sub>2</sub>)</strong> and explain the difference in their melting points.",
                 answer: `<div class="answer-content"><h3>Melting Point: Carbon vs. Nitrogen</h3><ul><li><strong>Carbon (diamond):</strong> Has a <strong>giant covalent structure</strong>. Melting requires breaking a vast number of strong covalent bonds, needing immense energy, resulting in a very high melting point.</li><li><strong>Nitrogen (N<sub>2</sub>):</strong> Has a <strong>simple molecular structure</strong>. Melting only requires overcoming weak van der Waals forces between N<sub>2</sub> molecules, needing very little energy, resulting in a very low melting point.</li></ul></div>`
+            },
+            {
+                id: 6,
+                question: "Describe and explain the trend in <strong>electrical conductivity</strong> for Period 3 elements (Na to Ar).",
+                answer: `<div class="answer-content"><h3>Electrical Conductivity Trend: Period 3</h3><p>Conductivity peaks at Aluminium and then drops to nearly zero.</p><ul><li><strong>Na, Mg, Al:</strong> Conductivity <strong>increases</strong>. The number of delocalized electrons increases from Na to Al, hence conductivity increases.</li><li><strong>Si:</strong> A <strong>metalloid (semiconductor)</strong> with poor conductivity at room temperature due to its giant covalent structure. It has no delocalised electrons nor mobile ions. </li><li><strong>P, S, Cl, Ar:</strong> These are <strong>insulators</strong>. They exist as simple molecules with no delocalised electrons and mobile ions.</li></ul></div>`
             }
         ];
 
@@ -205,7 +208,6 @@
         const mainControls = document.getElementById('main-controls');
         const scheduleBtn = document.getElementById('scheduleBtn');
 
-        // Use a unique key for storing flagged cards for this specific deck
         const flaggedCardsKey = `flashcardFlags-${deckTitle.textContent.trim()}`;
         const savedFlags = localStorage.getItem(flaggedCardsKey);
         let flaggedCardIds = savedFlags ? new Set(JSON.parse(savedFlags)) : new Set();
@@ -215,7 +217,6 @@
 
         function createCardDOM(cardData) {
             const cardWrapper = document.createElement('div');
-            // Increased height for cards with more content
             cardWrapper.className = 'card-container h-80 md:h-72';
             const isFlagged = flaggedCardIds.has(cardData.id);
             cardWrapper.innerHTML = `
@@ -244,7 +245,7 @@
         function renderCard() {
             flashcardContainer.innerHTML = '';
             
-            if (currentCardIndex < activeDeck.length) {
+            if (activeDeck.length > 0 && currentCardIndex < activeDeck.length) {
                 const cardData = activeDeck[currentCardIndex];
                 flashcardContainer.appendChild(createCardDOM(cardData));
             } else {
@@ -254,9 +255,10 @@
         }
         
         function updateControls() {
-            cardCounter.textContent = `${Math.min(currentCardIndex + 1, activeDeck.length)} / ${activeDeck.length}`;
+            const totalCards = activeDeck.length;
+            cardCounter.textContent = `${Math.min(currentCardIndex + 1, totalCards)} / ${totalCards}`;
             prevBtn.disabled = currentCardIndex === 0;
-            nextBtn.disabled = currentCardIndex >= activeDeck.length - 1;
+            nextBtn.disabled = currentCardIndex >= totalCards - 1;
             reviewFlaggedBtn.disabled = flaggedCardIds.size === 0;
         }
 
@@ -315,30 +317,17 @@
             deckSubtitle.textContent = "Trends in the Periodic Table";
             activeDeck = [...initialDeck];
             currentCardIndex = 0;
-            shuffleBtn.style.display = '';
-            reviewFlaggedBtn.style.display = '';
-            scheduleBtn.style.display = '';
+            mainControls.style.display = 'flex';
             revisionScheduler.classList.add('hidden');
         }
 
         resetBtn.addEventListener('click', () => {
-            if (!revisionScheduler.classList.contains('hidden')) {
-                // This part is for exiting the revision scheduler view
-                revisionScheduler.classList.add('hidden');
-                shuffleBtn.style.display = '';
-                reviewFlaggedBtn.style.display = '';
-                scheduleBtn.style.display = '';
-            } else {
-                // This part is for resetting the main deck
-                resetToFullDeck();
-                renderCard();
-            }
+            resetToFullDeck();
+            renderCard();
         });
         
         scheduleBtn.addEventListener('click', () => {
-            shuffleBtn.style.display = 'none';
-            reviewFlaggedBtn.style.display = 'none';
-            scheduleBtn.style.display = 'none';
+            mainControls.style.display = 'none';
             revisionScheduler.classList.remove('hidden');
         });
 
@@ -358,16 +347,22 @@
             window.open(url, '_blank');
         };
 
-        if (sessionStorage.getItem('introModalSeen')) {
-            introModal.style.display = 'none';
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('introModalSeen')) {
+                introModal.style.display = 'none';
+            } else {
+                const modalContent = introModal.querySelector('.transform');
+                introModal.classList.remove('opacity-0');
+                modalContent.classList.add('animate-fade-in-up');
+            }
 
-        closeModalBtn.addEventListener('click', () => {
-            introModal.style.display = 'none';
-            sessionStorage.setItem('introModalSeen', 'true');
+            closeModalBtn.addEventListener('click', () => {
+                introModal.style.display = 'none';
+                sessionStorage.setItem('introModalSeen', 'true');
+            });
+
+            renderCard();
         });
-
-        renderCard();
     </script>
 </body>
 </html>
