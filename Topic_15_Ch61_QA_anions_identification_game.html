@@ -257,28 +257,28 @@
         // Game data with explanations and equations
         const anions = [
             {
-                name: "CO₃²⁻",
+                name: "CO₃<sup>2</sup><sup>-</sup>",
                 tests: {
                     hcl: { 
                         observation: "Bubbles of gas that turn limewater milky",
-                        equation: "CO₃²⁻ + 2H⁺ → CO₂↑ + H₂O",
+                        equation: "CO₃<sup>2</sup><sup>-</sup> + 2H<sup>+</sup> → CO₂↑ + H₂O",
                         explanation: "Carbonate reacts with acid to produce carbon dioxide gas, which turns limewater milky due to formation of calcium carbonate."
                     },
                     agno3: { observation: "No precipitate" },
                     "ba-no3": { observation: "No precipitate" },
                     mgso4: { 
                         observation: "White precipitate",
-                        equation: "CO₃²⁻ + Mg²⁺ → MgCO₃↓",
+                        equation: "CO₃<sup>2</sup><sup>-</sup> + Mg<sup>2+</sup> → MgCO₃↓",
                         explanation: "Magnesium carbonate is insoluble in water, forming a white precipitate."
                     }
                 }
             },
             {
-                name: "HCO₃⁻",
+                name: "HCO₃<sup>-</sup>",
                 tests: {
                     hcl: { 
                         observation: "Bubbles of gas that turn limewater milky",
-                        equation: "HCO₃⁻ + H⁺ → CO₂↑ + H₂O",
+                        equation: "HCO₃<sup>-</sup> + H<sup>+</sup> → CO₂↑ + H₂O",
                         explanation: "Hydrogen carbonate reacts with acid to produce carbon dioxide gas, which turns limewater milky."
                     },
                     agno3: { observation: "No precipitate" },
@@ -287,11 +287,11 @@
                 }
             },
             {
-                name: "SO₃²⁻",
+                name: "SO₃<sup>2</sup><sup>-</sup>",
                 tests: {
                     hcl: { 
                         observation: "Bubbles of gas with pungent smell that turns acidified K₂Cr₂O₇ from orange to green",
-                        equation: "SO₃²⁻ + 2H⁺ → SO₂↑ + H₂O",
+                        equation: "SO₃<sup>2</sup><sup>-</sup> + 2H<sup>+</sup> → SO₂↑ + H₂O",
                         explanation: "Sulfite reacts with acid to produce sulfur dioxide gas, which reduces orange dichromate(VI) to green chromium(III)."
                     },
                     agno3: { observation: "No precipitate" },
@@ -300,11 +300,11 @@
                 }
             },
             {
-                name: "OCl⁻",
+                name: "OCl<sup>-</sup>",
                 tests: {
                     hcl: { 
                         observation: "Yellow-green gas that turns moist blue litmus paper red then white",
-                        equation: "OCl⁻ + Cl⁻ + 2H⁺ → Cl₂↑ + H₂O",
+                        equation: "OCl<sup>-</sup> + Cl<sup>-</sup> + 2H<sup>+</sup> → Cl₂↑ + H₂O",
                         explanation: "Hypochlorite reacts with chloride ions in acid to produce chlorine gas, which bleaches the litmus paper."
                     },
                     agno3: { observation: "No precipitate" },
@@ -313,12 +313,12 @@
                 }
             },
             {
-                name: "Cl⁻",
+                name: "Cl<sup>-</sup>",
                 tests: {
                     hcl: { observation: "No reaction" },
                     agno3: { 
                         observation: "White precipitate",
-                        equation: "Ag⁺ + Cl⁻ → AgCl↓",
+                        equation: "Ag<sup>+</sup> + Cl<sup>-</sup> → AgCl↓",
                         explanation: "Silver chloride forms as a white precipitate that is insoluble in dilute nitric acid."
                     },
                     "ba-no3": { observation: "No precipitate" },
@@ -326,12 +326,12 @@
                 }
             },
             {
-                name: "Br⁻",
+                name: "Br<sup>-</sup>",
                 tests: {
                     hcl: { observation: "No reaction" },
                     agno3: { 
                         observation: "Pale yellow precipitate",
-                        equation: "Ag⁺ + Br⁻ → AgBr↓",
+                        equation: "Ag<sup>+</sup> + Br<sup>-</sup> → AgBr↓",
                         explanation: "Silver bromide forms as a pale yellow precipitate that is insoluble in dilute nitric acid."
                     },
                     "ba-no3": { observation: "No precipitate" },
@@ -339,12 +339,12 @@
                 }
             },
             {
-                name: "I⁻",
+                name: "I<sup>-</sup>",
                 tests: {
                     hcl: { observation: "No reaction" },
                     agno3: { 
                         observation: "Yellow precipitate",
-                        equation: "Ag⁺ + I⁻ → AgI↓",
+                        equation: "Ag<sup>+</sup> + I<sup>-</sup> → AgI↓",
                         explanation: "Silver iodide forms as a yellow precipitate that is insoluble in dilute nitric acid."
                     },
                     "ba-no3": { observation: "No precipitate" },
@@ -352,13 +352,13 @@
                 }
             },
             {
-                name: "SO₄²⁻",
+                name: "SO₄<sup>2</sup><sup>-</sup>",
                 tests: {
                     hcl: { observation: "No reaction" },
                     agno3: { observation: "No precipitate" },
                     "ba-no3": { 
                         observation: "White precipitate",
-                        equation: "Ba²⁺ + SO₄²⁻ → BaSO₄↓",
+                        equation: "Ba<sup>2+</sup> + SO₄<sup>2</sup><sup>-</sup> → BaSO₄↓",
                         explanation: "Barium sulfate forms as a white precipitate that is insoluble in dilute nitric acid."
                     },
                     mgso4: { observation: "No precipitate" }
@@ -562,7 +562,8 @@
             shuffledAnions.forEach(anion => {
                 const button = document.createElement('div');
                 button.className = 'anion-option';
-                button.textContent = anion.name;
+                // Changed textContent to innerHTML to render superscripts
+                button.innerHTML = anion.name; 
                 button.addEventListener('click', () => checkAnswer(anion.name));
                 anionOptionsElement.appendChild(button);
             });
@@ -572,7 +573,9 @@
         function checkAnswer(selectedAnion) {
             if (!currentAnion) return;
             
-            const isCorrect = selectedAnion === currentAnion.name;
+            // Compare the name (which now contains HTML) with the current anion's name
+            // For accurate checking, we should compare the innerText (stripped of HTML)
+            const isCorrect = selectedAnion.replace(/<[^>]*>?/gm, '') === currentAnion.name.replace(/<[^>]*>?/gm, '');
             
             if (isCorrect) {
                 score++;
