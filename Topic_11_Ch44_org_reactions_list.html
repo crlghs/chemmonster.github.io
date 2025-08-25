@@ -254,7 +254,7 @@
                  { id: 'alkene-to-alkane', startGroup: 'Alkene', endGroup: 'Alkane', reagents: 'H₂, catalyst (e.g. Pt), heat', reactionType: 'Addition Reaction (Hydrogenation)', example: { reactant: 'CH₂=CH₂', reagentText: 'H₂, Pt, heat', product: 'CH₃-CH₃' } },
                  { id: 'alkene-to-dihaloalkane', startGroup: 'Alkene', endGroup: 'Dihaloalkane', reagents: 'X₂ in CCl₄', reactionType: 'Addition Reaction (Halogenation)', example: { reactant: 'CH₂=CH₂', reagentText: 'Br₂ in CCl₄', product: 'CH₂Br-CH₂Br' } },
                  { id: 'alkene-to-haloalkane-2', startGroup: 'Alkene', endGroup: 'Haloalkane', reagents: 'HX', reactionType: 'Addition Reaction (Hydrohalogenation)', example: { reactant: 'CH₃-CH=CH₂', reagentText: 'HBr', product: 'CH₃-CHBr-CH₃' } },
-                 { id: 'haloalkane-to-alcohol', startGroup: 'Haloalkane', endGroup: 'Alcohol', reagents: 'OH<sup>-</sup>(aq), Heat', reactionType: 'Substitution Reaction', example: { reactant: 'CH₃-CH₂Br', reagentText: 'NaOH(aq), Heat', product: 'CH₃-CH₂OH' } },
+                 { id: 'haloalkane-to-alcohol', startGroup: 'Haloalkane', endGroup: 'Alcohol', reagents: 'OH<sup>-</sup>(aq), Heat', reactionType: 'Substitution Reaction', example: { reactant: 'CH₃-CH₂Br', reagentText: 'NaOH(aq)', product: 'CH₃-CH₂OH' } },
                  { id: 'alcohol-to-haloalkane', startGroup: 'Alcohol', endGroup: 'Haloalkane', reagents: 'HX or PX₃', reactionType: 'Substitution Reaction', example: { reactant: 'CH₃-CH₂OH', reagentText: 'PBr₃', product: 'CH₃-CH₂Br' } },
                  { id: 'alcohol-to-alkene', startGroup: 'Alcohol', endGroup: 'Alkene', reagents: 'conc. H₂SO₄, Heat', reactionType: 'Dehydration Reaction', example: { reactant: 'CH₃-CH₂OH', reagentText: 'conc. H₂SO₄, Heat', product: 'CH₂=CH₂' } },
                  { id: '1-alcohol-to-aldehyde', startGroup: '1º Alcohol', endGroup: 'Aldehyde', reagents: 'Cr₂O₇<sup>2-</sup>/H<sup>+</sup>, heat', reactionType: 'Oxidation', example: { reactant: 'CH₃CH₂OH', reagentText: 'Cr₂O₇<sup>2-</sup>/H<sup>+</sup>, heat', product: 'CH₃CHO' } },
@@ -310,8 +310,8 @@
                 // Update instruction text based on the selected mode
                 const instructions = {
                     'fg-reagents': 'Hover over an arrow to see reagents and conditions.',
-                    'fg-products': 'Hover over a row to reveal the product. Click "Example" for details.',
-                    'sm-products': 'Hover over a row to reveal the specific product.',
+                    'fg-products': 'Hover over an arrow to reveal the product. Click "Example" for details.',
+                    'sm-products': 'Hover over an arrow to reveal the specific product.',
                     'sm-reagents': 'Hover over an arrow to see the specific reagents.'
                 };
                 instructionText.textContent = instructions[mode];
