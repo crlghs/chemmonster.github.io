@@ -1,0 +1,542 @@
+Year,Topics,Topic Name,Paper,Question No.,GHS % score,1A Answer
+2021,2,Microscopic World I,1A,1,81%,C
+2021,2,Microscopic World I,1A,2,40%,C
+2021,2,Microscopic World I,1A,3,77%,A
+2021,3,Metals,1A,4,81%,A
+2021,3,Metals,1A,5,80%,D
+2021,3,Metals,1A,6,59%,D
+2021,3,Metals,1A,7,83%,B
+2021,4,Acids and Bases,1A,8,64%,A
+2021,4,Acids and Bases,1A,9,69%,B
+2021,4,Acids and Bases,1A,10,80%,C
+2021,4,Acids and Bases,1A,11,76%,B
+2021,7,Electrochemistry,1A,12,77%,B
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,13,64%,A
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,14,73%,B
+2021,5,Fossil Fuels and Carbon Compounds,1A,15,50%,A
+2021,5,Fossil Fuels and Carbon Compounds,1A,16,63%,D
+2021,1,Planet Earth,1A,17,20%,C
+2021,6,Microscopic World II,1A,18,84%,C
+2021,6,Microscopic World II,1A,19,64%,C
+2021,6,Microscopic World II,1A,20,57%,D
+2021,6,Microscopic World II,1A,21,63%,C
+2021,8,Chemical Reactions and Energy,1A,22,73%,C
+2021,8,Chemical Reactions and Energy,1A,23,76%,A
+2021,8,Chemical Reactions and Energy,1A,24,17%,D
+2021,12,Patterns in the Chemical World,1A,25,74%,D
+2021,11,Chemistry of Carbon Compounds,1A,26,37%,C
+2021,11,Chemistry of Carbon Compounds,1A,27,69%,C
+2021,11,Chemistry of Carbon Compounds,1A,28,67%,C
+2021,11,Chemistry of Carbon Compounds,1A,29,51%,D
+2021,11,Chemistry of Carbon Compounds,1A,30,63%,D
+2021,11,Chemistry of Carbon Compounds,1A,31,86%,B
+2021,11,Chemistry of Carbon Compounds,1A,32,54%,C
+2021,10,Chemical Equilibrium,1A,33,76%,D
+2021,9,Rate of Reaction,1A,34,66%,A
+2021,10,Chemical Equilibrium,1A,35,66%,D
+2021,9,Rate of Reaction,1A,36,70%,C
+2022,2,Microscopic World I,1A,1,92%,B
+2022,2,Microscopic World I,1A,2,94%,D
+2022,1,Planet Earth,1A,3,69%,D
+2022,2,Microscopic World I,1A,4,88%,D
+2022,2,Microscopic World I,1A,5,66%,A
+2022,4,Acids and Bases,1A,6,44%,D
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,7,63%,D
+2022,4,Acids and Bases,1A,8,72%,A
+2022,4,Acids and Bases,1A,9,98%,A
+2022,4,Acids and Bases,1A,10,80%,B
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,11,94%,B
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,12,72%,C
+2022,8,Chemical Reactions and Energy,1A,13,86%,A
+2022,8,Chemical Reactions and Energy,1A,14,59%,A
+2022,8,Chemical Reactions and Energy,1A,15,59%,B
+2022,8,Chemical Reactions and Energy,1A,16,89%,D
+2022,8,Chemical Reactions and Energy,1A,17,91%,C
+2022,3,Metals,1A,18,83%,A
+2022,5,Fossil Fuels and Carbon Compounds,1A,19,84%,D
+2022,5,Fossil Fuels and Carbon Compounds,1A,20,81%,B
+2022,5,Fossil Fuels and Carbon Compounds,1A,21,84%,C
+2022,11,Chemistry of Carbon Compounds,1A,22,56%,A
+2022,6,Microscopic World II,1A,23,94%,B
+2022,6,Microscopic World II,1A,24,78%,B
+2022,11,Chemistry of Carbon Compounds,1A,25,56%,B
+2022,11,Chemistry of Carbon Compounds,1A,26,67%,B
+2022,11,Chemistry of Carbon Compounds,1A,27,72%,B
+2022,11,Chemistry of Carbon Compounds,1A,28,73%,D
+2022,5,Fossil Fuels and Carbon Compounds,1A,29,89%,B
+2022,10,Chemical Equilibrium,1A,30,59%,C
+2022,10,Chemical Equilibrium,1A,31,80%,D
+2022,10,Chemical Equilibrium,1A,32,63%,D
+2022,10,Chemical Equilibrium,1A,34,67%,D
+2022,11,Chemistry of Carbon Compounds,1A,35,59%,D
+2022,6,Microscopic World II,1A,36,70%,B
+2023,1,Planet Earth,1A,1,9%,D
+2023,2,Microscopic World I,1A,2,96%,A
+2023,2,Microscopic World I,1A,3,57%,D
+2023,3,Metals,1A,4,74%,A
+2023,3,Metals,1A,5,57%,D
+2023,3,Metals,1A,6,74%,B
+2023,3,Metals,1A,7,70%,D
+2023,4,Acids and Bases,1A,8,91%,C
+2023,4,Acids and Bases,1A,9,52%,C
+2023,4,Acids and Bases,1A,10,74%,D
+2023,4,Acids and Bases,1A,11,61%,B
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,12,61%,A
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,13,87%,A
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,14,48%,A
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,15,78%,C
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,16,70%,B
+2023,8,Chemical Reactions and Energy,1A,17,39%,D
+2023,8,Chemical Reactions and Energy,1A,18,74%,B
+2023,6,Microscopic World II,1A,19,83%,C
+2023,6,Microscopic World II,1A,20,57%,B
+2023,6,Microscopic World II,1A,21,91%,C
+2023,5,Fossil Fuels and Carbon Compounds,1A,22,91%,A
+2023,5,Fossil Fuels and Carbon Compounds,1A,23,100%,B
+2023,5,Fossil Fuels and Carbon Compounds,1A,24,61%,B
+2023,11,Chemistry of Carbon Compounds,1A,25,87%,D
+2023,11,Chemistry of Carbon Compounds,1A,26,26%,B
+2023,11,Chemistry of Carbon Compounds,1A,27,87%,D
+2023,11,Chemistry of Carbon Compounds,1A,28,70%,C
+2023,11,Chemistry of Carbon Compounds,1A,29,70%,D
+2023,9,Rate of Reaction,1A,30,57%,B
+2023,9,Rate of Reaction,1A,31,22%,D
+2023,10,Chemical Equilibrium,1A,32,74%,D
+2023,10,Chemical Equilibrium,1A,33,65%,A
+2023,10,Chemical Equilibrium,1A,34,65%,A
+2023,12,Patterns in the Chemical World,1A,35,39%,A
+2023,12,Patterns in the Chemical World,1A,36,65%,C
+2024,1,Planet Earth,1A,1,64%,B
+2024,1,Planet Earth,1A,2,60%,B
+2024,2,Microscopic World I,1A,3,82%,C
+2024,3,Metals,1A,4,66%,B
+2024,3,Metals,1A,5,76%,B
+2024,3,Metals,1A,6,49%,D
+2024,3,Metals,1A,7,72%,D
+2024,3,Metals,1A,8,66%,C
+2024,4,Acids and Bases,1A,9,51%,A
+2024,4,Acids and Bases,1A,10,73%,D
+2024,4,Acids and Bases,1A,11,71%,A
+2024,4,Acids and Bases,1A,12,87%,A
+2024,4,Acids and Bases,1A,13,94%,C
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,14,94%,C
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,15,61%,A
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,16,89%,D
+2024,8,Chemical Reactions and Energy,1A,17,93%,A
+2024,8,Chemical Reactions and Energy,1A,18,64%,C
+2024,5,Fossil Fuels and Carbon Compounds,1A,19,77%,D
+2024,5,Fossil Fuels and Carbon Compounds,1A,20,73%,B
+2024,5,Fossil Fuels and Carbon Compounds,1A,21,66%,B
+2024,5,Fossil Fuels and Carbon Compounds,1A,22,42%,B
+2024,6,Microscopic World II,1A,23,60%,B
+2024,9,Rate of Reaction,1A,24,89%,A
+2024,9,Rate of Reaction,1A,25,76%,C
+2024,10,Chemical Equilibrium,1A,26,87%,C
+2024,10,Chemical Equilibrium,1A,27,31%,D
+2024,10,Chemical Equilibrium,1A,28,77%,A
+2024,11,Chemistry of Carbon Compounds,1A,29,72%,B
+2024,11,Chemistry of Carbon Compounds,1A,31,66%,C
+2024,11,Chemistry of Carbon Compounds,1A,32,39%,C
+2024,11,Chemistry of Carbon Compounds,1A,33,46%,D
+2024,11,Chemistry of Carbon Compounds,1A,34,84%,D
+2024,12,Patterns in the Chemical World,1A,35,80%,A
+2024,12,Patterns in the Chemical World,1A,36,78%,D
+2025,1,Planet Earth,1A,1,80%,B
+2025,5,Fossil Fuels and Carbon Compounds,1A,2,52%,A
+2025,3,Metals,1A,3,73%,A
+2025,5,Fossil Fuels and Carbon Compounds,1A,4,91%,D
+2025,5,Fossil Fuels and Carbon Compounds,1A,5,91%,A
+2025,5,Fossil Fuels and Carbon Compounds,1A,6,41%,B
+2025,6,Microscopic World II,1A,7,70%,D
+2025,6,Microscopic World II,1A,8,96%,D
+2025,4,Acids and Bases,1A,9,43%,D
+2025,3,Metals,1A,10,90%,D
+2025,3,Metals,1A,11,96%,B
+2025,6,Microscopic World II,1A,12,46%,A
+2025,3,Metals,1A,13,91%,C
+2025,6,Microscopic World II,1A,14,76%,B
+2025,4,Acids and Bases,1A,15,59%,D
+2025,8,Chemical Reactions and Energy,1A,16,78%,A
+2025,4,Acids and Bases,1A,17,73%,C
+2025,4,Acids and Bases,1A,18,78%,D
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,19,85%,C
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,20,68%,A
+2025,4,Acids and Bases,1A,21,54%,C
+2025,8,Chemical Reactions and Energy,1A,22,48%,B
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,23,87%,D
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,24,67%,A
+2025,10,Chemical Equilibrium,1A,25,72%,C
+2025,9,Rate of Reaction,1A,26,56%,B
+2025,10,Chemical Equilibrium,1A,27,44%,D
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,28,82%,D
+2025,10,Chemical Equilibrium,1A,29,74%,C
+2025,11,Chemistry of Carbon Compounds,1A,30,41%,C
+2025,11,Chemistry of Carbon Compounds,1A,31,74%,C
+2025,11,Chemistry of Carbon Compounds,1A,32,51%,C
+2025,11,Chemistry of Carbon Compounds,1A,33,73%,A
+2025,12,Patterns in the Chemical World,1A,34,66%,A
+2025,12,Patterns in the Chemical World,1A,35,78%,A
+2025,6,Microscopic World II,1A,36,72%,D
+2021,2,Microscopic World I,1B,1(a),96%,
+2021,2,Microscopic World I,1B,1(b)(i),29%,
+2021,2,Microscopic World I,1B,1(b)(ii),79%,
+2021,5,Fossil Fuels and Carbon Compounds,1B,2(a),74%,
+2021,5,Fossil Fuels and Carbon Compounds,1B,2(b),46%,
+2021,5,Fossil Fuels and Carbon Compounds,1B,2(c),52%,
+2021,4,Acids and Bases,1B,3(a),34%,
+2021,4,Acids and Bases,1B,3(b),29%,
+2021,4,Acids and Bases,1B,3(c),76%,
+2021,4,Acids and Bases,1B,3(d),22%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(a)(i),74%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(a)(ii),53%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(a)(iii),67%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(b)(i),57%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(b)(ii),64%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(c),25%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(d)(i),59%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(d)(ii),30%,
+2021,3,Metals,1B,5,53%,
+2021,4,Acids and Bases,1B,6,41%,
+2021,8,Chemical Reactions and Energy,1B,7(a)(i),48%,
+2021,8,Chemical Reactions and Energy,1B,7(a)(ii),70%,
+2021,8,Chemical Reactions and Energy,1B,7(a)(iii),50%,
+2021,8,Chemical Reactions and Energy,1B,7(b),39%,
+2021,4,Acids and Bases,1B,8(a),34%,
+2021,4,Acids and Bases,1B,8(b),80%,
+2021,11,Chemistry of Carbon Compounds,1B,9(a)(i),34%,
+2021,5,Fossil Fuels and Carbon Compounds,1B,9(a)(ii),64%,
+2021,11,Chemistry of Carbon Compounds,1B,9(b)(1),51%,
+2021,11,Chemistry of Carbon Compounds,1B,9(b)(ii),33%,
+2021,11,Chemistry of Carbon Compounds,1B,9(b)(iii),59%,
+2021,11,Chemistry of Carbon Compounds,1B,10(a),74%,
+2021,11,Chemistry of Carbon Compounds,1B,10(b)(i),41%,
+2021,11,Chemistry of Carbon Compounds,1B,10(b)(ii)(I),57%,
+2021,11,Chemistry of Carbon Compounds,1B,10(b)(ii)(II),51%,
+2021,11,Chemistry of Carbon Compounds,1B,10(b)(iii),30%,
+2021,10,Chemical Equilibrium,1B,11(a)(i),56%,
+2021,10,Chemical Equilibrium,1B,11(a)(ii),41%,
+2021,10,Chemical Equilibrium,1B,11(b)(i),52%,
+2021,10,Chemical Equilibrium,1B,11(b)(ii),37%,
+2021,9,Rate of Reaction,1B,12(a),86%,
+2021,9,Rate of Reaction,1B,12(b)(i),51%,
+2021,9,Rate of Reaction,1B,12(b)(ii),16%,
+2021,9,Rate of Reaction,1B,12(c),45%,
+2021,9,Rate of Reaction,1B,12(d),49%,
+2021,12,Patterns in the Chemical World,1B,12(e),48%,
+2021,13,Industrial Chemistry,2,1(a)(i)(1),37%,
+2021,13,Industrial Chemistry,2,1(a)(i)(2),61%,
+2021,13,Industrial Chemistry,2,1(a)(i)(3),41%,
+2021,13,Industrial Chemistry,2,1(a)(ii)(1),51%,
+2021,13,Industrial Chemistry,2,1(a)(ii)(2),45%,
+2021,13,Industrial Chemistry,2,1(a)(iii),77%,
+2021,13,Industrial Chemistry,2,1(b)(i),34%,
+2021,13,Industrial Chemistry,2,1(b)(ii),81%,
+2021,13,Industrial Chemistry,2,1(b)(iii),53%,
+2021,13,Industrial Chemistry,2,1(c)(i),50%,
+2021,13,Industrial Chemistry,2,1(c)(ii),41%,
+2021,13,Industrial Chemistry,2,1(c)(iii),46%,
+2021,13,Industrial Chemistry,2,1(d)(i),10%,
+2021,13,Industrial Chemistry,2,1(d)(ii),44%,
+2021,15,Analytical Chemistry,2,2(a)(i),48%,
+2021,15,Analytical Chemistry,2,2(a)(ii),51%,
+2021,15,Analytical Chemistry,2,2(b)(i),50%,
+2021,15,Analytical Chemistry,2,2(b)(ii)(1),64%,
+2021,15,Analytical Chemistry,2,2(b)(ii)(2),4%,
+2021,15,Analytical Chemistry,2,2(b)(ii)(3),40%,
+2021,15,Analytical Chemistry,2,2(b)(iii),51%,
+2021,15,Analytical Chemistry,2,2(c)(i),53%,
+2021,15,Analytical Chemistry,2,2(c)(ii),19%,
+2021,15,Analytical Chemistry,2,2(c)(iii),44%,
+2022,2,Microscopic World I,1B,1(a),54%,
+2022,2,Microscopic World I,1B,1(b),83%,
+2022,4,Acids and Bases,1B,2(a),81%,
+2022,4,Acids and Bases,1B,2(b),57%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,3(a),92%,
+2022,3,Metals,1B,3(b),38%,
+2022,3,Metals,1B,3(c),46%,
+2022,3,Metals,1B,3(d),88%,
+2022,3,Metals,1B,3(e),83%,
+2022,4,Acids and Bases,1B,4(a),17%,
+2022,4,Acids and Bases,1B,4(b),27%,
+2022,4,Acids and Bases,1B,5(a),42%,
+2022,4,Acids and Bases,1B,5(b),50%,
+2022,4,Acids and Bases,1B,5(c),42%,
+2022,4,Acids and Bases,1B,5(d),54%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(a),79%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b),92%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c),88%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(d),71%,
+2022,8,Chemical Reactions and Energy,1B,7(a),50%,
+2022,8,Chemical Reactions and Energy,1B,7(b),88%,
+2022,8,Chemical Reactions and Energy,1B,7(c),69%,
+2022,6,Microscopic World II,1B,8(a)(i),96%,
+2022,2,Microscopic World I,1B,8(a)(ii),52%,
+2022,12,Patterns in the Chemical World,1B,8(a)(iii),48%,
+2022,6,Microscopic World II,1B,8(b),78%,
+2022,5,Fossil Fuels and Carbon Compounds,1B,9(a)(i),58%,
+2022,5,Fossil Fuels and Carbon Compounds,1B,9(a)(ii),79%,
+2022,5,Fossil Fuels and Carbon Compounds,1B,9(b),79%,
+2022,10,Chemical Equilibrium,1B,10(a),63%,
+2022,10,Chemical Equilibrium,1B,10(b),50%,
+2022,10,Chemical Equilibrium,1B,10(c),63%,
+2022,9,Rate of Reaction,1B,11(a),58%,
+2022,9,Rate of Reaction,1B,11(b),29%,
+2022,9,Rate of Reaction,1B,11(c),69%,
+2022,9,Rate of Reaction,1B,11(d),67%,
+2022,9,Rate of Reaction,1B,11(e),46%,
+2022,11,Chemistry of Carbon Compounds,1B,12(a),46%,
+2022,11,Chemistry of Carbon Compounds,1B,12(b)(i),85%,
+2022,11,Chemistry of Carbon Compounds,1B,12(b)(ii),13%,
+2022,11,Chemistry of Carbon Compounds,1B,13(a),54%,
+2022,11,Chemistry of Carbon Compounds,1B,13(b),81%,
+2022,11,Chemistry of Carbon Compounds,1B,13(c)(i),69%,
+2022,11,Chemistry of Carbon Compounds,1B,13(c)(ii),63%,
+2022,11,Chemistry of Carbon Compounds,1B,14(a),79%,
+2022,11,Chemistry of Carbon Compounds,1B,14(b),54%,
+2022,11,Chemistry of Carbon Compounds,1B,14(c),46%,
+2022,10,Chemical Equilibrium,1B,15(a),64%,
+2022,10,Chemical Equilibrium,1B,15(b),56%,
+2023,2,Microscopic World I,1B,1(a),93%,
+2023,2,Microscopic World I,1B,1(b)(i),52%,
+2023,2,Microscopic World I,1B,1(b)(ii),89%,
+2023,3,Metals,1B,1(b)(iii),16%,
+2023,2,Microscopic World I,1B,2(a),92%,
+2023,2,Microscopic World I,1B,2(b),54%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,2(c),41%,
+2023,3,Metals,1B,3(a),89%,
+2023,3,Metals,1B,3(b)(i),34%,
+2023,3,Metals,1B,3(b)(ii),92%,
+2023,3,Metals,1B,3(c),61%,
+2023,3,Metals,1B,3(d),38%,
+2023,4,Acids and Bases,1B,4(a),85%,
+2023,4,Acids and Bases,1B,4(b),95%,
+2023,4,Acids and Bases,1B,4(c),49%,
+2023,4,Acids and Bases,1B,4(d),72%,
+2023,4,Acids and Bases,1B,4(e)(i),61%,
+2023,4,Acids and Bases,1B,4(e)(ii),85%,
+2023,4,Acids and Bases,1B,4(f),65%,
+2023,4,Acids and Bases,1B,4(g),66%,
+2023,4,Acids and Bases,1B,5,77%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(a),80%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b),79%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c),85%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(d),52%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(a),67%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(b),54%,
+2023,8,Chemical Reactions and Energy,1B,8(a),78%,
+2023,8,Chemical Reactions and Energy,1B,8(b),61%,
+2023,8,Chemical Reactions and Energy,1B,8(c),52%,
+2023,11,Chemistry of Carbon Compounds,1B,9(a),69%,
+2023,5,Fossil Fuels and Carbon Compounds,1B,9(b)(i),80%,
+2023,11,Chemistry of Carbon Compounds,1B,9(b)(ii),51%,
+2023,11,Chemistry of Carbon Compounds,1B,9(c)(i),77%,
+2023,11,Chemistry of Carbon Compounds,1B,9(c)(ii),78%,
+2023,11,Chemistry of Carbon Compounds,1B,9(d),18%,
+2023,5,Fossil Fuels and Carbon Compounds,1B,10(a),73%,
+2023,5,Fossil Fuels and Carbon Compounds,1B,10(b),75%,
+2023,5,Fossil Fuels and Carbon Compounds,1B,10(c),71%,
+2023,10,Chemical Equilibrium,1B,11(a),97%,
+2023,10,Chemical Equilibrium,1B,11(b),63%,
+2023,10,Chemical Equilibrium,1B,11(c),62%,
+2023,11,Chemistry of Carbon Compounds,1B,12(a),62%,
+2023,6,Microscopic World II,1B,12(b),44%,
+2023,11,Chemistry of Carbon Compounds,1B,13(a),66%,
+2023,11,Chemistry of Carbon Compounds,1B,13(b)(i),20%,
+2023,11,Chemistry of Carbon Compounds,1B,13(b)(ii),74%,
+2023,11,Chemistry of Carbon Compounds,1B,13(c),56%,
+2023,12,Patterns in the Chemical World,1B,14,46%,
+2023,9,Rate of Reaction,1B,15(a),66%,
+2023,9,Rate of Reaction,1B,15(b),70%,
+2023,9,Rate of Reaction,1B,15(c),82%,
+2023,9,Rate of Reaction,1B,15(d),41%,
+2023,13,Industrial Chemistry,2,1(a)(i)(1),77%,
+2023,13,Industrial Chemistry,2,1(a)(i)(2),76%,
+2023,13,Industrial Chemistry,2,1(a)(ii),49%,
+2023,13,Industrial Chemistry,2,1(b)(i),20%,
+2023,13,Industrial Chemistry,2,1(b)(ii),46%,
+2023,13,Industrial Chemistry,2,1(c)(i)(1),87%,
+2023,13,Industrial Chemistry,2,1(c)(i)(2),65%,
+2023,13,Industrial Chemistry,2,1(c)(i)(3),54%,
+2023,13,Industrial Chemistry,2,1(c)(ii)(1),57%,
+2023,13,Industrial Chemistry,2,1(c)(ii)(2),47%,
+2023,13,Industrial Chemistry,2,1(c)(ii)(3),48%,
+2023,15,Analytical Chemistry,2,2(a),58%,
+2023,15,Analytical Chemistry,2,2(b)(i),75%,
+2023,15,Analytical Chemistry,2,2(b)(ii),25%,
+2023,15,Analytical Chemistry,2,2(c)(i),84%,
+2023,15,Analytical Chemistry,2,2(c)(ii)(1),69%,
+2023,15,Analytical Chemistry,2,2(c)(ii)(2),49%,
+2023,15,Analytical Chemistry,2,2(d)(i),97%,
+2023,15,Analytical Chemistry,2,2(d)(ii),2%,
+2023,15,Analytical Chemistry,2,2(d)(iii),26%,
+2023,15,Analytical Chemistry,2,2(e)(i),56%,
+2023,15,Analytical Chemistry,2,2(e)(ii),82%,
+2023,15,Analytical Chemistry,2,2(e)(iii),69%,
+2023,15,Analytical Chemistry,2,2(e)(iv),36%,
+2023,15,Analytical Chemistry,2,2(e)(v)(1),82%,
+2023,15,Analytical Chemistry,2,2(e)(v)(2),48%,
+2024,2,Microscopic World I,1B,1(a)(i),96%,
+2024,2,Microscopic World I,1B,1(a)(ii),81%,
+2024,2,Microscopic World I,1B,1(a)(iii),79%,
+2024,3,Metals,1B,1(b)(i),94%,
+2024,3,Metals,1B,1(b)(ii),90%,
+2024,4,Acids and Bases,1B,1(b)(iii),58%,
+2024,8,Chemical Reactions and Energy,1B,2(a),78%,
+2024,8,Chemical Reactions and Energy,1B,2(b),70%,
+2024,8,Chemical Reactions and Energy,1B,2(c)(i),62%,
+2024,8,Chemical Reactions and Energy,1B,2(c)(ii)(1),63%,
+2024,8,Chemical Reactions and Energy,1B,2(c)(ii)(2),73%,
+2024,4,Acids and Bases,1B,3(a),78%,
+2024,4,Acids and Bases,1B,3(b),78%,
+2024,4,Acids and Bases,1B,3(c),74%,
+2024,8,Chemical Reactions and Energy,1B,4(a),84%,
+2024,8,Chemical Reactions and Energy,1B,4(b),63%,
+2024,4,Acids and Bases,1B,5,62%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(a),46%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b),89%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c)(i),90%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c)(ii),53%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c)(iii),23%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(a)(i),89%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(a)(ii),45%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(a)(iii),71%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(b)(i),78%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(b)(ii),75%,
+2024,9,Rate of Reaction,1B,8(a),77%,
+2024,9,Rate of Reaction,1B,8(b),58%,
+2024,9,Rate of Reaction,1B,8(c)(i),81%,
+2024,9,Rate of Reaction,1B,8(c)(ii),87%,
+2024,10,Chemical Equilibrium,1B,9(a)(i),59%,
+2024,10,Chemical Equilibrium,1B,9(a)(ii),84%,
+2024,10,Chemical Equilibrium,1B,9(b),76%,
+2024,6,Microscopic World II,1B,10,72%,
+2024,5,Fossil Fuels and Carbon Compounds,1B,11(a),87%,
+2024,5,Fossil Fuels and Carbon Compounds,1B,11(b)(i),76%,
+2024,5,Fossil Fuels and Carbon Compounds,1B,11(b)(ii),78%,
+2024,11,Chemistry of Carbon Compounds,1B,11(c)(i),83%,
+2024,11,Chemistry of Carbon Compounds,1B,11(c)(ii)(I),45%,
+2024,11,Chemistry of Carbon Compounds,1B,11(c)(ii)(II),63%,
+2024,11,Chemistry of Carbon Compounds,1B,12(a)(i),24%,
+2024,11,Chemistry of Carbon Compounds,1B,12(a)(ii),76%,
+2024,11,Chemistry of Carbon Compounds,1B,12(b)(i),71%,
+2024,11,Chemistry of Carbon Compounds,1B,12(b)(ii),78%,
+2024,11,Chemistry of Carbon Compounds,1B,12(b)(iii),70%,
+2024,11,Chemistry of Carbon Compounds,1B,12(c)(i),70%,
+2024,11,Chemistry of Carbon Compounds,1B,12(c)(ii),14%,
+2024,11,Chemistry of Carbon Compounds,1B,13(a),52%,
+2024,11,Chemistry of Carbon Compounds,1B,13(b)(i),35%,
+2024,11,Chemistry of Carbon Compounds,1B,13(b)(ii),63%,
+2024,5,Fossil Fuels and Carbon Compounds,1B,13(c),83%,
+2024,12,Patterns in the Chemical World,1B,14(a),61%,
+2024,12,Patterns in the Chemical World,1B,14(b),46%,
+2024,12,Patterns in the Chemical World,1B,14(c),49%,
+2024,9,Rate of Reaction,1B,15,30%,
+2024,13,Industrial Chemistry,2,1(a)(i),40%,
+2024,13,Industrial Chemistry,2,1(a)(ii),31%,
+2024,13,Industrial Chemistry,2,1(a)(iii),58%,
+2024,13,Industrial Chemistry,2,1(b)(i),66%,
+2024,13,Industrial Chemistry,2,1(b)(ii)(1),54%,
+2024,13,Industrial Chemistry,2,1(b)(ii)(2),76%,
+2024,13,Industrial Chemistry,2,1(c)(i),71%,
+2024,13,Industrial Chemistry,2,1(c)(ii),40%,
+2024,13,Industrial Chemistry,2,1(c)(iii),54%,
+2024,13,Industrial Chemistry,2,1(d)(i),71%,
+2024,13,Industrial Chemistry,2,1(d)(ii),32%,
+2024,13,Industrial Chemistry,2,1(e)(i),45%,
+2024,13,Industrial Chemistry,2,1(e)(ii)(1),39%,
+2024,13,Industrial Chemistry,2,1(e)(ii)(2),22%,
+2024,15,Analytical Chemistry,2,2(a),61%,
+2024,15,Analytical Chemistry,2,2(b)(i),92%,
+2024,15,Analytical Chemistry,2,2(b)(ii),80%,
+2024,15,Analytical Chemistry,2,2(c)(i),63%,
+2024,15,Analytical Chemistry,2,2(c)(ii),67%,
+2024,15,Analytical Chemistry,2,2(d)(i),77%,
+2024,15,Analytical Chemistry,2,2(d)(ii),63%,
+2024,15,Analytical Chemistry,2,2(d)(iii)(1),73%,
+2024,15,Analytical Chemistry,2,2(d)(iii)(2),45%,
+2024,15,Analytical Chemistry,2,2(d)(iii)(3),83%,
+2024,15,Analytical Chemistry,2,2(e)(i),52%,
+2024,15,Analytical Chemistry,2,2(e)(ii),53%,
+2024,15,Analytical Chemistry,2,2(e)(iii),40%,
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(a),76%,
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(b)(i),91%,
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(b)(ii),85%,
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(b)(iii),63%,
+2025,11,Chemistry of Carbon Compounds,1B,1(c)(i),55%,
+2025,11,Chemistry of Carbon Compounds,1B,1(c)(ii),65%,
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(d),70%,
+2025,6,Microscopic World II,1B,2(a)(i),80%,
+2025,6,Microscopic World II,1B,2(a)(ii),72%,
+2025,6,Microscopic World II,1B,2(b),55%,
+2025,12,Patterns in the Chemical World,1B,2(c),45%,
+2025,2,Microscopic World I,1B,3(a)(i),78%,
+2025,2,Microscopic World I,1B,3(a)(ii),88%,
+2025,2,Microscopic World I,1B,3(b),85%,
+2025,3,Metals,1B,3(c),87%,
+2025,3,Metals,1B,4(a),74%,
+2025,3,Metals,1B,4(b)(i),76%,
+2025,3,Metals,1B,4(b)(ii),88%,
+2025,3,Metals,1B,4(c)(i),63%,
+2025,3,Metals,1B,4(c)(ii),89%,
+2025,4,Acids and Bases,1B,5(a),83%,
+2025,4,Acids and Bases,1B,5(b),82%,
+2025,4,Acids and Bases,1B,5(c),79%,
+2025,4,Acids and Bases,1B,5(d),80%,
+2025,4,Acids and Bases,1B,5(e),41%,
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(a),99%,
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b)(i),78%,
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b)(ii),61%,
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c),41%,
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(d),90%,
+2025,11,Chemistry of Carbon Compounds,1B,7(a),24%,
+2025,11,Chemistry of Carbon Compounds,1B,7(b)(i),29%,
+2025,11,Chemistry of Carbon Compounds,1B,7(b)(ii),59%,
+2025,11,Chemistry of Carbon Compounds,1B,7(c),86%,
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,8,76%,
+2025,9,Rate of Reaction,1B,9,40%,
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,10,66%,
+2025,4,Acids and Bases,1B,11,69%,
+2025,10,Chemical Equilibrium,1B,12(a),70%,
+2025,10,Chemical Equilibrium,1B,12(b)(i),70%,
+2025,10,Chemical Equilibrium,1B,12(b)(ii),87%,
+2025,10,Chemical Equilibrium,1B,12(c),73%,
+2025,8,Chemical Reactions and Energy,1B,13(a),80%,
+2025,8,Chemical Reactions and Energy,1B,13(b)(i),52%,
+2025,8,Chemical Reactions and Energy,1B,13(b)(ii),71%,
+2025,8,Chemical Reactions and Energy,1B,13(c),49%,
+2025,11,Chemistry of Carbon Compounds,1B,14(a),76%,
+2025,11,Chemistry of Carbon Compounds,1B,14(b),55%,
+2025,11,Chemistry of Carbon Compounds,1B,14(c),79%,
+2025,11,Chemistry of Carbon Compounds,1B,14(d)(i),39%,
+2025,11,Chemistry of Carbon Compounds,1B,14(d)(ii),74%,
+2025,11,Chemistry of Carbon Compounds,1B,14(d)(iii),79%,
+2025,11,Chemistry of Carbon Compounds,1B,14(e)(i),94%,
+2025,11,Chemistry of Carbon Compounds,1B,14(e)(ii),28%,
+2025,13,Industrial Chemistry,2,1(a)(i),39%,
+2025,13,Industrial Chemistry,2,1(a)(ii),83%,
+2025,13,Industrial Chemistry,2,1(a)(iii),28%,
+2025,13,Industrial Chemistry,2,1(a)(iv)(1),82%,
+2025,13,Industrial Chemistry,2,1(a)(iv)(2),33%,
+2025,13,Industrial Chemistry,2,1(a)(iv)(3),61%,
+2025,13,Industrial Chemistry,2,1(a)(v)(1),47%,
+2025,13,Industrial Chemistry,2,1(a)(v)(2),82%,
+2025,13,Industrial Chemistry,2,1(b)(i),63%,
+2025,13,Industrial Chemistry,2,1(b)(ii)(1),61%,
+2025,13,Industrial Chemistry,2,1(b)(ii)(2),71%,
+2025,13,Industrial Chemistry,2,1(b)(ii)(3),49%,
+2025,13,Industrial Chemistry,2,1(b)(ii)(4),60%,
+2025,13,Industrial Chemistry,2,1(c)(i),85%,
+2025,13,Industrial Chemistry,2,1(c)(ii),55%,
+2025,13,Industrial Chemistry,2,1(c)(iii),66%,
+2025,15,Analytical Chemistry,2,2(a)(i),39%,
+2025,15,Analytical Chemistry,2,2(a)(ii)(1),83%,
+2025,15,Analytical Chemistry,2,2(a)(ii)(2),63%,
+2025,15,Analytical Chemistry,2,2(b)(i),20%,
+2025,15,Analytical Chemistry,2,2(b)(ii),63%,
+2025,15,Analytical Chemistry,2,2(b)(iii),66%,
+2025,15,Analytical Chemistry,2,2(b)(iv),27%,
+2025,15,Analytical Chemistry,2,2(c),68%,
+2025,15,Analytical Chemistry,2,2(d)(i),82%,
+2025,15,Analytical Chemistry,2,2(d)(ii),79%,
+2025,15,Analytical Chemistry,2,2(d)(iii),77%,
+2025,15,Analytical Chemistry,2,2(d)(iv),54%,
