@@ -152,53 +152,7 @@
                 display: block !important;
             }
         }
-/* ========================================= */
-/* FIXED: Split-View Layout for Direct Image */
-/* ========================================= */
 
-/* 1. The Container */
-.split-container { 
-    display: flex; 
-    flex-direction: row;
-    gap: 24px; 
-    align-items: center; /* Center vertically */
-    justify-content: center;
-    height: 75vh; 
-    overflow: hidden; 
-    position: relative; /* Ensure buttons stay relative to this */
-}
-
-/* 2. The Image (Left Side) - TARGETED DIRECTLY */
-/* We target the ID specifically to override default IMG styles */
-.split-container #single-question-img {
-    flex: 1;
-    min-width: 0;       
-    max-width: 50%;     /* Strictly force half width */
-    height: 100%;       /* Use full container height */
-    object-fit: contain; /* Keep aspect ratio without stretching */
-    display: block;
-}
-
-/* 3. The PDF Pane (Right Side) */
-.pdf-viewer-pane { 
-    flex: 1; 
-    min-width: 50%;     
-    border-left: 2px solid #e2e8f0; 
-    padding-left: 20px; 
-    height: 100%; 
-    overflow-y: auto;   
-    background: #f8fafc;
-}
-
-/* 4. Fix Navigation Buttons in Split View */
-/* Prevents buttons from overlapping the PDF text */
-.split-container #nav-next-btn {
-    right: 50% !important; /* Move 'Next' button to the middle divider */
-    margin-right: -20px;   /* Fine-tune position */
-    z-index: 50;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -1729,78 +1683,6 @@
                 // Keep for legacy pdf support if user still wants it later, though main view is now image-based
                 // ... (code unchanged)
             }
-// --- NEW: Render PDF Marking Scheme ---
-    async renderPdfToModal(url, pageNum) {
-        const modalContainer = document.querySelector('#image-viewer-modal .relative.transform');
-        const imageWrapper = document.getElementById('single-question-img').parentElement;
-        
-        // 1. Expand Modal Width
-        modalContainer.classList.add('modal-expanded');
-        
-        // 2. Create Split Layout if it doesn't exist
-        if (!document.getElementById('pdf-pane')) {
-            // Add styling to the parent wrapper to enable flexbox
-            imageWrapper.classList.add('split-container');
-            
-            // Move image into a specific div if needed, or just append pane
-            // Current structure: Wrapper -> [PrevBtn, Img, NextBtn]
-            // We need to be careful not to break nav buttons. 
-            // Safer Strategy: Append pane to the wrapper.
-            
-            const pane = document.createElement('div');
-            pane.id = 'pdf-pane';
-            pane.className = 'pdf-viewer-pane animate-fade-in';
-            pane.innerHTML = `
-                <div class="sticky top-0 bg-slate-100/90 backdrop-blur p-2 border-b border-slate-200 mb-2 flex justify-between items-center z-10">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase">Marking Scheme (Page ${pageNum})</span>
-                    <button onclick="document.getElementById('pdf-pane').remove(); document.querySelector('.split-container').classList.remove('split-container'); document.querySelector('.modal-expanded').classList.remove('modal-expanded');" class="text-slate-400 hover:text-red-500">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-                <div id="pdf-loading" class="text-center py-10 text-slate-400 text-xs">Loading PDF...</div>
-                <canvas id="pdf-canvas" class="hidden"></canvas>
-            `;
-            imageWrapper.appendChild(pane);
-        }
-
-        // 3. Load and Render PDF Page
-        try {
-            const loadingTask = pdfjsLib.getDocument(url);
-            const pdf = await loadingTask.promise;
-            
-            // Handle Page Bound Errors
-            if (pageNum > pdf.numPages) pageNum = 1;
-
-            const page = await pdf.getPage(pageNum);
-            const canvas = document.getElementById('pdf-canvas');
-            const context = canvas.getContext('2d');
-            
-            // Calculate scale to fit the pane width
-            const paneWidth = document.getElementById('pdf-pane').clientWidth - 40; // padding
-            const unscaledViewport = page.getViewport({ scale: 1 });
-            const scale = paneWidth / unscaledViewport.width;
-            const viewport = page.getViewport({ scale: scale });
-
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            await page.render({ canvasContext: context, viewport: viewport }).promise;
-            
-            document.getElementById('pdf-loading').classList.add('hidden');
-            canvas.classList.remove('hidden');
-            
-        } catch (error) {
-            console.error("PDF Load Error:", error);
-            const pane = document.getElementById('pdf-pane');
-            if(pane) pane.innerHTML = `
-                <div class="p-4 flex flex-col items-center text-center">
-                    <div class="text-red-500 font-bold text-sm mb-1">File Not Found</div>
-                    <div class="text-xs text-slate-500 break-all">${url}</div>
-                    <div class="mt-4 text-[10px] text-slate-400">Ensure the PDF is in the same folder as this HTML file.</div>
-                </div>`;
-        }
-    }
-
 
 viewQuestion(year, paper, questionNum) {
         const imgFilename = this.getQuestionFilename(year, paper, questionNum);
@@ -1871,19 +1753,22 @@ viewQuestion(year, paper, questionNum) {
                         ansBtn.classList.remove('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
                     }
                 };
-            } else {
-                // NEW LOGIC: Check Marking Scheme (PDF)
-                ansBtn.innerHTML = `
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span>Check Marking Scheme</span>`;
+} else {
+            // NEW LOGIC: Open PDF in New Tab (Crisp Quality)
+            ansBtn.innerHTML = `
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                <span>Open Marking Scheme</span>`;
+            
+            ansBtn.onclick = () => {
+                const pageNum = parseInt(item.Answer);
+                // Construct the filename
+                const pdfFilename = `${item.Year}_mock_paper_${item.Paper}_ans_marked.pdf`;
                 
-                ansBtn.onclick = () => {
-                    const pageNum = parseInt(item.Answer); // Uses the 7th column as Page Number
-                    // Ensure the filename matches your file: 2025_mock_paper_1B_ans_marked.pdf
-                    const pdfUrl = `${item.Year}_mock_paper_${item.Paper}_ans_marked.pdf`;
-                    this.renderPdfToModal(pdfUrl, pageNum);
-                };
-            }
+                // Open in new tab and jump directly to the page
+                // Note: The '#page=' parameter works in Chrome, Edge, and Firefox
+                window.open(`${pdfFilename}#page=${pageNum}`, '_blank');
+            };
+        }
         } else {
             ansBtn.classList.add('hidden');
         }
