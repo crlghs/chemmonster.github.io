@@ -1,19 +1,3 @@
-Here is the **complete, updated HTML code** for your project (`MOCK_smart_drill_11.html`).
-
-This single file includes:
-
-1. **Corrected CSV Data:** All 2025 Paper 1B questions now point to the correct PDF pages (accounting for the cover page).
-2. **Crisp PDF Viewing:** "Check Marking Scheme" now opens the PDF in a **New Tab** for perfect clarity.
-3. **Review Summary:** The new "Review Answers" button allows you to see a summary table of all selected questions at once.
-4. **Clean Code:** All experimental "Split View" code has been removed to ensure stability.
-
-### Instructions
-
-1. **Save** the code below as an `.html` file (e.g., `MOCK_smart_drill_11.html`).
-2. **Place** it in the same folder as your images and the `2025_mock_paper_1B_ans_marked.pdf` file.
-3. **Run** it in your browser.
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,16 +5,30 @@ This single file includes:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Drill: Mock Exams</title>
 
+    <!-- ========================================= -->
+    <!-- 1. MAGIC LINK GUARD (Inserted)            -->
+    <!-- ========================================= -->
     <script>
         function checkAccess() {
+            // 1. PASS if we are inside a frame (Standard Google Site Embed)
             if (window.self !== window.top) return true;
+
+            // 2. PASS if the URL contains the "Magic Word"
+            // This allows the "Pop-out" button and Mobile views to work safely.
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('access') === 'school_verified') return true;
+            if (urlParams.get('access') === 'school_verified') {
+                return true;
+            }
+
+            // 3. PASS if in Preview Mode (Blob) - for testing purposes
             if (window.location.protocol === 'blob:') return true;
+
+            // 4. FAIL in all other cases (Direct "Naked" Link)
             return false;
         }
 
         if (!checkAccess()) {
+            // Stop everything and show an error
             document.documentElement.innerHTML = `
                 <div style="height:100vh; display:flex; align-items:center; justify-content:center; background:#f1f5f9; font-family:sans-serif; text-align:center;">
                     <div style="background:white; padding:40px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.1); max-width:400px; margin:20px;">
@@ -41,12 +39,20 @@ This single file includes:
                     </div>
                 </div>
             `;
+            // Stop the rest of the browser from processing the app
             throw new Error("Access Denied: Missing Magic Parameter");
         }
     </script>
+    <!-- ========================================= -->
+    <!-- END: MAGIC LINK GUARD                     -->
+    <!-- ========================================= -->
 
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <script>
@@ -83,7 +89,7 @@ This single file includes:
             border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
             padding: 1.5rem;
-            page-break-inside: avoid;
+            page-break-inside: avoid; /* Prevents splitting a question across pages */
         }
 
         .quiz-header {
@@ -146,17 +152,26 @@ This single file includes:
                 display: block !important;
             }
         }
+
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
+    <!-- ========================================= -->
+    <!-- 2. PASSWORD LOCK SCREEN (Inserted)        -->
+    <!-- ========================================= -->
     <div id="security-overlay" class="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center border-4 border-indigo-50">
+            <!-- Icon -->
             <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
             </div>
+            
+            <!-- Text -->
             <h2 class="text-2xl font-bold text-slate-800 mb-2 tracking-tight">Chemistry Smart Drill (MOCK)</h2>
             <p class="text-slate-500 mb-6 text-sm">Please enter the class passcode to access the question bank.</p>
+            
+            <!-- Form -->
             <form onsubmit="smartDrillLock.check(event)" class="space-y-4">
                 <input type="password" id="access-code" class="w-full border-2 border-slate-200 rounded-lg p-3 text-center text-lg tracking-widest focus:border-indigo-500 focus:ring-indigo-500 outline-none transition-colors placeholder-slate-300" placeholder="••••••" autofocus autocomplete="off">
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-transform transform active:scale-95 shadow-lg shadow-indigo-200">Unlock Access</button>
@@ -168,23 +183,31 @@ This single file includes:
 
     <script>
         const smartDrillLock = {
+            // === SET YOUR PASSWORD HERE ===
             PASSCODE: "chem2025", 
+            // ==============================
+
             init: function() {
+                // Check if already unlocked in this session
                 if (sessionStorage.getItem('smart_drill_unlocked') === 'true') {
                     document.getElementById('security-overlay').style.display = 'none';
                 }
             },
+            
             check: function(e) {
                 e.preventDefault();
                 const input = document.getElementById('access-code');
                 const errorMsg = document.getElementById('lock-error-msg');
                 const overlay = document.getElementById('security-overlay');
+
                 if (input.value === this.PASSCODE) {
+                    // Success: Fade out and save state
                     sessionStorage.setItem('smart_drill_unlocked', 'true');
                     overlay.style.transition = "opacity 0.5s ease";
                     overlay.style.opacity = "0";
                     setTimeout(() => overlay.style.display = 'none', 500);
                 } else {
+                    // Fail: Show error and shake
                     errorMsg.classList.remove('hidden');
                     input.value = '';
                     input.focus();
@@ -193,9 +216,14 @@ This single file includes:
                 }
             }
         };
+        // Run immediately
         smartDrillLock.init();
     </script>
+    <!-- ========================================= -->
+    <!-- END: PASSWORD LOCK SCREEN                 -->
+    <!-- ========================================= -->
 
+    <!-- Header -->
     <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 z-20 shadow-sm print:hidden">
         <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -205,7 +233,7 @@ This single file includes:
                     </svg>
                 </div>
                 <h1 class="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-slate-700 to-slate-900 tracking-tight">
-                    Smart Drill: Mock Exams <span class="text-[10px] font-medium text-slate-400 ml-1 px-2 py-0.5 bg-slate-100 rounded-full border border-slate-200">v3.4</span>
+                    Smart Drill: Mock Exams <span class="text-[10px] font-medium text-slate-400 ml-1 px-2 py-0.5 bg-slate-100 rounded-full border border-slate-200">v3.3</span>
                 </h1>
             </div>
             
@@ -215,17 +243,22 @@ This single file includes:
                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                      Add Papers
                  </button>
+                 <div id="pdf-status" class="hidden text-[10px] px-2 py-1 bg-emerald-50 text-emerald-600 rounded border border-emerald-100 animate-pulse">
+                    Processing...
+                 </div>
             </div>
         </div>
     </header>
 
     <div class="flex-1 flex overflow-hidden">
+        <!-- Sidebar Filters -->
         <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-10 print:hidden shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
             <div class="p-4 border-b border-slate-100">
                 <div class="flex justify-end items-center mb-2">
                     <span id="total-questions" class="text-[10px] font-medium px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100">0 Qs</span>
                 </div>
                 
+                <!-- CSV Upload -->
                 <div class="mb-2">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1" id="source-label">Source</label>
                     <input type="file" id="csv-upload" accept=".csv" class="block w-full text-xs text-slate-500
@@ -236,9 +269,16 @@ This single file includes:
                         hover:file:bg-indigo-100 cursor-pointer
                     "/>
                 </div>
+
+                <!-- PDF Status List -->
+                <div id="pdf-list" class="max-h-24 overflow-y-auto hidden">
+                    <!-- Badges injected here -->
+                </div>
             </div>
             
             <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                
+                <!-- Status Filters -->
                 <div class="flex flex-col gap-2">
                     <div class="bg-indigo-50/50 p-2 rounded-lg border border-indigo-100">
                         <label class="flex items-center space-x-2 cursor-pointer w-full">
@@ -248,6 +288,7 @@ This single file includes:
                             </span>
                         </label>
                     </div>
+                    <!-- Hide Completed Filter -->
                     <div class="bg-emerald-50/50 p-2 rounded-lg border border-emerald-100">
                         <label class="flex items-center space-x-2 cursor-pointer w-full">
                             <input type="checkbox" id="filter-hide-completed" onchange="smartDrill.toggleCompletedFilter()" class="w-3.5 h-3.5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500">
@@ -258,22 +299,29 @@ This single file includes:
                     </div>
                 </div>
 
+                <!-- Year Filter -->
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Year</label>
-                        <button onclick="smartDrill.toggleAllFilters('year')" class="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Toggle All</button>
+                        <button onclick="smartDrill.toggleAllFilters('year')" class="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline">
+                            Toggle All
+                        </button>
                     </div>
                     <div id="year-filters" class="grid grid-cols-3 gap-2"></div>
                 </div>
 
+                <!-- Paper Filter -->
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Paper</label>
-                        <button onclick="smartDrill.toggleAllFilters('paper')" class="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Toggle All</button>
+                        <button onclick="smartDrill.toggleAllFilters('paper')" class="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline">
+                            Toggle All
+                        </button>
                     </div>
                     <div id="paper-filters" class="grid grid-cols-3 gap-2"></div>
                 </div>
 
+                <!-- Performance Filter -->
                 <div class="pt-0">
                     <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wide">Performance</label>
                     <select id="performance-select" onchange="smartDrill.handlePerformanceChange(this.value)" class="w-full text-xs border border-slate-200 rounded-md text-slate-600 focus:border-indigo-500 focus:ring-indigo-500 p-1.5 bg-white">
@@ -283,6 +331,7 @@ This single file includes:
                         <option value="must-win">Must-Win (&gt;60%)</option>
                         <option value="custom">Custom Range</option>
                     </select>
+                    
                     <div id="custom-performance-inputs" class="hidden grid grid-cols-2 gap-2 mt-2 bg-slate-50 p-2 rounded border border-slate-100">
                         <div>
                             <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Min %</label>
@@ -295,26 +344,33 @@ This single file includes:
                     </div>
                 </div>
 
+                <!-- Topic Filter -->
                 <div class="pt-4 border-t border-slate-100">
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Topic</label>
-                        <button onclick="smartDrill.toggleAllFilters('topic')" class="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Toggle All</button>
+                        <button onclick="smartDrill.toggleAllFilters('topic')" class="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline">
+                            Toggle All
+                        </button>
                     </div>
                     <div id="topic-filters" class="space-y-0.5"></div>
                 </div>
+
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-1 bg-slate-50/50 flex flex-col overflow-hidden relative print:hidden">
+            <!-- Table Header -->
             <div class="px-6 pt-4 pb-2">
                  <div class="flex justify-between items-end mb-3">
                     <div>
                         <h2 class="text-xl font-bold text-slate-800 tracking-tight">Question Bank</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Take control of your revision! Use the Star (<span class="text-yellow-500 font-bold">★</span>) to bookmark tricky questions, and hit Completed (<span class="text-emerald-500 font-bold">✓</span>) to track progress.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Take control of your revision! Use the Star (<span class="text-yellow-500 font-bold">★</span>) to bookmark tricky questions for later review, and hit Completed (<span class="text-emerald-500 font-bold">✓</span>) to track your progress as you master each topic.</p>
                     </div>
                  </div>
             </div>
 
+            <!-- Table Container -->
             <div class="flex-1 overflow-auto px-6 pb-6">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <table class="w-full text-left border-collapse">
@@ -326,6 +382,7 @@ This single file includes:
                                         <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Quiz Gen.</span>
                                     </div>
                                 </th>
+                                <!-- SORTABLE HEADERS -->
                                 <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-16 cursor-pointer hover:text-indigo-600 group select-none" onclick="smartDrill.handleSort('Year')">
                                     <div class="flex items-center gap-1">Year <span id="sort-icon-Year" class="text-slate-300 group-hover:text-indigo-400 font-normal">↕</span></div>
                                 </th>
@@ -341,6 +398,8 @@ This single file includes:
                                 <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-16 text-right cursor-pointer hover:text-indigo-600 group select-none" onclick="smartDrill.handleSort('Performance')">
                                     <div class="flex items-center justify-end gap-1">Score <span id="sort-icon-Performance" class="text-slate-300 group-hover:text-indigo-400 font-normal">↕</span></div>
                                 </th>
+                                
+                                <!-- 3 Action Columns -->
                                 <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-10 text-center">View</th>
                                 <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-10 text-center">Star</th>
                                 <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-20 text-center">
@@ -351,15 +410,19 @@ This single file includes:
                                 </th>
                             </tr>
                         </thead>
-                        <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+                        <tbody id="table-body" class="divide-y divide-slate-100">
+                            <!-- Rows -->
+                        </tbody>
                     </table>
                 </div>
             </div>
             
+            <!-- Floating Action Button Container -->
             <div id="fab-container" class="absolute bottom-6 right-6 flex flex-col items-end gap-2 pointer-events-none z-20 [&>*]:pointer-events-auto"></div>
         </main>
     </div>
 
+    <!-- Quiz Generation Modal -->
     <div id="quiz-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="smartDrill.closeQuizModal()"></div>
         <div class="relative z-10 flex min-h-full items-center justify-center p-4 text-center sm:p-0">
@@ -375,29 +438,25 @@ This single file includes:
             </div>
         </div>
     </div>
-
-    <div id="review-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="review-title" role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="smartDrill.closeReviewModal()"></div>
-        <div class="relative z-10 flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl flex flex-col max-h-[85vh]">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 border-b border-slate-100 flex justify-between items-center">
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-900" id="review-title">Answer Key Summary</h3>
-                        <p class="text-xs text-slate-500 mt-1">Reviewing answers for selected questions.</p>
-                    </div>
-                    <button onclick="smartDrill.closeReviewModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-50 transition-colors">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+<div id="review-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="review-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="smartDrill.closeReviewModal()"></div>
+    <div class="relative z-10 flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl flex flex-col max-h-[85vh]">
+            <div class="bg-white px-4 pb-4 pt-5 sm:p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900" id="review-title">Answer Key Summary</h3>
+                <button onclick="smartDrill.closeReviewModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-50 transition-colors">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div id="review-content" class="bg-slate-50 px-4 py-4 sm:p-6 overflow-y-auto">
                 </div>
-                <div id="review-content" class="bg-slate-50 px-4 py-4 sm:p-6 overflow-y-auto">
-                    </div>
-                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-100">
-                    <button type="button" class="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" onclick="smartDrill.closeReviewModal()">Close</button>
-                </div>
+            <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-100">
+                <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" onclick="smartDrill.closeReviewModal()">Close</button>
             </div>
         </div>
     </div>
-
+</div>
+    <!-- NEW: Image Viewer Modal with Star & Check Features -->
     <div id="image-viewer-modal" class="fixed inset-0 z-[60] hidden" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="smartDrill.closeImageModal()"></div>
         <div class="fixed inset-0 z-10 overflow-y-auto">
@@ -407,11 +466,20 @@ This single file includes:
                         <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
                             <h3 class="text-lg font-bold leading-6 text-slate-800" id="image-modal-title">Question View</h3>
                             <div class="flex items-center gap-3">
-                                <button id="modal-answer-btn" class="hidden text-slate-500 hover:text-indigo-600 transition-colors font-medium text-xs px-2 py-1 bg-slate-100 rounded border border-slate-200 mr-2 flex items-center gap-1" title="Show Answer"></button>
+                                
+                                <!-- NEW: SHOW ANSWER BUTTON -->
+                                <button id="modal-answer-btn" class="hidden text-slate-500 hover:text-indigo-600 transition-colors font-medium text-xs px-2 py-1 bg-slate-100 rounded border border-slate-200 mr-2 flex items-center gap-1" title="Show Answer">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <span>Show Answer</span>
+                                </button>
+
+                                <!-- NEW: Complete Button in Modal -->
                                 <button id="modal-check-btn" onclick="smartDrill.toggleCompleteFromModal()" class="text-slate-300 hover:text-emerald-500 transition-colors transform hover:scale-110 flex items-center gap-1" title="Mark as Completed">
                                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                     <span class="text-xs font-bold uppercase tracking-wide">Done</span>
                                 </button>
+                                
+                                <!-- Star Button in Modal -->
                                 <button id="modal-star-btn" onclick="smartDrill.toggleStarFromModal()" class="text-slate-300 hover:text-yellow-400 transition-colors transform hover:scale-110" title="Mark for review">
                                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>
                                 </button>
@@ -420,18 +488,29 @@ This single file includes:
                                 </button>
                             </div>
                         </div>
+                        
+                        <!-- NEW: Focus Badge -->
                         <div id="focus-badge" class="mb-3 px-4 py-2 bg-blue-50 text-blue-800 rounded-lg border border-blue-100 flex items-center justify-center gap-2 hidden shadow-sm">
-                            <span class="text-lg">🎯</span><span class="font-bold uppercase text-xs tracking-wider">Focus:</span><span id="focus-text" class="font-bold text-lg"></span>
+                            <span class="text-lg">🎯</span>
+                            <span class="font-bold uppercase text-xs tracking-wider">Focus:</span>
+                            <span id="focus-text" class="font-bold text-lg"></span>
                         </div>
+
+                        <!-- Image Container with Navigation Arrows -->
                         <div class="flex justify-center bg-slate-50 rounded border border-slate-200 p-2 min-h-[200px] items-center relative group">
-                            <button id="nav-prev-btn" onclick="smartDrill.navigateQuestion(-1)" class="absolute left-2 md:left-4 p-2 rounded-full bg-white/80 text-slate-500 hover:text-indigo-600 hover:bg-white shadow-md border border-slate-200 transition-all z-20 disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <!-- Prev Button -->
+                            <button id="nav-prev-btn" onclick="smartDrill.navigateQuestion(-1)" class="absolute left-2 md:left-4 p-2 rounded-full bg-white/80 text-slate-500 hover:text-indigo-600 hover:bg-white shadow-md border border-slate-200 transition-all z-20 disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Previous (Left Arrow)">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                             </button>
+
                             <img id="single-question-img" src="" alt="Question Image" class="max-w-full h-auto object-contain shadow-sm z-10 max-h-[70vh]">
-                            <button id="nav-next-btn" onclick="smartDrill.navigateQuestion(1)" class="absolute right-2 md:right-4 p-2 rounded-full bg-white/80 text-slate-500 hover:text-indigo-600 hover:bg-white shadow-md border border-slate-200 transition-all z-20 disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+                            <!-- Next Button -->
+                            <button id="nav-next-btn" onclick="smartDrill.navigateQuestion(1)" class="absolute right-2 md:right-4 p-2 rounded-full bg-white/80 text-slate-500 hover:text-indigo-600 hover:bg-white shadow-md border border-slate-200 transition-all z-20 disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Next (Right Arrow)">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             </button>
                         </div>
+
                         <div id="image-error-msg" class="hidden mt-3 p-3 bg-red-50 text-red-600 rounded text-xs text-center border border-red-100"></div>
                         <div class="text-center mt-2 text-xs text-slate-400 hidden sm:block">Tip: Use Left/Right arrow keys to navigate</div>
                     </div>
@@ -441,7 +520,7 @@ This single file includes:
     </div>
 
     <script>
-        // Updated CSV Data with Correct PDF Page Mappings for 2025 1B
+        // EMBEDDED CSV DATA
         const EMBEDDED_CSV_DATA = `Year,Topics,Topic Name,Paper,Question No.,GHS % score,1A Answer
 2021,2,Microscopic World I,1A,1,81%,C
 2021,2,Microscopic World I,1A,2,40%,C
@@ -986,11 +1065,103 @@ This single file includes:
 2025,15,Analytical Chemistry,2,2(d)(iv),54%,`;
 
         class SmartDrill {
+
+// --- NEW: Review Summary Logic ---
+
+    // 1. Trigger from FAB or Menu
+    showReviewSummary() {
+        if (this.selectedQuestions.size === 0) {
+            alert("Please select questions first to generate a summary.");
+            return;
+        }
+        
+        const container = document.getElementById('review-content');
+        let html = `
+            <table class="min-w-full divide-y divide-slate-200 bg-white rounded-lg shadow-sm overflow-hidden">
+                <thead class="bg-slate-100">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Question</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Answer / Scheme</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Your Score</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+        `;
+
+        // Sort selected questions naturally (Year -> Paper -> Number)
+        const sortedIDs = Array.from(this.selectedQuestions).sort((a, b) => a - b);
+
+        sortedIDs.forEach(id => {
+            const item = this.data.find(d => d.id === id);
+            if (!item) return;
+
+            // Determine Answer Display
+            let answerDisplay = '<span class="text-slate-400 italic text-xs">Not Available</span>';
+            
+            if (item.Answer) {
+                if (item.Paper === '1A') {
+                    // Direct Text for MC
+                    answerDisplay = `<span class="font-bold text-indigo-600 text-lg">${item.Answer}</span>`;
+                } else {
+                    // PDF Link for Structured
+                    const pageNum = parseInt(item.Answer);
+                    const pdfFilename = `${item.Year}_mock_paper_${item.Paper}_ans_marked.pdf`;
+                    // Use the crisp "New Tab" method
+                    answerDisplay = `
+                        <button onclick="window.open('${pdfFilename}#page=${pageNum}', '_blank')" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            Page ${pageNum}
+                        </button>`;
+                }
+            }
+
+            // Score Formatting
+            let scoreClass = 'bg-slate-100 text-slate-600';
+            const scoreVal = parseInt(item.Performance);
+            if (!isNaN(scoreVal)) {
+                if (scoreVal < 40) scoreClass = 'bg-red-50 text-red-600';
+                else if (scoreVal < 60) scoreClass = 'bg-amber-50 text-amber-600';
+                else scoreClass = 'bg-emerald-50 text-emerald-600';
+            }
+
+            html += `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-4 py-3 text-sm font-medium text-slate-700">
+                        ${item.Year} <span class="text-slate-400 mx-1">|</span> Paper ${item.Paper} <span class="text-slate-400 mx-1">|</span> Q${item['Question No.']}
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        ${answerDisplay}
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${scoreClass}">
+                            ${item.Performance}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+        document.getElementById('review-modal').classList.remove('hidden');
+    }
+
+    // 2. Close Helper
+    closeReviewModal() {
+        document.getElementById('review-modal').classList.add('hidden');
+    }
+
+
+
+
+
+
             constructor() {
                 this.data = [];
                 this.filteredData = [];
                 this.selectedQuestions = new Set();
                 this.starredQuestions = new Set();
+                // Map to store completion dates { uniqueId: timestamp }
                 this.completedQuestions = {}; 
                 
                 this.filters = { year: new Set(), paper: new Set(), topic: new Set() };
@@ -1001,6 +1172,8 @@ This single file includes:
                 this.hideCompleted = false;
                 
                 this.currentViewingId = null;
+                this.fileRegistry = {}; 
+                this.pageMaps = {}; 
 
                 this.init();
             }
@@ -1010,14 +1183,16 @@ This single file includes:
                 document.getElementById('csv-upload').addEventListener('change', (e) => this.handleFileUpload(e));
                 document.getElementById('pdf-upload').addEventListener('change', (e) => this.handlePdfUpload(e));
                 
-                // LOAD EMBEDDED DATA
+                // LOAD EMBEDDED DATA DIRECTLY
                 this.processCSVData(EMBEDDED_CSV_DATA);
                 
+                // UI Feedback to show source is internal
                 const label = document.getElementById('source-label');
                 if(label) label.innerHTML = "Source <span class='text-emerald-500 font-bold normal-case ml-1 text-[10px]'>(Embedded 2021-25)</span>";
 
-                // Keyboard Nav
+                // --- NEW: Add Keyboard Navigation ---
                 document.addEventListener('keydown', (e) => {
+                    // Only react if the image modal is OPEN
                     const modal = document.getElementById('image-viewer-modal');
                     if (!modal.classList.contains('hidden')) {
                         if (e.key === 'ArrowLeft') {
@@ -1031,6 +1206,7 @@ This single file includes:
                 });
             }
 
+            // Helper to process CSV text (used by both auto-load and manual upload)
             processCSVData(text) {
                 this.data = this.parseCSV(text);
                 this.initializeFilters();
@@ -1082,12 +1258,15 @@ This single file includes:
                 this.renderTable();
             }
 
+            // NEW: Bulk Toggle Completed Visible with Checkbox Logic
             toggleAllCompletedVisible(checkbox) {
                 const isChecking = checkbox.checked;
                 const action = isChecking ? "Completed" : "Incomplete";
                 
-                if (!confirm(`Are you sure you want to mark ${this.filteredData.length} visible questions as ${action}?`)) {
-                    checkbox.checked = !isChecking;
+                // Confirm action
+                const confirmMsg = `Are you sure you want to mark ${this.filteredData.length} visible questions as ${action}?`;
+                if (!confirm(confirmMsg)) {
+                    checkbox.checked = !isChecking; // Undo the check if cancelled
                     return;
                 }
 
@@ -1095,9 +1274,15 @@ This single file includes:
                 this.filteredData.forEach(item => {
                     const uid = this.getUniqueId(item);
                     if (isChecking) {
-                        if (!this.completedQuestions[uid]) this.completedQuestions[uid] = now;
+                        // Mark as completed if not already
+                        if (!this.completedQuestions[uid]) {
+                            this.completedQuestions[uid] = now;
+                        }
                     } else {
-                        if (this.completedQuestions[uid]) delete this.completedQuestions[uid];
+                        // Unmark
+                        if (this.completedQuestions[uid]) {
+                            delete this.completedQuestions[uid];
+                        }
                     }
                 });
                 
@@ -1148,15 +1333,19 @@ This single file includes:
                     checkBtn.classList.remove('text-emerald-500');
                     checkBtn.classList.add('text-slate-300');
                 }
+                
+                // NEW: Update navigation button states
                 this.updateNavButtons();
             }
             
+            // --- NEW: NAVIGATION LOGIC ---
             updateNavButtons() {
                 const currentIndex = this.filteredData.findIndex(item => this.getUniqueId(item) === this.currentViewingId);
                 const prevBtn = document.getElementById('nav-prev-btn');
                 const nextBtn = document.getElementById('nav-next-btn');
 
                 if (prevBtn) {
+                    // Disable if at start
                     prevBtn.disabled = currentIndex <= 0;
                     if(prevBtn.disabled) {
                         prevBtn.classList.add('opacity-30', 'cursor-not-allowed');
@@ -1168,6 +1357,7 @@ This single file includes:
                 }
                 
                 if (nextBtn) {
+                    // Disable if at end
                     nextBtn.disabled = currentIndex >= this.filteredData.length - 1;
                     if(nextBtn.disabled) {
                         nextBtn.classList.add('opacity-30', 'cursor-not-allowed');
@@ -1180,15 +1370,20 @@ This single file includes:
             }
 
             navigateQuestion(offset) {
+                // Find current index in the FILTERED list
                 const currentIndex = this.filteredData.findIndex(item => this.getUniqueId(item) === this.currentViewingId);
                 if (currentIndex === -1) return;
 
                 const newIndex = currentIndex + offset;
+                
+                // Check bounds
                 if (newIndex >= 0 && newIndex < this.filteredData.length) {
                     const nextItem = this.filteredData[newIndex];
+                    // Load the next question
                     this.viewQuestion(nextItem.Year, nextItem.Paper, nextItem['Question No.']);
                 }
             }
+            // -----------------------------
 
             handleFileUpload(event) {
                 const file = event.target.files[0];
@@ -1216,6 +1411,7 @@ This single file includes:
                     const cleanData = rowData.map(val => val.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
                     if (cleanData.length < 5) return null; 
 
+                    // Normalize Topic 7 Name
                     let finalTopicName = cleanData[2];
                     if (finalTopicName === 'Redox Reactions, Chemical Cells and Electrolysis') {
                         finalTopicName = 'Electrochemistry';
@@ -1224,12 +1420,12 @@ This single file includes:
                     return {
                         id: index,
                         Year: cleanData[0],
-                        Topic: cleanData[1], 
+                        Topic: cleanData[1], // Contains ID (e.g., "1")
                         TopicName: finalTopicName, 
                         Paper: cleanData[3],
                         'Question No.': cleanData[4],
                         'Performance': cleanData[5] || 'N/A',
-                        'Answer': cleanData[6] || '' 
+                        'Answer': cleanData[6] || '' // Capture Answer Column
                     };
                 }).filter(item => item !== null);
             }
@@ -1243,13 +1439,18 @@ This single file includes:
             getQuestionIdentifier(paper, questionNo) {
                 const qStr = questionNo.toString();
                 if (paper === '2') {
+                    // Match number and first bracket letter e.g., 1(a) -> 1a
                     const match = qStr.match(/^(\d+)\(([a-zA-Z])\)/);
-                    if (match) return `${match[1]}${match[2]}`;
-                    return qStr.replace(/[\(\)]/g, ''); 
+                    if (match) {
+                        return `${match[1]}${match[2]}`; // 1c
+                    }
+                    return qStr.replace(/[\(\)]/g, ''); // Fallback: remove all parens
                 } else if (paper === '1B') {
+                     // Extract just the main number e.g., 3(a) -> 3
                      const match = qStr.match(/^(\d+)/);
                      return match ? match[0] : qStr;
                 } else {
+                    // Paper 1A: just the number
                     const match = qStr.match(/^\d+/);
                     return match ? match[0] : qStr;
                 }
@@ -1257,6 +1458,7 @@ This single file includes:
 
             getQuestionFilename(year, paper, questionNo) {
                 const qId = this.getQuestionIdentifier(paper, questionNo);
+                // 2025_mock_1A_Q1
                 return `${year}/${year}_mock_${paper}_Q${qId}.png`;
             }
 
@@ -1384,6 +1586,7 @@ This single file includes:
             applyFilters() {
                 this.filteredData = this.data.filter(item => {
                     const uniqueId = this.getUniqueId(item);
+                    
                     if (this.showStarredOnly && !this.starredQuestions.has(uniqueId)) { return false; }
                     if (this.hideCompleted && this.completedQuestions[uniqueId]) { return false; }
 
@@ -1422,6 +1625,8 @@ This single file includes:
                     const uniqueId = this.getUniqueId(item);
                     const isStarred = this.starredQuestions.has(uniqueId);
                     const isCompleted = !!this.completedQuestions[uniqueId];
+                    const completedDate = isCompleted ? new Date(this.completedQuestions[uniqueId]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+                    
                     let scoreClass = 'bg-slate-100 text-slate-600';
                     const score = parseInt(item.Performance);
                     if (!isNaN(score)) {
@@ -1429,10 +1634,12 @@ This single file includes:
                         else if (score < 60) scoreClass = 'bg-amber-50 text-amber-600 font-bold';
                         else scoreClass = 'bg-emerald-50 text-emerald-600 font-bold';
                     }
+                    
                     const rowClass = isCompleted ? 'bg-emerald-50/60 hover:bg-emerald-100/50' : 'hover:bg-slate-50';
 
                     return `
                     <tr class="${rowClass} transition-colors group animate-fade-in">
+                        <!-- FIXED ALIGNMENT: Left Aligned Body Cell -->
                         <td class="p-3 text-left pl-5">
                             <input type="checkbox" onchange="smartDrill.toggleSelection(${item.id})" ${isSelected ? 'checked' : ''} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
                         </td>
@@ -1441,6 +1648,7 @@ This single file includes:
                         <td class="p-3 text-xs font-bold text-slate-800">${item['Question No.']}</td>
                         <td class="p-3 text-xs text-slate-600 text-center">${item.Topic}</td>
                         <td class="p-3 text-right"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${scoreClass}">${item.Performance}</span></td>
+                        
                         <td class="p-3 text-center">
                              <button onclick="smartDrill.viewQuestion('${item.Year}', '${item.Paper}', '${item['Question No.']}')" class="text-slate-400 hover:text-indigo-600 p-1 rounded-full hover:bg-indigo-50 transition-colors" title="View">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
@@ -1479,190 +1687,64 @@ This single file includes:
                 this.renderFAB();
             }
 
-            toggleAllDisplay(checkbox) {
+toggleAllDisplay(checkbox) {
                 const isChecked = checkbox.checked;
+                
+                // 1. Iterate through ONLY the currently filtered/visible data
                 this.filteredData.forEach(item => {
-                    if (isChecked) this.selectedQuestions.add(item.id);
-                    else this.selectedQuestions.delete(item.id);
+                    const id = item.id;
+                    const rowCheckbox = document.querySelector(`input[onchange="smartDrill.toggleSelection(${id})"]`);
+                    
+                    if (isChecked) {
+                        this.selectedQuestions.add(id);
+                        if(rowCheckbox) rowCheckbox.checked = true;
+                    } else {
+                        this.selectedQuestions.delete(id);
+                        if(rowCheckbox) rowCheckbox.checked = false;
+                    }
                 });
-                this.renderTable(); 
+
+                // 2. Update the FAB button count immediately
                 this.renderFAB();
             }
 
-            // --- NEW: Review Summary Logic ---
-            showReviewSummary() {
-                if (this.selectedQuestions.size === 0) {
-                    alert("Please select questions first to generate a summary.");
-                    return;
-                }
-                
-                const container = document.getElementById('review-content');
-                let html = `
-                    <table class="min-w-full divide-y divide-slate-200 bg-white rounded-lg shadow-sm overflow-hidden border border-slate-200">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Question</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Answer / Scheme</th>
-                                <th class="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Your Score</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                `;
+            selectAll() {
+                this.filteredData.forEach(item => this.selectedQuestions.add(item.id));
+                const headerCheckbox = document.getElementById('header-checkbox');
+                if(headerCheckbox) headerCheckbox.checked = true;
+                this.renderTable();
+                this.renderFAB();
+            }
 
-                const sortedIDs = Array.from(this.selectedQuestions).sort((a, b) => a - b);
+            clearSelection() {
+                this.selectedQuestions.clear();
+                const headerCheckbox = document.getElementById('header-checkbox');
+                if(headerCheckbox) headerCheckbox.checked = false;
+                this.renderTable();
+                this.renderFAB();
+            }
 
-                sortedIDs.forEach(id => {
-                    const item = this.data.find(d => d.id === id);
-                    if (!item) return;
-
-                    let answerDisplay = '<span class="text-slate-300 italic text-xs">N/A</span>';
+renderFAB() {
+        const fabContainer = document.getElementById('fab-container');
+        const count = this.selectedQuestions.size;
+        
+        if (count > 0) {
+            fabContainer.innerHTML = `
+                <div class="flex flex-col gap-3 items-end animate-bounce-in">
+                     <button onclick="smartDrill.generateQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-sm font-bold rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 group">
+                        <svg class="w-5 h-5 text-indigo-200 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                        Generate Quiz
+                    </button>
                     
-                    if (item.Answer) {
-                        if (item.Paper === '1A') {
-                            answerDisplay = `<span class="font-bold text-indigo-600 text-lg">${item.Answer}</span>`;
-                        } else {
-                            const pageNum = parseInt(item.Answer);
-                            const pdfFilename = `${item.Year}_mock_paper_${item.Paper}_ans_marked.pdf`;
-                            answerDisplay = `
-                                <button onclick="window.open('${pdfFilename}#page=${pageNum}', '_blank')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors group">
-                                    <svg class="w-3.5 h-3.5 text-emerald-500 group-hover:text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                                    Page ${pageNum}
-                                </button>`;
-                        }
-                    }
-
-                    let scoreClass = 'bg-slate-100 text-slate-500';
-                    const scoreVal = parseInt(item.Performance);
-                    if (!isNaN(scoreVal)) {
-                        if (scoreVal < 40) scoreClass = 'bg-red-50 text-red-600 border-red-100';
-                        else if (scoreVal < 60) scoreClass = 'bg-amber-50 text-amber-600 border-amber-100';
-                        else scoreClass = 'bg-emerald-50 text-emerald-600 border-emerald-100';
-                    }
-
-                    html += `
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-4 py-3 text-xs font-medium text-slate-700">
-                                <span class="font-bold">${item.Year}</span> <span class="text-slate-300 mx-1">|</span> Paper ${item.Paper} <span class="text-slate-300 mx-1">|</span> Q${item['Question No.']}
-                            </td>
-                            <td class="px-4 py-3 text-sm">
-                                ${answerDisplay}
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${scoreClass}">
-                                    ${item.Performance}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                html += `</tbody></table>`;
-                container.innerHTML = html;
-                document.getElementById('review-modal').classList.remove('hidden');
-            }
-
-            closeReviewModal() {
-                document.getElementById('review-modal').classList.add('hidden');
-            }
-
-            viewQuestion(year, paper, questionNum) {
-                const imgFilename = this.getQuestionFilename(year, paper, questionNum);
-                this.currentViewingId = `${year}_${paper}_${questionNum}`;
-                const imgEl = document.getElementById('single-question-img');
-                imgEl.src = imgFilename;
-                imgEl.onerror = () => {
-                    const errEl = document.getElementById('image-error-msg');
-                    errEl.innerHTML = `Image not found: <b>${imgFilename}</b><br>Please ensure the file exists.`;
-                    errEl.classList.remove('hidden');
-                    imgEl.style.display = 'none';
-                };
-                imgEl.onload = () => {
-                    document.getElementById('image-error-msg').classList.add('hidden');
-                    imgEl.style.display = 'block';
-                }
-
-                document.getElementById('image-modal-title').innerText = `${year} Paper ${paper} - Q${questionNum}`;
-                this.updateModalButtons();
-                document.getElementById('image-viewer-modal').classList.remove('hidden');
-
-                const item = this.data.find(d => this.getUniqueId(d) === this.currentViewingId);
-                const ansBtn = document.getElementById('modal-answer-btn');
-
-                if (item && item.Answer) {
-                    ansBtn.classList.remove('hidden');
-                    // Reset
-                    ansBtn.classList.remove('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
-                    ansBtn.classList.add('text-slate-500', 'bg-slate-100', 'border-slate-200');
-
-                    if (item.Paper === '1A') {
-                        ansBtn.innerHTML = `
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            <span>Show Answer</span>`;
-                        ansBtn.onclick = () => {
-                            if (ansBtn.innerText.includes('Show')) {
-                                ansBtn.innerHTML = `<span class="font-bold">Answer: ${item.Answer}</span>`;
-                                ansBtn.classList.remove('text-slate-500', 'bg-slate-100', 'border-slate-200');
-                                ansBtn.classList.add('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
-                            } else {
-                                ansBtn.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg><span>Show Answer</span>`;
-                                ansBtn.classList.add('text-slate-500', 'bg-slate-100', 'border-slate-200');
-                                ansBtn.classList.remove('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
-                            }
-                        };
-                    } else {
-                        // NEW LOGIC: Open PDF in New Tab
-                        ansBtn.innerHTML = `
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                            <span>Open Marking Scheme</span>`;
-                        
-                        ansBtn.onclick = () => {
-                            const pageNum = parseInt(item.Answer);
-                            const pdfFilename = `${item.Year}_mock_paper_${item.Paper}_ans_marked.pdf`;
-                            window.open(`${pdfFilename}#page=${pageNum}`, '_blank');
-                        };
-                    }
-                } else {
-                    ansBtn.classList.add('hidden');
-                }
-
-                const badge = document.getElementById('focus-badge');
-                const badgeText = document.getElementById('focus-text');
-                const qStr = questionNum.toString();
-                const match = qStr.match(/^\d+(.*)$/);
-                const subPart = match ? match[1].trim() : '';
-                if (subPart && paper !== '1A') {
-                    badgeText.innerText = `Part ${subPart}`;
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
-                }
-            }
-
-            closeImageModal() {
-                document.getElementById('image-viewer-modal').classList.add('hidden');
-                setTimeout(() => { document.getElementById('single-question-img').src = ''; }, 200);
-            }
-
-            renderFAB() {
-                const fabContainer = document.getElementById('fab-container');
-                const count = this.selectedQuestions.size;
-                
-                if (count > 0) {
-                    fabContainer.innerHTML = `
-                        <div class="flex flex-col gap-3 items-end animate-bounce-in">
-                            <button onclick="smartDrill.showReviewSummary()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 text-xs font-bold rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 group border-2 border-white/20 backdrop-blur-sm">
-                                <svg class="w-4 h-4 text-emerald-100 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Review Answers
-                            </button>
-                            <button onclick="smartDrill.generateQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-xs font-bold rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 group border-2 border-white/20 backdrop-blur-sm">
-                                <svg class="w-4 h-4 text-indigo-100 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                Generate Quiz (${count})
-                            </button>
-                        </div>`;
-                } else {
-                    fabContainer.innerHTML = '';
-                }
-            }
+                    <button onclick="smartDrill.showReviewSummary()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 text-sm font-bold rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 group">
+                        <svg class="w-5 h-5 text-emerald-200 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Review Answers (${count})
+                    </button>
+                </div>`;
+        } else {
+            fabContainer.innerHTML = '';
+        }
+    }
 
             generateQuiz() {
                 const container = document.getElementById('quiz-content');
@@ -1675,7 +1757,7 @@ This single file includes:
                 const groups = {}; 
 
                 indices.forEach((index) => {
-                    const item = this.filteredData.find(d => d.id === index);
+                    const item = this.filteredData[index];
                     if (!item) return;
                     
                     const qIdentifier = this.getQuestionIdentifier(item.Paper, item['Question No.']);
@@ -1715,8 +1797,122 @@ This single file includes:
             }
 
             closeQuizModal() { document.getElementById('quiz-modal').classList.add('hidden'); }
-            viewSelected() { alert("Use the new Review Answers feature to see details!"); }
-            handlePdfUpload(event) { console.log("Legacy PDF upload handler"); }
+
+            viewSelected() { alert("This feature would typically generate a summary list or export the selected IDs."); }
+
+            handlePdfUpload(event) {
+                // Keep for legacy pdf support if user still wants it later, though main view is now image-based
+                // ... (code unchanged)
+            }
+
+viewQuestion(year, paper, questionNum) {
+        const imgFilename = this.getQuestionFilename(year, paper, questionNum);
+        this.currentViewingId = `${year}_${paper}_${questionNum}`;
+
+        // --- RESET UI STATE ---
+        // Collapse modal if it was expanded
+        const modalTransform = document.querySelector('#image-viewer-modal .relative.transform');
+        if(modalTransform) modalTransform.classList.remove('modal-expanded');
+        
+        // Remove split pane if exists
+        const oldPane = document.getElementById('pdf-pane');
+        if (oldPane) oldPane.remove();
+        
+        // Remove split class from wrapper
+        const wrapper = document.getElementById('single-question-img').parentElement;
+        if(wrapper) wrapper.classList.remove('split-container');
+
+        // --- LOAD IMAGE ---
+        const imgEl = document.getElementById('single-question-img');
+        imgEl.src = imgFilename;
+        imgEl.onerror = () => {
+            const errEl = document.getElementById('image-error-msg');
+            errEl.innerHTML = `Image not found: <b>${imgFilename}</b>`;
+            errEl.classList.remove('hidden');
+            imgEl.style.display = 'none';
+        };
+        imgEl.onload = () => {
+            document.getElementById('image-error-msg').classList.add('hidden');
+            imgEl.style.display = 'block';
+        }
+
+        document.getElementById('image-modal-title').innerText = `${year} Paper ${paper} - Q${questionNum}`;
+        this.updateModalButtons(); // Updates Star/Complete buttons
+        
+        // Update Nav Buttons State
+        this.updateNavButtons(); 
+
+        document.getElementById('image-viewer-modal').classList.remove('hidden');
+
+        // --- NEW ANSWER / MARKING SCHEME LOGIC ---
+        // Find current item data
+        const item = this.data.find(d => this.getUniqueId(d) === this.currentViewingId);
+        const ansBtn = document.getElementById('modal-answer-btn');
+
+        if (item && item.Answer) {
+            ansBtn.classList.remove('hidden');
+            
+            // Reset button styling to default
+            ansBtn.classList.remove('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
+            ansBtn.classList.add('text-slate-500', 'bg-slate-100', 'border-slate-200');
+
+            if (item.Paper === '1A') {
+                // OLD LOGIC: Show Letter
+                ansBtn.innerHTML = `
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <span>Show Answer</span>`;
+                
+                ansBtn.onclick = () => {
+                    if (ansBtn.innerText.includes('Show')) {
+                        ansBtn.innerHTML = `<span class="font-bold">Answer: ${item.Answer}</span>`;
+                        ansBtn.classList.add('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
+                    } else {
+                        // Toggle back
+                        ansBtn.innerHTML = `
+                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <span>Show Answer</span>`;
+                        ansBtn.classList.remove('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
+                    }
+                };
+} else {
+            // NEW LOGIC: Open PDF in New Tab (Crisp Quality)
+            ansBtn.innerHTML = `
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                <span>Open Marking Scheme</span>`;
+            
+            ansBtn.onclick = () => {
+                const pageNum = parseInt(item.Answer);
+                // Construct the filename
+                const pdfFilename = `${item.Year}_mock_paper_${item.Paper}_ans_marked.pdf`;
+                
+                // Open in new tab and jump directly to the page
+                // Note: The '#page=' parameter works in Chrome, Edge, and Firefox
+                window.open(`${pdfFilename}#page=${pageNum}`, '_blank');
+            };
+        }
+        } else {
+            ansBtn.classList.add('hidden');
+        }
+
+        // Focus Badge Logic (unchanged)
+        const badge = document.getElementById('focus-badge');
+        const badgeText = document.getElementById('focus-text');
+        const qStr = questionNum.toString();
+        const match = qStr.match(/^\d+(.*)$/);
+        const subPart = match ? match[1].trim() : '';
+
+        if (subPart && paper !== '1A') {
+            badgeText.innerText = `Part ${subPart}`;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+            closeImageModal() {
+                document.getElementById('image-viewer-modal').classList.add('hidden');
+                setTimeout(() => { document.getElementById('single-question-img').src = ''; }, 200);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1725,5 +1921,3 @@ This single file includes:
     </script>
 </body>
 </html>
-
-```
