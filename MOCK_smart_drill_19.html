@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Drill: Mock Exams</title>
+
+    <script>
+        function checkAccess() {
+            if (window.self !== window.top) return true;
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('access') === 'school_verified') return true;
+            if (window.location.protocol === 'blob:') return true;
+            return false;
+        }
+
+        if (!checkAccess()) {
+            document.documentElement.innerHTML = `
+                <div style="height:100vh; display:flex; align-items:center; justify-content:center; background:#f1f5f9; font-family:sans-serif; text-align:center;">
+                    <div style="background:white; padding:40px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.1); max-width:400px; margin:20px;">
+                        <div style="font-size:48px; margin-bottom:16px;">🚫</div>
+                        <h1 style="color:#1e293b; margin:0 0 8px 0; font-size:24px;">Link Incomplete</h1>
+                        <p style="color:#64748b; margin:0;">This resource must be accessed via the official class link.</p>
+                    </div>
+                </div>
+            `;
+            throw new Error("Access Denied");
+        }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        .animate-bounce-in { animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes bounceIn { 
+            0% { transform: scale(0.3); opacity: 0; } 
+            50% { transform: scale(1.05); } 
+            70% { transform: scale(0.9); } 
+            100% { transform: scale(1); opacity: 1; } 
+        }
+
+        /* Quiz Image Styling */
+        .quiz-item {
+            background: white;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            page-break-inside: avoid;
+        }
+
+        .quiz-header {
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* PRINT STYLES */
+        @media print {
+            html, body, #quiz-modal, #quiz-modal .relative, #quiz-content {
+                height: auto !important;
+                min-height: 0 !important;
+                overflow: visible !important;
+                position: static !important;
+                display: block !important;
+            }
+            body > *:not(#quiz-modal) {
+                display: none !important;
+            }
+            #quiz-modal {
+                background: white !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                z-index: 9999;
+            }
+            .quiz-item {
+                break-inside: avoid;
+                page-break-inside: avoid;
+                border: 1px solid #ddd !important;
+                margin-bottom: 20px;
+            }
+            img { max-width: 100% !important; }
+            .bg-white.px-4.pb-4.pt-5.sm\:p-6.sm\:pb-4.border-b {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <div id="security-overlay" class="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center border-4 border-indigo-50">
+            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2 tracking-tight">Chemistry Smart Drill (MOCK)</h2>
+            <p class="text-slate-500 mb-6 text-sm">Please enter the class passcode to access the question bank.</p>
+            <form onsubmit="smartDrillLock.check(event)" class="space-y-4">
+                <input type="password" id="access-code" class="w-full border-2 border-slate-200 rounded-lg p-3 text-center text-lg tracking-widest focus:border-indigo-500 focus:ring-indigo-500 outline-none transition-colors placeholder-slate-300" placeholder="••••••" autofocus autocomplete="off">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-transform transform active:scale-95 shadow-lg shadow-indigo-200">Unlock Access</button>
+            </form>
+            <p id="lock-error-msg" class="text-red-500 text-xs font-bold mt-4 hidden animate-pulse">Incorrect Passcode. Please try again.</p>
+        </div>
+    </div>
+
+    <script>
+        const smartDrillLock = {
+            PASSCODE: "chem2025", 
+            init: function() {
+                if (sessionStorage.getItem('smart_drill_unlocked') === 'true') {
+                    document.getElementById('security-overlay').style.display = 'none';
+                }
+            },
+            check: function(e) {
+                e.preventDefault();
+                const input = document.getElementById('access-code');
+                const errorMsg = document.getElementById('lock-error-msg');
+                const overlay = document.getElementById('security-overlay');
+                if (input.value === this.PASSCODE) {
+                    sessionStorage.setItem('smart_drill_unlocked', 'true');
+                    overlay.style.transition = "opacity 0.5s ease";
+                    overlay.style.opacity = "0";
+                    setTimeout(() => overlay.style.display = 'none', 500);
+                } else {
+                    errorMsg.classList.remove('hidden');
+                    input.value = '';
+                    input.focus();
+                    input.classList.add('border-red-300', 'bg-red-50');
+                    setTimeout(() => input.classList.remove('border-red-300', 'bg-red-50'), 2000);
+                }
+            }
+        };
+        smartDrillLock.init();
+    </script>
+
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 z-20 shadow-sm print:hidden">
+        <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg ring-1 ring-white/20">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                </div>
+                <h1 class="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-slate-700 to-slate-900 tracking-tight">
+                    Smart Drill: Mock Exams <span class="text-[10px] font-medium text-slate-400 ml-1 px-2 py-0.5 bg-slate-100 rounded-full border border-slate-200">v3.11 (Fix Toggles)</span>
+                </h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                 <input type="file" id="pdf-upload" multiple accept=".pdf" class="hidden">
+                 <button onclick="document.getElementById('pdf-upload').click()" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors flex items-center gap-2">
+                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                     Add Papers
+                 </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-10 print:hidden shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
+            <div class="p-4 border-b border-slate-100">
+                <div class="flex justify-end items-center mb-2">
+                    <span id="total-questions" class="text-[10px] font-medium px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100">0 Qs</span>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1" id="source-label">Source</label>
+                    <input type="file" id="csv-upload" accept=".csv" class="block w-full text-xs text-slate-500
+                        file:mr-2 file:py-1.5 file:px-3
+                        file:rounded-md file:border-0
+                        file:text-[10px] file:font-semibold
+                        file:bg-indigo-50 file:text-indigo-700
+                        hover:file:bg-indigo-100 cursor-pointer
+                    "/>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div class="flex flex-col gap-2">
+                    <div class="bg-indigo-50/50 p-2 rounded-lg border border-indigo-100">
+                        <label class="flex items-center space-x-2 cursor-pointer w-full">
+                            <input type="checkbox" id="filter-starred-only" onchange="smartDrill.toggleStarredFilter()" class="w-3.5 h-3.5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500">
+                            <span class="text-xs font-bold text-indigo-700 flex items-center gap-1">
+                                <span class="text-yellow-500">★</span> Show Starred Only
+                            </span>
+                        </label>
+                    </div>
+                    <div class="bg-emerald-50/50 p-2 rounded-lg border border-emerald-100">
+                        <label class="flex items-center space-x-2 cursor-pointer w-full">
+                            <input type="checkbox" id="filter-hide-completed" onchange="smartDrill.toggleCompletedFilter()" class="w-3.5 h-3.5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                                <span>✓</span> Hide Completed
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Year</label>
+                        <button onclick="smartDrill.toggleAllFilters('year')" class="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Toggle All</button>
+                    </div>
+                    <div id="year-filters" class="grid grid-cols-3 gap-2"></div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Paper</label>
+                        <button onclick="smartDrill.toggleAllFilters('paper')" class="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Toggle All</button>
+                    </div>
+                    <div id="paper-filters" class="grid grid-cols-3 gap-2"></div>
+                </div>
+
+                <div class="pt-0">
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wide">Performance</label>
+                    <select id="performance-select" onchange="smartDrill.handlePerformanceChange(this.value)" class="w-full text-xs border border-slate-200 rounded-md text-slate-600 focus:border-indigo-500 focus:ring-indigo-500 p-1.5 bg-white">
+                        <option value="all">Show ALL</option>
+                        <option value="distinction">Distinction Traps (&lt;40%)</option>
+                        <option value="standard">Standard Zone (40%-60%)</option>
+                        <option value="must-win">Must-Win (&gt;60%)</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                    <div id="custom-performance-inputs" class="hidden grid grid-cols-2 gap-2 mt-2 bg-slate-50 p-2 rounded border border-slate-100">
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Min %</label>
+                            <input type="number" id="perf-min" min="0" max="100" value="0" onchange="smartDrill.updateCustomRange()" class="w-full text-xs border-slate-300 rounded px-1 py-1 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Max %</label>
+                            <input type="number" id="perf-max" min="0" max="100" value="100" onchange="smartDrill.updateCustomRange()" class="w-full text-xs border-slate-300 rounded px-1 py-1 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Topic</label>
+                        <button onclick="smartDrill.toggleAllFilters('topic')" class="text-[10px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Toggle All</button>
+                    </div>
+                    <div id="topic-filters" class="space-y-0.5"></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 bg-slate-50/50 flex flex-col overflow-hidden relative print:hidden">
+            <div class="px-6 pt-4 pb-2">
+                 <div class="flex justify-between items-end mb-3">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 tracking-tight">Question Bank</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Take control of your revision! Use the Star (<span class="text-yellow-500 font-bold">★</span>) to bookmark tricky questions, and hit Completed (<span class="text-emerald-500 font-bold">✓</span>) to track progress.</p>
+                    </div>
+                 </div>
+            </div>
+
+            <div class="flex-1 overflow-auto px-6 pb-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm border-b border-slate-200">
+                            <tr>
+                                <th class="p-3 w-28 text-left">
+                                    <div class="flex items-center justify-start gap-1.5 pl-2">
+                                        <input type="checkbox" id="header-checkbox" onchange="smartDrill.toggleAllDisplay(this)" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Select</span>
+                                    </div>
+                                </th>
+                                <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-16 cursor-pointer hover:text-indigo-600 group select-none" onclick="smartDrill.handleSort('Year')">
+                                    <div class="flex items-center gap-1">Year <span id="sort-icon-Year" class="text-slate-300 group-hover:text-indigo-400 font-normal">↕</span></div>
+                                </th>
+                                <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-14 cursor-pointer hover:text-indigo-600 group select-none" onclick="smartDrill.handleSort('Paper')">
+                                    <div class="flex items-center gap-1">Paper <span id="sort-icon-Paper" class="text-slate-300 group-hover:text-indigo-400 font-normal">↕</span></div>
+                                </th>
+                                <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-24 cursor-pointer hover:text-indigo-600 group select-none" onclick="smartDrill.handleSort('Question No.')">
+                                    <div class="flex items-center gap-1">Q No. <span id="sort-icon-Question No." class="text-slate-300 group-hover:text-indigo-400 font-normal">↕</span></div>
+                                </th>
+                                <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-12 cursor-pointer hover:text-indigo-600 group select-none text-center" onclick="smartDrill.handleSort('Topic')">
+                                    <div class="flex items-center justify-center gap-1">Topic <span id="sort-icon-Topic" class="text-slate-300 group-hover:text-indigo-400 font-normal">↕</span></div>
+                                </th>
+                                <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-16 text-right cursor-pointer hover:text-indigo-600 group select-none" onclick="smartDrill.handleSort('Performance')">
+                                    <div class="flex items-center justify-end gap-1">Score <span id="sort-icon-Performance" class="text-slate-300 group-hover:text-indigo-400 font-normal">↕</span></div>
+                                </th>
+                                <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-10 text-center">View</th>
+                                <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-10 text-center">Star</th>
+                                <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-20 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <input type="checkbox" id="header-done-checkbox" onchange="smartDrill.toggleAllCompletedVisible(this)" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" title="Toggle All Completed">
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Done</span>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="fab-container" class="absolute bottom-6 right-6 flex flex-col items-end gap-2 pointer-events-none z-20 [&>*]:pointer-events-auto"></div>
+        </main>
+    </div>
+
+    <div id="quiz-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="smartDrill.closeQuizModal()"></div>
+        <div class="relative z-10 flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl flex flex-col max-h-[90vh]">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center print:hidden">
+                    <h3 class="text-lg font-semibold leading-6 text-slate-900" id="modal-title">Generated Quiz Paper</h3>
+                    <div class="flex gap-2">
+                        <button onclick="window.print()" class="inline-flex justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500">🖨️ Print / Save PDF</button>
+                        <button onclick="smartDrill.closeQuizModal()" class="text-slate-400 hover:text-slate-600 p-2"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    </div>
+                </div>
+                <div id="quiz-content" class="bg-slate-50 px-4 py-6 sm:p-8 overflow-y-auto print:p-0 print:overflow-visible"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="review-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="review-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="smartDrill.closeReviewModal()"></div>
+        <div class="relative z-10 flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl flex flex-col max-h-[85vh]">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 border-b border-slate-100 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900" id="review-title">Answer Key Summary</h3>
+                        <p class="text-xs text-slate-500 mt-1">Reviewing answers for selected questions.</p>
+                    </div>
+                    <button onclick="smartDrill.closeReviewModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-50 transition-colors">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="review-content" class="bg-slate-50 px-4 py-4 sm:p-6 overflow-y-auto">
+                    </div>
+                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-100">
+                    <button type="button" class="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" onclick="smartDrill.closeReviewModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="image-viewer-modal" class="fixed inset-0 z-[60] hidden" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="smartDrill.closeImageModal()"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-2xl transition-all sm:w-full sm:max-w-3xl border border-slate-700">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                            <h3 class="text-lg font-bold leading-6 text-slate-800" id="image-modal-title">Question View</h3>
+                            <div class="flex items-center gap-3">
+                                <button id="modal-answer-btn" class="hidden text-slate-500 hover:text-indigo-600 transition-colors font-medium text-xs px-2 py-1 bg-slate-100 rounded border border-slate-200 mr-2 flex items-center gap-1" title="Show Answer"></button>
+                                <button id="modal-check-btn" onclick="smartDrill.toggleCompleteFromModal()" class="text-slate-300 hover:text-emerald-500 transition-colors transform hover:scale-110 flex items-center gap-1" title="Mark as Completed">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    <span class="text-xs font-bold uppercase tracking-wide">Done</span>
+                                </button>
+                                <button id="modal-star-btn" onclick="smartDrill.toggleStarFromModal()" class="text-slate-300 hover:text-yellow-400 transition-colors transform hover:scale-110" title="Mark for review">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>
+                                </button>
+                                <button onclick="smartDrill.closeImageModal()" class="text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 rounded-full p-1 ml-2">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="focus-badge" class="mb-3 px-4 py-2 bg-blue-50 text-blue-800 rounded-lg border border-blue-100 flex items-center justify-center gap-2 hidden shadow-sm">
+                            <span class="text-lg">🎯</span><span class="font-bold uppercase text-xs tracking-wider">Focus:</span><span id="focus-text" class="font-bold text-lg"></span>
+                        </div>
+                        <div class="flex justify-center bg-slate-50 rounded border border-slate-200 p-2 min-h-[200px] items-center relative group">
+                            <button id="nav-prev-btn" onclick="smartDrill.navigateQuestion(-1)" class="absolute left-2 md:left-4 p-2 rounded-full bg-white/80 text-slate-500 hover:text-indigo-600 hover:bg-white shadow-md border border-slate-200 transition-all z-20 disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <img id="single-question-img" src="" alt="Question Image" class="max-w-full h-auto object-contain shadow-sm z-10 max-h-[70vh]">
+                            <button id="nav-next-btn" onclick="smartDrill.navigateQuestion(1)" class="absolute right-2 md:right-4 p-2 rounded-full bg-white/80 text-slate-500 hover:text-indigo-600 hover:bg-white shadow-md border border-slate-200 transition-all z-20 disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        </div>
+                        <div id="image-error-msg" class="hidden mt-3 p-3 bg-red-50 text-red-600 rounded text-xs text-center border border-red-100"></div>
+                        <div class="text-center mt-2 text-xs text-slate-400 hidden sm:block">Tip: Use Left/Right arrow keys to navigate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Updated CSV Data with Correct PDF Page Mappings for 2025 1B
+        const EMBEDDED_CSV_DATA = `Year,Topics,Topic Name,Paper,Question No.,GHS % score,1A Answer
+2021,2,Microscopic World I,1A,1,81%,C
+2021,2,Microscopic World I,1A,2,40%,C
+2021,2,Microscopic World I,1A,3,77%,A
+2021,3,Metals,1A,4,81%,A
+2021,3,Metals,1A,5,80%,D
+2021,3,Metals,1A,6,59%,D
+2021,3,Metals,1A,7,83%,B
+2021,4,Acids and Bases,1A,8,64%,A
+2021,4,Acids and Bases,1A,9,69%,B
+2021,4,Acids and Bases,1A,10,80%,C
+2021,4,Acids and Bases,1A,11,76%,B
+2021,7,Electrochemistry,1A,12,77%,B
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,13,64%,A
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,14,73%,B
+2021,5,Fossil Fuels and Carbon Compounds,1A,15,50%,A
+2021,5,Fossil Fuels and Carbon Compounds,1A,16,63%,D
+2021,1,Planet Earth,1A,17,20%,C
+2021,6,Microscopic World II,1A,18,84%,C
+2021,6,Microscopic World II,1A,19,64%,C
+2021,6,Microscopic World II,1A,20,57%,D
+2021,6,Microscopic World II,1A,21,63%,C
+2021,8,Chemical Reactions and Energy,1A,22,73%,C
+2021,8,Chemical Reactions and Energy,1A,23,76%,A
+2021,8,Chemical Reactions and Energy,1A,24,17%,D
+2021,12,Patterns in the Chemical World,1A,25,74%,D
+2021,11,Chemistry of Carbon Compounds,1A,26,37%,C
+2021,11,Chemistry of Carbon Compounds,1A,27,69%,C
+2021,11,Chemistry of Carbon Compounds,1A,28,67%,C
+2021,11,Chemistry of Carbon Compounds,1A,29,51%,D
+2021,11,Chemistry of Carbon Compounds,1A,30,63%,D
+2021,11,Chemistry of Carbon Compounds,1A,31,86%,B
+2021,11,Chemistry of Carbon Compounds,1A,32,54%,C
+2021,10,Chemical Equilibrium,1A,33,76%,D
+2021,9,Rate of Reaction,1A,34,66%,A
+2021,10,Chemical Equilibrium,1A,35,66%,D
+2021,9,Rate of Reaction,1A,36,70%,C
+2022,2,Microscopic World I,1A,1,92%,B
+2022,2,Microscopic World I,1A,2,94%,D
+2022,1,Planet Earth,1A,3,69%,D
+2022,2,Microscopic World I,1A,4,88%,D
+2022,2,Microscopic World I,1A,5,66%,A
+2022,4,Acids and Bases,1A,6,44%,D
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,7,63%,D
+2022,4,Acids and Bases,1A,8,72%,A
+2022,4,Acids and Bases,1A,9,98%,A
+2022,4,Acids and Bases,1A,10,80%,B
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,11,94%,B
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,12,72%,C
+2022,8,Chemical Reactions and Energy,1A,13,86%,A
+2022,8,Chemical Reactions and Energy,1A,14,59%,A
+2022,8,Chemical Reactions and Energy,1A,15,59%,B
+2022,8,Chemical Reactions and Energy,1A,16,89%,D
+2022,8,Chemical Reactions and Energy,1A,17,91%,C
+2022,3,Metals,1A,18,83%,A
+2022,5,Fossil Fuels and Carbon Compounds,1A,19,84%,D
+2022,5,Fossil Fuels and Carbon Compounds,1A,20,81%,B
+2022,5,Fossil Fuels and Carbon Compounds,1A,21,84%,C
+2022,11,Chemistry of Carbon Compounds,1A,22,56%,A
+2022,6,Microscopic World II,1A,23,94%,B
+2022,6,Microscopic World II,1A,24,78%,B
+2022,11,Chemistry of Carbon Compounds,1A,25,56%,B
+2022,11,Chemistry of Carbon Compounds,1A,26,67%,B
+2022,11,Chemistry of Carbon Compounds,1A,27,72%,B
+2022,11,Chemistry of Carbon Compounds,1A,28,73%,D
+2022,5,Fossil Fuels and Carbon Compounds,1A,29,89%,B
+2022,10,Chemical Equilibrium,1A,30,59%,C
+2022,10,Chemical Equilibrium,1A,31,80%,D
+2022,10,Chemical Equilibrium,1A,32,63%,D
+2022,10,Chemical Equilibrium,1A,34,67%,D
+2022,11,Chemistry of Carbon Compounds,1A,35,59%,D
+2022,6,Microscopic World II,1A,36,70%,B
+2023,1,Planet Earth,1A,1,9%,D
+2023,2,Microscopic World I,1A,2,96%,A
+2023,2,Microscopic World I,1A,3,57%,D
+2023,3,Metals,1A,4,74%,A
+2023,3,Metals,1A,5,57%,D
+2023,3,Metals,1A,6,74%,B
+2023,3,Metals,1A,7,70%,D
+2023,4,Acids and Bases,1A,8,91%,C
+2023,4,Acids and Bases,1A,9,52%,C
+2023,4,Acids and Bases,1A,10,74%,D
+2023,4,Acids and Bases,1A,11,61%,B
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,12,61%,A
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,13,87%,A
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,14,48%,A
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,15,78%,C
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,16,70%,B
+2023,8,Chemical Reactions and Energy,1A,17,39%,D
+2023,8,Chemical Reactions and Energy,1A,18,74%,B
+2023,6,Microscopic World II,1A,19,83%,C
+2023,6,Microscopic World II,1A,20,57%,B
+2023,6,Microscopic World II,1A,21,91%,C
+2023,5,Fossil Fuels and Carbon Compounds,1A,22,91%,A
+2023,5,Fossil Fuels and Carbon Compounds,1A,23,100%,B
+2023,5,Fossil Fuels and Carbon Compounds,1A,24,61%,B
+2023,11,Chemistry of Carbon Compounds,1A,25,87%,D
+2023,11,Chemistry of Carbon Compounds,1A,26,26%,B
+2023,11,Chemistry of Carbon Compounds,1A,27,87%,D
+2023,11,Chemistry of Carbon Compounds,1A,28,70%,C
+2023,11,Chemistry of Carbon Compounds,1A,29,70%,D
+2023,9,Rate of Reaction,1A,30,57%,B
+2023,9,Rate of Reaction,1A,31,22%,D
+2023,10,Chemical Equilibrium,1A,32,74%,D
+2023,10,Chemical Equilibrium,1A,33,65%,A
+2023,10,Chemical Equilibrium,1A,34,65%,A
+2023,12,Patterns in the Chemical World,1A,35,39%,A
+2023,12,Patterns in the Chemical World,1A,36,65%,C
+2024,1,Planet Earth,1A,1,64%,B
+2024,1,Planet Earth,1A,2,60%,B
+2024,2,Microscopic World I,1A,3,82%,C
+2024,3,Metals,1A,4,66%,B
+2024,3,Metals,1A,5,76%,B
+2024,3,Metals,1A,6,49%,D
+2024,3,Metals,1A,7,72%,D
+2024,3,Metals,1A,8,66%,C
+2024,4,Acids and Bases,1A,9,51%,A
+2024,4,Acids and Bases,1A,10,73%,D
+2024,4,Acids and Bases,1A,11,71%,A
+2024,4,Acids and Bases,1A,12,87%,A
+2024,4,Acids and Bases,1A,13,94%,C
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,14,94%,C
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,15,61%,A
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,16,89%,D
+2024,8,Chemical Reactions and Energy,1A,17,93%,A
+2024,8,Chemical Reactions and Energy,1A,18,64%,C
+2024,5,Fossil Fuels and Carbon Compounds,1A,19,77%,D
+2024,5,Fossil Fuels and Carbon Compounds,1A,20,73%,B
+2024,5,Fossil Fuels and Carbon Compounds,1A,21,66%,B
+2024,5,Fossil Fuels and Carbon Compounds,1A,22,42%,B
+2024,6,Microscopic World II,1A,23,60%,B
+2024,9,Rate of Reaction,1A,24,89%,A
+2024,9,Rate of Reaction,1A,25,76%,C
+2024,10,Chemical Equilibrium,1A,26,87%,C
+2024,10,Chemical Equilibrium,1A,27,31%,D
+2024,10,Chemical Equilibrium,1A,28,77%,A
+2024,11,Chemistry of Carbon Compounds,1A,29,72%,B
+2024,11,Chemistry of Carbon Compounds,1A,31,66%,C
+2024,11,Chemistry of Carbon Compounds,1A,32,39%,C
+2024,11,Chemistry of Carbon Compounds,1A,33,46%,D
+2024,11,Chemistry of Carbon Compounds,1A,34,84%,D
+2024,12,Patterns in the Chemical World,1A,35,80%,A
+2024,12,Patterns in the Chemical World,1A,36,78%,D
+2025,1,Planet Earth,1A,1,80%,B
+2025,5,Fossil Fuels and Carbon Compounds,1A,2,52%,A
+2025,3,Metals,1A,3,73%,A
+2025,5,Fossil Fuels and Carbon Compounds,1A,4,91%,D
+2025,5,Fossil Fuels and Carbon Compounds,1A,5,91%,A
+2025,5,Fossil Fuels and Carbon Compounds,1A,6,41%,B
+2025,6,Microscopic World II,1A,7,70%,D
+2025,6,Microscopic World II,1A,8,96%,D
+2025,4,Acids and Bases,1A,9,43%,D
+2025,3,Metals,1A,10,90%,D
+2025,3,Metals,1A,11,96%,B
+2025,6,Microscopic World II,1A,12,46%,A
+2025,3,Metals,1A,13,91%,C
+2025,6,Microscopic World II,1A,14,76%,B
+2025,4,Acids and Bases,1A,15,59%,D
+2025,8,Chemical Reactions and Energy,1A,16,78%,A
+2025,4,Acids and Bases,1A,17,73%,C
+2025,4,Acids and Bases,1A,18,78%,D
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,19,85%,C
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,20,68%,A
+2025,4,Acids and Bases,1A,21,54%,C
+2025,8,Chemical Reactions and Energy,1A,22,48%,B
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,23,87%,D
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,24,67%,A
+2025,10,Chemical Equilibrium,1A,25,72%,C
+2025,9,Rate of Reaction,1A,26,56%,B
+2025,10,Chemical Equilibrium,1A,27,44%,D
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1A,28,82%,D
+2025,10,Chemical Equilibrium,1A,29,74%,C
+2025,11,Chemistry of Carbon Compounds,1A,30,41%,C
+2025,11,Chemistry of Carbon Compounds,1A,31,74%,C
+2025,11,Chemistry of Carbon Compounds,1A,32,51%,C
+2025,11,Chemistry of Carbon Compounds,1A,33,73%,A
+2025,12,Patterns in the Chemical World,1A,34,66%,A
+2025,12,Patterns in the Chemical World,1A,35,78%,A
+2025,6,Microscopic World II,1A,36,72%,D
+2021,2,Microscopic World I,1B,1(a),96%,
+2021,2,Microscopic World I,1B,1(b)(i),29%,
+2021,2,Microscopic World I,1B,1(b)(ii),79%,
+2021,5,Fossil Fuels and Carbon Compounds,1B,2(a),74%,
+2021,5,Fossil Fuels and Carbon Compounds,1B,2(b),46%,
+2021,5,Fossil Fuels and Carbon Compounds,1B,2(c),52%,
+2021,4,Acids and Bases,1B,3(a),34%,
+2021,4,Acids and Bases,1B,3(b),29%,
+2021,4,Acids and Bases,1B,3(c),76%,
+2021,4,Acids and Bases,1B,3(d),22%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(a)(i),74%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(a)(ii),53%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(a)(iii),67%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(b)(i),57%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(b)(ii),64%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(c),25%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(d)(i),59%,
+2021,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,4(d)(ii),30%,
+2021,3,Metals,1B,5,53%,
+2021,4,Acids and Bases,1B,6,41%,
+2021,8,Chemical Reactions and Energy,1B,7(a)(i),48%,
+2021,8,Chemical Reactions and Energy,1B,7(a)(ii),70%,
+2021,8,Chemical Reactions and Energy,1B,7(a)(iii),50%,
+2021,8,Chemical Reactions and Energy,1B,7(b),39%,
+2021,4,Acids and Bases,1B,8(a),34%,
+2021,4,Acids and Bases,1B,8(b),80%,
+2021,11,Chemistry of Carbon Compounds,1B,9(a)(i),34%,
+2021,5,Fossil Fuels and Carbon Compounds,1B,9(a)(ii),64%,
+2021,11,Chemistry of Carbon Compounds,1B,9(b)(1),51%,
+2021,11,Chemistry of Carbon Compounds,1B,9(b)(ii),33%,
+2021,11,Chemistry of Carbon Compounds,1B,9(b)(iii),59%,
+2021,11,Chemistry of Carbon Compounds,1B,10(a),74%,
+2021,11,Chemistry of Carbon Compounds,1B,10(b)(i),41%,
+2021,11,Chemistry of Carbon Compounds,1B,10(b)(ii)(I),57%,
+2021,11,Chemistry of Carbon Compounds,1B,10(b)(ii)(II),51%,
+2021,11,Chemistry of Carbon Compounds,1B,10(b)(iii),30%,
+2021,10,Chemical Equilibrium,1B,11(a)(i),56%,
+2021,10,Chemical Equilibrium,1B,11(a)(ii),41%,
+2021,10,Chemical Equilibrium,1B,11(b)(i),52%,
+2021,10,Chemical Equilibrium,1B,11(b)(ii),37%,
+2021,9,Rate of Reaction,1B,12(a),86%,
+2021,9,Rate of Reaction,1B,12(b)(i),51%,
+2021,9,Rate of Reaction,1B,12(b)(ii),16%,
+2021,9,Rate of Reaction,1B,12(c),45%,
+2021,9,Rate of Reaction,1B,12(d),49%,
+2021,12,Patterns in the Chemical World,1B,12(e),48%,
+2021,13,Industrial Chemistry,2,1(a)(i)(1),37%,
+2021,13,Industrial Chemistry,2,1(a)(i)(2),61%,
+2021,13,Industrial Chemistry,2,1(a)(i)(3),41%,
+2021,13,Industrial Chemistry,2,1(a)(ii)(1),51%,
+2021,13,Industrial Chemistry,2,1(a)(ii)(2),45%,
+2021,13,Industrial Chemistry,2,1(a)(iii),77%,
+2021,13,Industrial Chemistry,2,1(b)(i),34%,
+2021,13,Industrial Chemistry,2,1(b)(ii),81%,
+2021,13,Industrial Chemistry,2,1(b)(iii),53%,
+2021,13,Industrial Chemistry,2,1(c)(i),50%,
+2021,13,Industrial Chemistry,2,1(c)(ii),41%,
+2021,13,Industrial Chemistry,2,1(c)(iii),46%,
+2021,13,Industrial Chemistry,2,1(d)(i),10%,
+2021,13,Industrial Chemistry,2,1(d)(ii),44%,
+2021,15,Analytical Chemistry,2,2(a)(i),48%,
+2021,15,Analytical Chemistry,2,2(a)(ii),51%,
+2021,15,Analytical Chemistry,2,2(b)(i),50%,
+2021,15,Analytical Chemistry,2,2(b)(ii)(1),64%,
+2021,15,Analytical Chemistry,2,2(b)(ii)(2),4%,
+2021,15,Analytical Chemistry,2,2(b)(ii)(3),40%,
+2021,15,Analytical Chemistry,2,2(b)(iii),51%,
+2021,15,Analytical Chemistry,2,2(c)(i),53%,
+2021,15,Analytical Chemistry,2,2(c)(ii),19%,
+2021,15,Analytical Chemistry,2,2(c)(iii),44%,
+2022,2,Microscopic World I,1B,1(a),54%,
+2022,2,Microscopic World I,1B,1(b),83%,
+2022,4,Acids and Bases,1B,2(a),81%,
+2022,4,Acids and Bases,1B,2(b),57%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,3(a),92%,
+2022,3,Metals,1B,3(b),38%,
+2022,3,Metals,1B,3(c),46%,
+2022,3,Metals,1B,3(d),88%,
+2022,3,Metals,1B,3(e),83%,
+2022,4,Acids and Bases,1B,4(a),17%,
+2022,4,Acids and Bases,1B,4(b),27%,
+2022,4,Acids and Bases,1B,5(a),42%,
+2022,4,Acids and Bases,1B,5(b),50%,
+2022,4,Acids and Bases,1B,5(c),42%,
+2022,4,Acids and Bases,1B,5(d),54%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(a),79%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b),92%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c),88%,
+2022,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(d),71%,
+2022,8,Chemical Reactions and Energy,1B,7(a),50%,
+2022,8,Chemical Reactions and Energy,1B,7(b),88%,
+2022,8,Chemical Reactions and Energy,1B,7(c),69%,
+2022,6,Microscopic World II,1B,8(a)(i),96%,
+2022,2,Microscopic World I,1B,8(a)(ii),52%,
+2022,12,Patterns in the Chemical World,1B,8(a)(iii),48%,
+2022,6,Microscopic World II,1B,8(b),78%,
+2022,5,Fossil Fuels and Carbon Compounds,1B,9(a)(i),58%,
+2022,5,Fossil Fuels and Carbon Compounds,1B,9(a)(ii),79%,
+2022,5,Fossil Fuels and Carbon Compounds,1B,9(b),79%,
+2022,10,Chemical Equilibrium,1B,10(a),63%,
+2022,10,Chemical Equilibrium,1B,10(b),50%,
+2022,10,Chemical Equilibrium,1B,10(c),63%,
+2022,9,Rate of Reaction,1B,11(a),58%,
+2022,9,Rate of Reaction,1B,11(b),29%,
+2022,9,Rate of Reaction,1B,11(c),69%,
+2022,9,Rate of Reaction,1B,11(d),67%,
+2022,9,Rate of Reaction,1B,11(e),46%,
+2022,11,Chemistry of Carbon Compounds,1B,12(a),46%,
+2022,11,Chemistry of Carbon Compounds,1B,12(b)(i),85%,
+2022,11,Chemistry of Carbon Compounds,1B,12(b)(ii),13%,
+2022,11,Chemistry of Carbon Compounds,1B,13(a),54%,
+2022,11,Chemistry of Carbon Compounds,1B,13(b),81%,
+2022,11,Chemistry of Carbon Compounds,1B,13(c)(i),69%,
+2022,11,Chemistry of Carbon Compounds,1B,13(c)(ii),63%,
+2022,11,Chemistry of Carbon Compounds,1B,14(a),79%,
+2022,11,Chemistry of Carbon Compounds,1B,14(b),54%,
+2022,11,Chemistry of Carbon Compounds,1B,14(c),46%,
+2022,10,Chemical Equilibrium,1B,15(a),64%,
+2022,10,Chemical Equilibrium,1B,15(b),56%,
+2023,2,Microscopic World I,1B,1(a),93%,
+2023,2,Microscopic World I,1B,1(b)(i),52%,
+2023,2,Microscopic World I,1B,1(b)(ii),89%,
+2023,3,Metals,1B,1(b)(iii),16%,
+2023,2,Microscopic World I,1B,2(a),92%,
+2023,2,Microscopic World I,1B,2(b),54%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,2(c),41%,
+2023,3,Metals,1B,3(a),89%,
+2023,3,Metals,1B,3(b)(i),34%,
+2023,3,Metals,1B,3(b)(ii),92%,
+2023,3,Metals,1B,3(c),61%,
+2023,3,Metals,1B,3(d),38%,
+2023,4,Acids and Bases,1B,4(a),85%,
+2023,4,Acids and Bases,1B,4(b),95%,
+2023,4,Acids and Bases,1B,4(c),49%,
+2023,4,Acids and Bases,1B,4(d),72%,
+2023,4,Acids and Bases,1B,4(e)(i),61%,
+2023,4,Acids and Bases,1B,4(e)(ii),85%,
+2023,4,Acids and Bases,1B,4(f),65%,
+2023,4,Acids and Bases,1B,4(g),66%,
+2023,4,Acids and Bases,1B,5,77%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(a),80%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b),79%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c),85%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(d),52%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(a),67%,
+2023,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(b),54%,
+2023,8,Chemical Reactions and Energy,1B,8(a),78%,
+2023,8,Chemical Reactions and Energy,1B,8(b),61%,
+2023,8,Chemical Reactions and Energy,1B,8(c),52%,
+2023,11,Chemistry of Carbon Compounds,1B,9(a),69%,
+2023,5,Fossil Fuels and Carbon Compounds,1B,9(b)(i),80%,
+2023,11,Chemistry of Carbon Compounds,1B,9(b)(ii),51%,
+2023,11,Chemistry of Carbon Compounds,1B,9(c)(i),77%,
+2023,11,Chemistry of Carbon Compounds,1B,9(c)(ii),78%,
+2023,11,Chemistry of Carbon Compounds,1B,9(d),18%,
+2023,5,Fossil Fuels and Carbon Compounds,1B,10(a),73%,
+2023,5,Fossil Fuels and Carbon Compounds,1B,10(b),75%,
+2023,5,Fossil Fuels and Carbon Compounds,1B,10(c),71%,
+2023,10,Chemical Equilibrium,1B,11(a),97%,
+2023,10,Chemical Equilibrium,1B,11(b),63%,
+2023,10,Chemical Equilibrium,1B,11(c),62%,
+2023,11,Chemistry of Carbon Compounds,1B,12(a),62%,
+2023,6,Microscopic World II,1B,12(b),44%,
+2023,11,Chemistry of Carbon Compounds,1B,13(a),66%,
+2023,11,Chemistry of Carbon Compounds,1B,13(b)(i),20%,
+2023,11,Chemistry of Carbon Compounds,1B,13(b)(ii),74%,
+2023,11,Chemistry of Carbon Compounds,1B,13(c),56%,
+2023,12,Patterns in the Chemical World,1B,14,46%,
+2023,9,Rate of Reaction,1B,15(a),66%,
+2023,9,Rate of Reaction,1B,15(b),70%,
+2023,9,Rate of Reaction,1B,15(c),82%,
+2023,9,Rate of Reaction,1B,15(d),41%,
+2023,13,Industrial Chemistry,2,1(a)(i)(1),77%,
+2023,13,Industrial Chemistry,2,1(a)(i)(2),76%,
+2023,13,Industrial Chemistry,2,1(a)(ii),49%,
+2023,13,Industrial Chemistry,2,1(b)(i),20%,
+2023,13,Industrial Chemistry,2,1(b)(ii),46%,
+2023,13,Industrial Chemistry,2,1(c)(i)(1),87%,
+2023,13,Industrial Chemistry,2,1(c)(i)(2),65%,
+2023,13,Industrial Chemistry,2,1(c)(i)(3),54%,
+2023,13,Industrial Chemistry,2,1(c)(ii)(1),57%,
+2023,13,Industrial Chemistry,2,1(c)(ii)(2),47%,
+2023,13,Industrial Chemistry,2,1(c)(ii)(3),48%,
+2023,15,Analytical Chemistry,2,2(a),58%,
+2023,15,Analytical Chemistry,2,2(b)(i),75%,
+2023,15,Analytical Chemistry,2,2(b)(ii),25%,
+2023,15,Analytical Chemistry,2,2(c)(i),84%,
+2023,15,Analytical Chemistry,2,2(c)(ii)(1),69%,
+2023,15,Analytical Chemistry,2,2(c)(ii)(2),49%,
+2023,15,Analytical Chemistry,2,2(d)(i),97%,
+2023,15,Analytical Chemistry,2,2(d)(ii),2%,
+2023,15,Analytical Chemistry,2,2(d)(iii),26%,
+2023,15,Analytical Chemistry,2,2(e)(i),56%,
+2023,15,Analytical Chemistry,2,2(e)(ii),82%,
+2023,15,Analytical Chemistry,2,2(e)(iii),69%,
+2023,15,Analytical Chemistry,2,2(e)(iv),36%,
+2023,15,Analytical Chemistry,2,2(e)(v)(1),82%,
+2023,15,Analytical Chemistry,2,2(e)(v)(2),48%,
+2024,2,Microscopic World I,1B,1(a)(i),96%,
+2024,2,Microscopic World I,1B,1(a)(ii),81%,
+2024,2,Microscopic World I,1B,1(a)(iii),79%,
+2024,3,Metals,1B,1(b)(i),94%,
+2024,3,Metals,1B,1(b)(ii),90%,
+2024,4,Acids and Bases,1B,1(b)(iii),58%,
+2024,8,Chemical Reactions and Energy,1B,2(a),78%,
+2024,8,Chemical Reactions and Energy,1B,2(b),70%,
+2024,8,Chemical Reactions and Energy,1B,2(c)(i),62%,
+2024,8,Chemical Reactions and Energy,1B,2(c)(ii)(1),63%,
+2024,8,Chemical Reactions and Energy,1B,2(c)(ii)(2),73%,
+2024,4,Acids and Bases,1B,3(a),78%,
+2024,4,Acids and Bases,1B,3(b),78%,
+2024,4,Acids and Bases,1B,3(c),74%,
+2024,8,Chemical Reactions and Energy,1B,4(a),84%,
+2024,8,Chemical Reactions and Energy,1B,4(b),63%,
+2024,4,Acids and Bases,1B,5,62%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(a),46%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b),89%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c)(i),90%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c)(ii),53%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c)(iii),23%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(a)(i),89%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(a)(ii),45%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(a)(iii),71%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(b)(i),78%,
+2024,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,7(b)(ii),75%,
+2024,9,Rate of Reaction,1B,8(a),77%,
+2024,9,Rate of Reaction,1B,8(b),58%,
+2024,9,Rate of Reaction,1B,8(c)(i),81%,
+2024,9,Rate of Reaction,1B,8(c)(ii),87%,
+2024,10,Chemical Equilibrium,1B,9(a)(i),59%,
+2024,10,Chemical Equilibrium,1B,9(a)(ii),84%,
+2024,10,Chemical Equilibrium,1B,9(b),76%,
+2024,6,Microscopic World II,1B,10,72%,
+2024,5,Fossil Fuels and Carbon Compounds,1B,11(a),87%,
+2024,5,Fossil Fuels and Carbon Compounds,1B,11(b)(i),76%,
+2024,5,Fossil Fuels and Carbon Compounds,1B,11(b)(ii),78%,
+2024,11,Chemistry of Carbon Compounds,1B,11(c)(i),83%,
+2024,11,Chemistry of Carbon Compounds,1B,11(c)(ii)(I),45%,
+2024,11,Chemistry of Carbon Compounds,1B,11(c)(ii)(II),63%,
+2024,11,Chemistry of Carbon Compounds,1B,12(a)(i),24%,
+2024,11,Chemistry of Carbon Compounds,1B,12(a)(ii),76%,
+2024,11,Chemistry of Carbon Compounds,1B,12(b)(i),71%,
+2024,11,Chemistry of Carbon Compounds,1B,12(b)(ii),78%,
+2024,11,Chemistry of Carbon Compounds,1B,12(b)(iii),70%,
+2024,11,Chemistry of Carbon Compounds,1B,12(c)(i),70%,
+2024,11,Chemistry of Carbon Compounds,1B,12(c)(ii),14%,
+2024,11,Chemistry of Carbon Compounds,1B,13(a),52%,
+2024,11,Chemistry of Carbon Compounds,1B,13(b)(i),35%,
+2024,11,Chemistry of Carbon Compounds,1B,13(b)(ii),63%,
+2024,5,Fossil Fuels and Carbon Compounds,1B,13(c),83%,
+2024,12,Patterns in the Chemical World,1B,14(a),61%,
+2024,12,Patterns in the Chemical World,1B,14(b),46%,
+2024,12,Patterns in the Chemical World,1B,14(c),49%,
+2024,9,Rate of Reaction,1B,15,30%,
+2024,13,Industrial Chemistry,2,1(a)(i),40%,
+2024,13,Industrial Chemistry,2,1(a)(ii),31%,
+2024,13,Industrial Chemistry,2,1(a)(iii),58%,
+2024,13,Industrial Chemistry,2,1(b)(i),66%,
+2024,13,Industrial Chemistry,2,1(b)(ii)(1),54%,
+2024,13,Industrial Chemistry,2,1(b)(ii)(2),76%,
+2024,13,Industrial Chemistry,2,1(c)(i),71%,
+2024,13,Industrial Chemistry,2,1(c)(ii),40%,
+2024,13,Industrial Chemistry,2,1(c)(iii),54%,
+2024,13,Industrial Chemistry,2,1(d)(i),71%,
+2024,13,Industrial Chemistry,2,1(d)(ii),32%,
+2024,13,Industrial Chemistry,2,1(e)(i),45%,
+2024,13,Industrial Chemistry,2,1(e)(ii)(1),39%,
+2024,13,Industrial Chemistry,2,1(e)(ii)(2),22%,
+2024,15,Analytical Chemistry,2,2(a),61%,
+2024,15,Analytical Chemistry,2,2(b)(i),92%,
+2024,15,Analytical Chemistry,2,2(b)(ii),80%,
+2024,15,Analytical Chemistry,2,2(c)(i),63%,
+2024,15,Analytical Chemistry,2,2(c)(ii),67%,
+2024,15,Analytical Chemistry,2,2(d)(i),77%,
+2024,15,Analytical Chemistry,2,2(d)(ii),63%,
+2024,15,Analytical Chemistry,2,2(d)(iii)(1),73%,
+2024,15,Analytical Chemistry,2,2(d)(iii)(2),45%,
+2024,15,Analytical Chemistry,2,2(d)(iii)(3),83%,
+2024,15,Analytical Chemistry,2,2(e)(i),52%,
+2024,15,Analytical Chemistry,2,2(e)(ii),53%,
+2024,15,Analytical Chemistry,2,2(e)(iii),40%,
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(a),76%,2
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(b)(i),91%,2
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(b)(ii),85%,2
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(b)(iii),63%,2
+2025,11,Chemistry of Carbon Compounds,1B,1(c)(i),55%,2
+2025,11,Chemistry of Carbon Compounds,1B,1(c)(ii),65%,2
+2025,5,Fossil Fuels and Carbon Compounds,1B,1(d),70%,3
+2025,6,Microscopic World II,1B,2(a)(i),80%,3
+2025,6,Microscopic World II,1B,2(a)(ii),72%,3
+2025,6,Microscopic World II,1B,2(b),55%,3
+2025,12,Patterns in the Chemical World,1B,2(c),45%,3
+2025,2,Microscopic World I,1B,3(a)(i),78%,4
+2025,2,Microscopic World I,1B,3(a)(ii),88%,4
+2025,2,Microscopic World I,1B,3(b),85%,4
+2025,3,Metals,1B,3(c),87%,4
+2025,3,Metals,1B,4(a),74%,5
+2025,3,Metals,1B,4(b)(i),76%,5
+2025,3,Metals,1B,4(b)(ii),88%,5
+2025,3,Metals,1B,4(c)(i),63%,5
+2025,3,Metals,1B,4(c)(ii),89%,5
+2025,4,Acids and Bases,1B,5(a),83%,6
+2025,4,Acids and Bases,1B,5(b),82%,6
+2025,4,Acids and Bases,1B,5(c),79%,6
+2025,4,Acids and Bases,1B,5(d),80%,6
+2025,4,Acids and Bases,1B,5(e),41%,6
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(a),99%,7
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b)(i),78%,7
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(b)(ii),61%,7
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(c),41%,7
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,6(d),90%,7
+2025,11,Chemistry of Carbon Compounds,1B,7(a),24%,8
+2025,11,Chemistry of Carbon Compounds,1B,7(b)(i),29%,8
+2025,11,Chemistry of Carbon Compounds,1B,7(b)(ii),59%,8
+2025,11,Chemistry of Carbon Compounds,1B,7(c),86%,8
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,8,76%,9
+2025,9,Rate of Reaction,1B,9,40%,9
+2025,7,"Redox Reactions, Chemical Cells and Electrolysis",1B,10,66%,10
+2025,4,Acids and Bases,1B,11,69%,10
+2025,10,Chemical Equilibrium,1B,12(a),70%,11
+2025,10,Chemical Equilibrium,1B,12(b)(i),70%,11
+2025,10,Chemical Equilibrium,1B,12(b)(ii),87%,11
+2025,10,Chemical Equilibrium,1B,12(c),73%,11
+2025,8,Chemical Reactions and Energy,1B,13(a),80%,12
+2025,8,Chemical Reactions and Energy,1B,13(b)(i),52%,12
+2025,8,Chemical Reactions and Energy,1B,13(b)(ii),71%,13
+2025,8,Chemical Reactions and Energy,1B,13(c),49%,13
+2025,11,Chemistry of Carbon Compounds,1B,14(a),76%,14
+2025,11,Chemistry of Carbon Compounds,1B,14(b),55%,14
+2025,11,Chemistry of Carbon Compounds,1B,14(c),79%,14
+2025,11,Chemistry of Carbon Compounds,1B,14(d)(i),39%,15
+2025,11,Chemistry of Carbon Compounds,1B,14(d)(ii),74%,15
+2025,11,Chemistry of Carbon Compounds,1B,14(d)(iii),79%,15
+2025,11,Chemistry of Carbon Compounds,1B,14(e)(i),94%,15
+2025,11,Chemistry of Carbon Compounds,1B,14(e)(ii),28%,15
+2025,13,Industrial Chemistry,2,1(a)(i),39%,
+2025,13,Industrial Chemistry,2,1(a)(ii),83%,
+2025,13,Industrial Chemistry,2,1(a)(iii),28%,
+2025,13,Industrial Chemistry,2,1(a)(iv)(1),82%,
+2025,13,Industrial Chemistry,2,1(a)(iv)(2),33%,
+2025,13,Industrial Chemistry,2,1(a)(iv)(3),61%,
+2025,13,Industrial Chemistry,2,1(a)(v)(1),47%,
+2025,13,Industrial Chemistry,2,1(a)(v)(2),82%,
+2025,13,Industrial Chemistry,2,1(b)(i),63%,
+2025,13,Industrial Chemistry,2,1(b)(ii)(1),61%,
+2025,13,Industrial Chemistry,2,1(b)(ii)(2),71%,
+2025,13,Industrial Chemistry,2,1(b)(ii)(3),49%,
+2025,13,Industrial Chemistry,2,1(b)(ii)(4),60%,
+2025,13,Industrial Chemistry,2,1(c)(i),85%,
+2025,13,Industrial Chemistry,2,1(c)(ii),55%,
+2025,13,Industrial Chemistry,2,1(c)(iii),66%,
+2025,15,Analytical Chemistry,2,2(a)(i),39%,
+2025,15,Analytical Chemistry,2,2(a)(ii)(1),83%,
+2025,15,Analytical Chemistry,2,2(a)(ii)(2),63%,
+2025,15,Analytical Chemistry,2,2(b)(i),20%,
+2025,15,Analytical Chemistry,2,2(b)(ii),63%,
+2025,15,Analytical Chemistry,2,2(b)(iii),66%,
+2025,15,Analytical Chemistry,2,2(b)(iv),27%,
+2025,15,Analytical Chemistry,2,2(c),68%,
+2025,15,Analytical Chemistry,2,2(d)(i),82%,
+2025,15,Analytical Chemistry,2,2(d)(ii),79%,
+2025,15,Analytical Chemistry,2,2(d)(iii),77%,
+2025,15,Analytical Chemistry,2,2(d)(iv),54%,`;
+
+        class SmartDrill {
+            constructor() {
+                this.data = [];
+                this.filteredData = [];
+                this.selectedQuestions = new Set();
+                this.starredQuestions = new Set();
+                this.completedQuestions = {}; 
+                
+                this.filters = { year: new Set(), paper: new Set(), topic: new Set() };
+                this.performanceFilter = { type: 'all', min: 0, max: 100 };
+                this.sortState = { column: null, direction: 'asc' };
+                
+                this.showStarredOnly = false;
+                this.hideCompleted = false;
+                
+                this.currentViewingId = null;
+
+                this.init();
+            }
+
+            init() {
+                this.loadUserData();
+                document.getElementById('csv-upload').addEventListener('change', (e) => this.handleFileUpload(e));
+                document.getElementById('pdf-upload').addEventListener('change', (e) => this.handlePdfUpload(e));
+                
+                // LOAD EMBEDDED DATA
+                this.processCSVData(EMBEDDED_CSV_DATA);
+                
+                const label = document.getElementById('source-label');
+                if(label) label.innerHTML = "Source <span class='text-emerald-500 font-bold normal-case ml-1 text-[10px]'>(Embedded 2021-25)</span>";
+
+                // Keyboard Nav
+                document.addEventListener('keydown', (e) => {
+                    const modal = document.getElementById('image-viewer-modal');
+                    if (!modal.classList.contains('hidden')) {
+                        if (e.key === 'ArrowLeft') {
+                            this.navigateQuestion(-1);
+                        } else if (e.key === 'ArrowRight') {
+                            this.navigateQuestion(1);
+                        } else if (e.key === 'Escape') {
+                            this.closeImageModal();
+                        }
+                    }
+                });
+            }
+
+            processCSVData(text) {
+                this.data = this.parseCSV(text);
+                this.initializeFilters();
+                
+                // Default: ALL Selected
+                this.selectedQuestions.clear();
+                this.data.forEach(item => this.selectedQuestions.add(item.id));
+
+                const headerCheckbox = document.getElementById('header-checkbox');
+                if(headerCheckbox) headerCheckbox.checked = true;
+
+                this.applyFilters();
+                this.renderFilters();
+                this.renderFAB();
+            }
+
+            loadUserData() {
+                const starred = localStorage.getItem('smart_drill_starred');
+                if (starred) this.starredQuestions = new Set(JSON.parse(starred));
+                
+                const completed = localStorage.getItem('smart_drill_completed');
+                if (completed) this.completedQuestions = JSON.parse(completed);
+            }
+
+            saveUserData() {
+                localStorage.setItem('smart_drill_starred', JSON.stringify([...this.starredQuestions]));
+                localStorage.setItem('smart_drill_completed', JSON.stringify(this.completedQuestions));
+            }
+
+            getUniqueId(item) {
+                return `${item.Year}_${item.Paper}_${item['Question No.']}`;
+            }
+
+            toggleStar(uniqueId) {
+                if (this.starredQuestions.has(uniqueId)) {
+                    this.starredQuestions.delete(uniqueId);
+                } else {
+                    this.starredQuestions.add(uniqueId);
+                }
+                this.saveUserData();
+                this.renderTable(); 
+            }
+
+            toggleComplete(uniqueId) {
+                if (this.completedQuestions[uniqueId]) {
+                    delete this.completedQuestions[uniqueId];
+                } else {
+                    this.completedQuestions[uniqueId] = Date.now();
+                }
+                this.saveUserData();
+                this.renderTable();
+            }
+
+            toggleAllCompletedVisible(checkbox) {
+                const isChecking = checkbox.checked;
+                const action = isChecking ? "Completed" : "Incomplete";
+                
+                if (!confirm(`Are you sure you want to mark ${this.filteredData.length} visible questions as ${action}?`)) {
+                    checkbox.checked = !isChecking;
+                    return;
+                }
+
+                const now = Date.now();
+                this.filteredData.forEach(item => {
+                    const uid = this.getUniqueId(item);
+                    if (isChecking) {
+                        if (!this.completedQuestions[uid]) this.completedQuestions[uid] = now;
+                    } else {
+                        if (this.completedQuestions[uid]) delete this.completedQuestions[uid];
+                    }
+                });
+                
+                this.saveUserData();
+                this.renderTable();
+            }
+
+            toggleStarredFilter() {
+                const checkbox = document.getElementById('filter-starred-only');
+                this.showStarredOnly = checkbox.checked;
+                this.applyFilters();
+            }
+
+            toggleCompletedFilter() {
+                const checkbox = document.getElementById('filter-hide-completed');
+                this.hideCompleted = checkbox.checked;
+                this.applyFilters();
+            }
+
+            toggleStarFromModal() {
+                if (this.currentViewingId) {
+                    this.toggleStar(this.currentViewingId);
+                    this.updateModalButtons();
+                }
+            }
+
+            toggleCompleteFromModal() {
+                if (this.currentViewingId) {
+                    this.toggleComplete(this.currentViewingId);
+                    this.updateModalButtons();
+                }
+            }
+
+            updateModalButtons() {
+                const starBtn = document.getElementById('modal-star-btn');
+                if (this.starredQuestions.has(this.currentViewingId)) {
+                    starBtn.classList.add('text-yellow-400');
+                    starBtn.classList.remove('text-slate-300');
+                } else {
+                    starBtn.classList.remove('text-yellow-400');
+                    starBtn.classList.add('text-slate-300');
+                }
+                const checkBtn = document.getElementById('modal-check-btn');
+                if (this.completedQuestions[this.currentViewingId]) {
+                    checkBtn.classList.add('text-emerald-500');
+                    checkBtn.classList.remove('text-slate-300');
+                } else {
+                    checkBtn.classList.remove('text-emerald-500');
+                    checkBtn.classList.add('text-slate-300');
+                }
+                this.updateNavButtons();
+            }
+            
+            updateNavButtons() {
+                const currentIndex = this.filteredData.findIndex(item => this.getUniqueId(item) === this.currentViewingId);
+                const prevBtn = document.getElementById('nav-prev-btn');
+                const nextBtn = document.getElementById('nav-next-btn');
+
+                if (prevBtn) {
+                    prevBtn.disabled = currentIndex <= 0;
+                    if(prevBtn.disabled) {
+                        prevBtn.classList.add('opacity-30', 'cursor-not-allowed');
+                        prevBtn.classList.remove('hover:text-indigo-600', 'hover:bg-white', 'hover:scale-110');
+                    } else {
+                        prevBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+                        prevBtn.classList.add('hover:text-indigo-600', 'hover:bg-white', 'hover:scale-110');
+                    }
+                }
+                
+                if (nextBtn) {
+                    nextBtn.disabled = currentIndex >= this.filteredData.length - 1;
+                    if(nextBtn.disabled) {
+                        nextBtn.classList.add('opacity-30', 'cursor-not-allowed');
+                        nextBtn.classList.remove('hover:text-indigo-600', 'hover:bg-white', 'hover:scale-110');
+                    } else {
+                        nextBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+                        nextBtn.classList.add('hover:text-indigo-600', 'hover:bg-white', 'hover:scale-110');
+                    }
+                }
+            }
+
+            navigateQuestion(offset) {
+                const currentIndex = this.filteredData.findIndex(item => this.getUniqueId(item) === this.currentViewingId);
+                if (currentIndex === -1) return;
+
+                const newIndex = currentIndex + offset;
+                if (newIndex >= 0 && newIndex < this.filteredData.length) {
+                    const nextItem = this.filteredData[newIndex];
+                    this.viewQuestion(nextItem.Year, nextItem.Paper, nextItem['Question No.']);
+                }
+            }
+
+            handleFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.processCSVData(e.target.result);
+                };
+                reader.readAsText(file);
+            }
+
+            parseCSV(text) {
+                const lines = text.split('\n').filter(line => line.trim());
+                return lines.slice(1).map((line, index) => {
+                    const rowData = [];
+                    let inQuote = false;
+                    let currentToken = '';
+                    for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+                        if (char === '"') { inQuote = !inQuote; }
+                        else if (char === ',' && !inQuote) { rowData.push(currentToken); currentToken = ''; }
+                        else { currentToken += char; }
+                    }
+                    rowData.push(currentToken); 
+                    const cleanData = rowData.map(val => val.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+                    if (cleanData.length < 5) return null; 
+
+                    let finalTopicName = cleanData[2];
+                    if (finalTopicName === 'Redox Reactions, Chemical Cells and Electrolysis') {
+                        finalTopicName = 'Electrochemistry';
+                    }
+
+                    return {
+                        id: index,
+                        Year: cleanData[0],
+                        Topic: cleanData[1], 
+                        TopicName: finalTopicName, 
+                        Paper: cleanData[3],
+                        'Question No.': cleanData[4],
+                        'Performance': cleanData[5] || 'N/A',
+                        'Answer': cleanData[6] || '' 
+                    };
+                }).filter(item => item !== null);
+            }
+
+            initializeFilters() {
+                // Default: ALL Checked
+                this.filters.year = new Set(this.data.map(d => d.Year));
+                this.filters.paper = new Set(this.data.map(d => d.Paper));
+                this.filters.topic = new Set(this.data.map(d => d.TopicName));
+            }
+
+            getQuestionIdentifier(paper, questionNo) {
+                const qStr = questionNo.toString();
+                if (paper === '2') {
+                    const match = qStr.match(/^(\d+)\(([a-zA-Z])\)/);
+                    if (match) return `${match[1]}${match[2]}`;
+                    return qStr.replace(/[\(\)]/g, ''); 
+                } else if (paper === '1B') {
+                     const match = qStr.match(/^(\d+)/);
+                     return match ? match[0] : qStr;
+                } else {
+                    const match = qStr.match(/^\d+/);
+                    return match ? match[0] : qStr;
+                }
+            }
+
+            getQuestionFilename(year, paper, questionNo) {
+                const qId = this.getQuestionIdentifier(paper, questionNo);
+                return `${year}/${year}_mock_${paper}_Q${qId}.png`;
+            }
+
+            renderFilters() {
+                const years = [...new Set(this.data.map(d => d.Year))].sort().reverse();
+                const papers = [...new Set(this.data.map(d => d.Paper))].sort();
+
+                // 1. STRICT RULE: Check if "Paper 2" is currently selected.
+                // If the set is empty (Default), this returns false.
+                const isPaper2Selected = this.filters.paper.has('2');
+
+                // 2. Filter Topics
+                const uniqueTopicsMap = new Map();
+                this.data.forEach(item => {
+                    const topicId = parseInt(item.Topic) || 999;
+                    
+                    // --- NEW LOGIC: CONDITIONAL VISIBILITY ---
+                    // If it is an Elective Topic (13+) AND Paper 2 is NOT checked...
+                    // HIDE IT. (This applies to Default state too)
+                    if (topicId >= 13 && !isPaper2Selected) {
+                        return; // Skip this iteration
+                    }
+                    // -----------------------------------------
+
+                    if (!uniqueTopicsMap.has(item.TopicName)) {
+                        uniqueTopicsMap.set(item.TopicName, { id: topicId, rawId: item.Topic, name: item.TopicName });
+                    }
+                });
+                
+                const sortedTopics = Array.from(uniqueTopicsMap.values()).sort((a, b) => a.id - b.id);
+
+                // 3. Render HTML
+                const yearContainer = document.getElementById('year-filters');
+                yearContainer.innerHTML = years.map(y => `
+                    <label class="flex items-center justify-center space-x-1 cursor-pointer py-1 px-1 rounded hover:bg-slate-100 border border-slate-200 transition-all bg-white w-full">
+                        <input type="checkbox" onchange="smartDrill.toggleFilter('year', '${y}')" value="${y}" ${this.filters.year.has(y) ? 'checked' : ''} class="w-3 h-3 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-[10px] text-slate-600 font-medium">${y}</span>
+                    </label>`).join('');
+
+                const paperContainer = document.getElementById('paper-filters');
+                paperContainer.innerHTML = papers.map(p => `
+                    <label class="flex items-center justify-center space-x-1 cursor-pointer py-1 px-1 rounded hover:bg-slate-100 border border-slate-200 transition-all bg-white w-full">
+                        <input type="checkbox" onchange="smartDrill.toggleFilter('paper', '${p}')" value="${p}" ${this.filters.paper.has(p) ? 'checked' : ''} class="w-3 h-3 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-[10px] text-slate-600 font-medium">${p}</span>
+                    </label>`).join('');
+
+                const topicContainer = document.getElementById('topic-filters');
+                topicContainer.innerHTML = sortedTopics.map(t => `
+                    <label class="flex items-start space-x-2 cursor-pointer py-1 px-2 rounded hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100 transition-all">
+                        <input type="checkbox" onchange="smartDrill.toggleFilter('topic', '${t.name.replace(/'/g, "\\'")}')" value="${t.name}" ${this.filters.topic.has(t.name) ? 'checked' : ''} class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-0.5 shrink-0">
+                        <span class="text-xs text-slate-600 font-medium leading-tight"><span class="font-bold text-slate-400 mr-1">${t.rawId}.</span>${t.name}</span>
+                    </label>`).join('');
+            }
+
+            toggleFilter(type, value) {
+                if (this.filters[type].has(value)) { this.filters[type].delete(value); } else { this.filters[type].add(value); }
+                
+                // NEW: Re-render Filters if Paper changes (to update Topic list)
+                if (type === 'paper') {
+                    this.renderFilters();
+                }
+                
+                this.applyFilters();
+            }
+
+            toggleAllFilters(type) {
+                let allValues;
+                if (type === 'year') allValues = new Set(this.data.map(d => d.Year));
+                else if (type === 'paper') allValues = new Set(this.data.map(d => d.Paper));
+                else if (type === 'topic') allValues = new Set(this.data.map(d => d.TopicName));
+
+                if (allValues.size === this.filters[type].size) { this.filters[type].clear(); } else { this.filters[type] = allValues; }
+                
+                this.renderFilters();
+                this.applyFilters();
+            }
+
+            handlePerformanceChange(value) {
+                const customInput = document.getElementById('custom-performance-inputs');
+                this.performanceFilter.type = value;
+                if (value === 'custom') {
+                    customInput.classList.remove('hidden');
+                    customInput.classList.add('grid');
+                    this.updateCustomRange();
+                } else {
+                    customInput.classList.add('hidden');
+                    customInput.classList.remove('grid');
+                    if (value === 'all') { this.performanceFilter.min = 0; this.performanceFilter.max = 100; }
+                    else if (value === 'distinction') { this.performanceFilter.min = 0; this.performanceFilter.max = 39; }
+                    else if (value === 'standard') { this.performanceFilter.min = 40; this.performanceFilter.max = 60; }
+                    else if (value === 'must-win') { this.performanceFilter.min = 61; this.performanceFilter.max = 100; }
+                    this.applyFilters();
+                }
+            }
+
+            updateCustomRange() {
+                this.performanceFilter.min = parseInt(document.getElementById('perf-min').value) || 0;
+                this.performanceFilter.max = parseInt(document.getElementById('perf-max').value) || 100;
+                this.applyFilters();
+            }
+
+            handleSort(column) {
+                if (this.sortState.column === column) {
+                    this.sortState.direction = this.sortState.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    this.sortState.column = column;
+                    this.sortState.direction = 'asc';
+                }
+                const icons = ['Year', 'Paper', 'Question No.', 'Topic', 'Performance'];
+                icons.forEach(c => {
+                    const iconEl = document.getElementById(`sort-icon-${c}`);
+                    if(iconEl) {
+                        if(c === column) {
+                            iconEl.innerText = this.sortState.direction === 'asc' ? '↑' : '↓';
+                            iconEl.classList.add('text-indigo-600', 'font-bold');
+                            iconEl.classList.remove('text-slate-300', 'font-normal');
+                        } else {
+                            iconEl.innerText = '↕';
+                            iconEl.classList.remove('text-indigo-600', 'font-bold');
+                            iconEl.classList.add('text-slate-300', 'font-normal');
+                        }
+                    }
+                });
+                this.applySort();
+            }
+
+            applyFilters() {
+                // 1. Standard Filter Logic
+                this.filteredData = this.data.filter(item => {
+                    const uniqueId = this.getUniqueId(item);
+                    if (this.showStarredOnly && !this.starredQuestions.has(uniqueId)) { return false; }
+                    if (this.hideCompleted && this.completedQuestions[uniqueId]) { return false; }
+
+                    const yearMatch = this.filters.year.has(item.Year);
+                    const paperMatch = this.filters.paper.has(item.Paper);
+                    const topicMatch = this.filters.topic.has(item.TopicName);
+                    
+                    const perfStr = (item.Performance || "").toString().replace('%', '');
+                    const perfVal = parseInt(perfStr);
+                    let perfMatch = false;
+                    if (isNaN(perfVal)) { perfMatch = this.performanceFilter.type === 'all'; } 
+                    else { perfMatch = perfVal >= this.performanceFilter.min && perfVal <= this.performanceFilter.max; }
+                    
+                    return yearMatch && paperMatch && topicMatch && perfMatch;
+                });
+                
+                // 2. AUTO-SELECT VISIBLE QUESTIONS
+                this.selectedQuestions.clear();
+                this.filteredData.forEach(item => this.selectedQuestions.add(item.id));
+                
+                // 3. Update Header Checkbox
+                const headerCheckbox = document.getElementById('header-checkbox');
+                if(headerCheckbox) headerCheckbox.checked = this.filteredData.length > 0;
+
+                if (!this.sortState.column) {
+                    this.filteredData.sort((a, b) => {
+                        if (b.Year != a.Year) return b.Year - a.Year;
+                        if (a.Paper != b.Paper) return a.Paper.localeCompare(b.Paper);
+                        const qComp = a['Question No.'].toString().localeCompare(b['Question No.'].toString(), undefined, {numeric: true, sensitivity: 'base'});
+                        if (qComp !== 0) return qComp;
+                        const scoreA = parseFloat((a.Performance || "").replace('%', '')) || 0;
+                        const scoreB = parseFloat((b.Performance || "").replace('%', '')) || 0;
+                        return scoreA - scoreB;
+                    });
+                    this.renderTable();
+                } else {
+                    this.applySort();
+                }
+                this.updateStats();
+                this.renderFAB();
+            }
+
+            renderTable() {
+                const tbody = document.getElementById('table-body');
+                
+                if (this.filteredData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-center p-8 text-slate-400 text-sm">No questions selected. Please adjust your filters.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = this.filteredData.map(item => {
+                    const isSelected = this.selectedQuestions.has(item.id);
+                    const uniqueId = this.getUniqueId(item);
+                    const isStarred = this.starredQuestions.has(uniqueId);
+                    const isCompleted = !!this.completedQuestions[uniqueId];
+                    let scoreClass = 'bg-slate-100 text-slate-600';
+                    const score = parseInt(item.Performance);
+                    if (!isNaN(score)) {
+                        if (score < 40) scoreClass = 'bg-red-50 text-red-600 font-bold';
+                        else if (score < 60) scoreClass = 'bg-amber-50 text-amber-600 font-bold';
+                        else scoreClass = 'bg-emerald-50 text-emerald-600 font-bold';
+                    }
+                    const rowClass = isCompleted ? 'bg-emerald-50/60 hover:bg-emerald-100/50' : 'hover:bg-slate-50';
+
+                    return `
+                    <tr class="${rowClass} transition-colors group animate-fade-in">
+                        <td class="p-3 text-left pl-5">
+                            <input type="checkbox" onchange="smartDrill.toggleSelection(${item.id})" ${isSelected ? 'checked' : ''} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                        </td>
+                        <td class="p-3 text-xs font-medium text-slate-700">${item.Year}</td>
+                        <td class="p-3 text-xs text-slate-600">${item.Paper}</td>
+                        <td class="p-3 text-xs font-bold text-slate-800">${item['Question No.']}</td>
+                        <td class="p-3 text-xs text-slate-600 text-center">${item.Topic}</td>
+                        <td class="p-3 text-right"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${scoreClass}">${item.Performance}</span></td>
+                        <td class="p-3 text-center">
+                             <button onclick="smartDrill.viewQuestion('${item.Year}', '${item.Paper}', '${item['Question No.']}')" class="text-slate-400 hover:text-indigo-600 p-1 rounded-full hover:bg-indigo-50 transition-colors" title="View">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </button>
+                        </td>
+                        <td class="p-3 text-center">
+                             <button onclick="smartDrill.toggleStar('${uniqueId}')" class="p-1 rounded-full hover:bg-slate-100 transition-transform transform hover:scale-110" title="Star">
+                                <svg class="w-4 h-4 ${isStarred ? 'text-yellow-400' : 'text-slate-300'}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>
+                             </button>
+                        </td>
+                        <td class="p-3 text-center">
+                             <button onclick="smartDrill.toggleComplete('${uniqueId}')" class="p-1 rounded-full hover:bg-slate-100 transition-transform transform hover:scale-110" title="Mark Done">
+                                <svg class="w-4 h-4 ${isCompleted ? 'text-emerald-500' : 'text-slate-300'}" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                             </button>
+                        </td>
+                    </tr>
+                `}).join('');
+
+                const headerDoneCheckbox = document.getElementById('header-done-checkbox');
+                if (headerDoneCheckbox) {
+                    if (this.filteredData.length > 0) {
+                        const allCompleted = this.filteredData.every(item => this.completedQuestions[this.getUniqueId(item)]);
+                        headerDoneCheckbox.checked = allCompleted;
+                    } else {
+                        headerDoneCheckbox.checked = false;
+                    }
+                }
+            }
+
+            updateStats() {
+                document.getElementById('total-questions').textContent = `${this.filteredData.length} Qs`;
+            }
+
+            toggleSelection(id) {
+                if (this.selectedQuestions.has(id)) { this.selectedQuestions.delete(id); } else { this.selectedQuestions.add(id); }
+                this.renderFAB();
+            }
+
+            toggleAllDisplay(checkbox) {
+                const isChecked = checkbox.checked;
+                this.filteredData.forEach(item => {
+                    const id = item.id;
+                    const rowCheckbox = document.querySelector(`input[onchange="smartDrill.toggleSelection(${id})"]`);
+                    
+                    if (isChecked) {
+                        this.selectedQuestions.add(id);
+                        if(rowCheckbox) rowCheckbox.checked = true;
+                    } else {
+                        this.selectedQuestions.delete(id);
+                        if(rowCheckbox) rowCheckbox.checked = false;
+                    }
+                });
+                this.renderFAB();
+            }
+
+            // --- REVIEW SUMMARY ---
+            showReviewSummary() {
+                // 1. Double-check: Filter the selection against the current data
+                const validIDs = Array.from(this.selectedQuestions).filter(id => this.data.find(d => d.id === id));
+                
+                if (validIDs.length === 0) {
+                    alert("Please select questions first to generate a summary.");
+                    return;
+                }
+                
+                const container = document.getElementById('review-content');
+                let html = `
+                    <table class="min-w-full divide-y divide-slate-200 bg-white rounded-lg shadow-sm overflow-hidden border border-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Question</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Answer / Scheme</th>
+                                <th class="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Your Score</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                `;
+
+                const sortedIDs = validIDs.sort((a, b) => a - b);
+
+                sortedIDs.forEach(id => {
+                    const item = this.data.find(d => d.id === id);
+                    if (!item) return;
+
+                    let answerDisplay = '<span class="text-slate-300 italic text-xs">N/A</span>';
+                    
+                    if (item.Answer) {
+                        if (item.Paper === '1A') {
+                            answerDisplay = `<span class="font-bold text-indigo-600 text-lg">${item.Answer}</span>`;
+                        } else {
+                            const pageNum = parseInt(item.Answer);
+                            const pdfFilename = `${item.Year}_mock_paper_${item.Paper}_ans_marked.pdf`;
+                            answerDisplay = `
+                                <button onclick="window.open('${pdfFilename}#page=${pageNum}', '_blank')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors group">
+                                    <svg class="w-3.5 h-3.5 text-emerald-500 group-hover:text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    Page ${pageNum}
+                                </button>`;
+                        }
+                    }
+
+                    let scoreClass = 'bg-slate-100 text-slate-500';
+                    const scoreVal = parseInt(item.Performance);
+                    if (!isNaN(scoreVal)) {
+                        if (scoreVal < 40) scoreClass = 'bg-red-50 text-red-600 border-red-100';
+                        else if (scoreVal < 60) scoreClass = 'bg-amber-50 text-amber-600 border-amber-100';
+                        else scoreClass = 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                    }
+
+                    html += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-4 py-3 text-xs font-medium text-slate-700">
+                                <span class="font-bold">${item.Year}</span> <span class="text-slate-300 mx-1">|</span> Paper ${item.Paper} <span class="text-slate-300 mx-1">|</span> Q${item['Question No.']}
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                ${answerDisplay}
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${scoreClass}">
+                                    ${item.Performance}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+                document.getElementById('review-modal').classList.remove('hidden');
+            }
+
+            closeReviewModal() {
+                document.getElementById('review-modal').classList.add('hidden');
+            }
+
+            viewQuestion(year, paper, questionNum) {
+                const imgFilename = this.getQuestionFilename(year, paper, questionNum);
+                this.currentViewingId = `${year}_${paper}_${questionNum}`;
+                const imgEl = document.getElementById('single-question-img');
+                imgEl.src = imgFilename;
+                imgEl.onerror = () => {
+                    const errEl = document.getElementById('image-error-msg');
+                    errEl.innerHTML = `Image not found: <b>${imgFilename}</b><br>Please ensure the file exists.`;
+                    errEl.classList.remove('hidden');
+                    imgEl.style.display = 'none';
+                };
+                imgEl.onload = () => {
+                    document.getElementById('image-error-msg').classList.add('hidden');
+                    imgEl.style.display = 'block';
+                }
+
+                document.getElementById('image-modal-title').innerText = `${year} Paper ${paper} - Q${questionNum}`;
+                this.updateModalButtons();
+                document.getElementById('image-viewer-modal').classList.remove('hidden');
+
+                const item = this.data.find(d => this.getUniqueId(d) === this.currentViewingId);
+                const ansBtn = document.getElementById('modal-answer-btn');
+
+                if (item && item.Answer) {
+                    ansBtn.classList.remove('hidden');
+                    // Reset
+                    ansBtn.classList.remove('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
+                    ansBtn.classList.add('text-slate-500', 'bg-slate-100', 'border-slate-200');
+
+                    if (item.Paper === '1A') {
+                        ansBtn.innerHTML = `
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <span>Show Answer</span>`;
+                        ansBtn.onclick = () => {
+                            if (ansBtn.innerText.includes('Show')) {
+                                ansBtn.innerHTML = `<span class="font-bold">Answer: ${item.Answer}</span>`;
+                                ansBtn.classList.remove('text-slate-500', 'bg-slate-100', 'border-slate-200');
+                                ansBtn.classList.add('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
+                            } else {
+                                ansBtn.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg><span>Show Answer</span>`;
+                                ansBtn.classList.add('text-slate-500', 'bg-slate-100', 'border-slate-200');
+                                ansBtn.classList.remove('text-indigo-600', 'bg-indigo-50', 'border-indigo-200');
+                            }
+                        };
+                    } else {
+                        // NEW LOGIC: Open PDF in New Tab
+                        ansBtn.innerHTML = `
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            <span>Open Marking Scheme</span>`;
+                        
+                        ansBtn.onclick = () => {
+                            const pageNum = parseInt(item.Answer);
+                            const pdfFilename = `${item.Year}_mock_paper_${item.Paper}_ans_marked.pdf`;
+                            window.open(`${pdfFilename}#page=${pageNum}`, '_blank');
+                        };
+                    }
+                } else {
+                    ansBtn.classList.add('hidden');
+                }
+
+                const badge = document.getElementById('focus-badge');
+                const badgeText = document.getElementById('focus-text');
+                const qStr = questionNum.toString();
+                const match = qStr.match(/^\d+(.*)$/);
+                const subPart = match ? match[1].trim() : '';
+                if (subPart && paper !== '1A') {
+                    badgeText.innerText = `Part ${subPart}`;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            closeImageModal() {
+                document.getElementById('image-viewer-modal').classList.add('hidden');
+                setTimeout(() => { document.getElementById('single-question-img').src = ''; }, 200);
+            }
+
+            renderFAB() {
+                const fabContainer = document.getElementById('fab-container');
+                const count = this.selectedQuestions.size;
+                
+                if (count > 0) {
+                    fabContainer.innerHTML = `
+                        <div class="flex flex-col gap-3 items-end animate-bounce-in">
+                            <button onclick="smartDrill.showReviewSummary()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 text-xs font-bold rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 group border-2 border-white/20 backdrop-blur-sm">
+                                <svg class="w-4 h-4 text-emerald-100 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Review Answers
+                            </button>
+                            <button onclick="smartDrill.generateQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-xs font-bold rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 group border-2 border-white/20 backdrop-blur-sm">
+                                <svg class="w-4 h-4 text-indigo-100 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                Generate Quiz (${count})
+                            </button>
+                        </div>`;
+                } else {
+                    fabContainer.innerHTML = '';
+                }
+            }
+
+            generateQuiz() {
+                const container = document.getElementById('quiz-content');
+                container.innerHTML = ''; 
+                if (this.selectedQuestions.size === 0) {
+                    alert("Please select questions from the list first.");
+                    return;
+                }
+                const indices = Array.from(this.selectedQuestions).sort((a, b) => a - b);
+                const groups = {}; 
+
+                indices.forEach((index) => {
+                    const item = this.filteredData.find(d => d.id === index);
+                    if (!item) return;
+                    
+                    const qIdentifier = this.getQuestionIdentifier(item.Paper, item['Question No.']);
+                    const groupKey = `${item.Year}_${item.Paper}_${qIdentifier}`;
+
+                    if (!groups[groupKey]) {
+                        groups[groupKey] = {
+                            year: item.Year,
+                            paper: item.Paper,
+                            qIdentifier: qIdentifier,
+                            subParts: []
+                        };
+                    }
+                    groups[groupKey].subParts.push(item['Question No.']);
+                });
+
+                let questionCounter = 1;
+                for (const key in groups) {
+                    const group = groups[key];
+                    const subPartsText = group.subParts.join(', ');
+                    const imgFilename = this.getQuestionFilename(group.year, group.paper, group.qIdentifier);
+
+                    const div = document.createElement('div');
+                    div.className = 'quiz-item shadow-sm';
+                    div.innerHTML = `
+                        <div class="quiz-header text-sm">
+                            <span>Question ${questionCounter}</span>
+                            <span>${group.year} - Paper ${group.paper} - Q${subPartsText}</span>
+                        </div>
+                        <div class="flex justify-center">
+                            <img src="${imgFilename}" alt="Question Image" class="max-w-full h-auto object-contain" onerror="this.parentElement.innerHTML='<div class=\'text-red-500 bg-red-50 p-4 rounded w-full text-center\'>Image file not found: <b>${imgFilename}</b><br><span class=\'text-xs text-gray-500\'>Please ensure you have created a folder named <b>${group.year}</b> and placed the image inside it.</span></div>'">
+                        </div>`;
+                    container.appendChild(div);
+                    questionCounter++;
+                }
+                document.getElementById('quiz-modal').classList.remove('hidden');
+            }
+
+            closeQuizModal() { document.getElementById('quiz-modal').classList.add('hidden'); }
+            viewSelected() { alert("Use the new Review Answers feature to see details!"); }
+            handlePdfUpload(event) { console.log("Legacy PDF upload handler"); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.smartDrill = new SmartDrill();
+        });
+    </script>
+</body>
+</html>
