@@ -165,7 +165,7 @@
                     </svg>
                 </div>
                 <h1 class="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-slate-700 to-slate-900 tracking-tight">
-                    Smart Drill: Mock Exams <span class="text-[10px] font-medium text-slate-400 ml-1 px-2 py-0.5 bg-slate-100 rounded-full border border-slate-200">v3.9 (Auto-Select)</span>
+                    Smart Drill: Mock Exams <span class="text-[10px] font-medium text-slate-400 ml-1 px-2 py-0.5 bg-slate-100 rounded-full border border-slate-200">v3.10 (Auto-Sync)</span>
                 </h1>
             </div>
             
@@ -994,11 +994,13 @@
             processCSVData(text) {
                 this.data = this.parseCSV(text);
                 this.initializeFilters();
-                this.selectedQuestions.clear(); 
-                // Removed auto-selection loop so app starts empty
+                
+                // Default: ALL Selected
+                this.selectedQuestions.clear();
+                this.data.forEach(item => this.selectedQuestions.add(item.id));
 
                 const headerCheckbox = document.getElementById('header-checkbox');
-                if(headerCheckbox) headerCheckbox.checked = false; 
+                if(headerCheckbox) headerCheckbox.checked = true;
 
                 this.applyFilters();
                 this.renderFilters();
@@ -1195,13 +1197,10 @@
             }
 
             initializeFilters() {
-                // 1. We DON'T select anything by default.
-                this.filters.year = new Set();
-                this.filters.paper = new Set();
-                this.filters.topic = new Set();
-                
-                // 2. Note: We don't need to store "available options" here because 
-                // renderFilters() calculates them dynamically from this.data every time.
+                // Default: ALL Checked
+                this.filters.year = new Set(this.data.map(d => d.Year));
+                this.filters.paper = new Set(this.data.map(d => d.Paper));
+                this.filters.topic = new Set(this.data.map(d => d.TopicName));
             }
 
             getQuestionIdentifier(paper, questionNo) {
@@ -1231,36 +1230,19 @@
                 // 1. STRICT RULE: Check if "Paper 2" is currently selected.
                 // If the set is empty (Default), this returns false.
                 const isPaper2Selected = this.filters.paper.has('2');
-                const isCorePaperSelected = this.filters.paper.has('1A') || this.filters.paper.has('1B');
-                const noPaperSelected = this.filters.paper.size === 0;
 
                 // 2. Filter Topics
                 const uniqueTopicsMap = new Map();
                 this.data.forEach(item => {
                     const topicId = parseInt(item.Topic) || 999;
                     
-                    // --- VISIBILITY LOGIC START ---
-                    let shouldShow = false;
-
-                    if (noPaperSelected) {
-                        shouldShow = false; // Hide all topics if no paper is selected
-                    } else {
-                        const isElective = topicId >= 13;
-                        
-                        if (isElective) {
-                            // Show elective ONLY if Paper 2 is checked
-                            if (isPaper2Selected) shouldShow = true;
-                        } else {
-                            // Show Core ONLY if Paper 1A/1B is checked
-                            // (Or if Paper 2 is checked and you want Core topics visible too? 
-                            // Usually electives depend on Core, so maybe allow? 
-                            // But user said "When ONLY paper 2... topics 1-12 invisible")
-                            if (isCorePaperSelected) shouldShow = true;
-                        }
+                    // --- NEW LOGIC: CONDITIONAL VISIBILITY ---
+                    // If it is an Elective Topic (13+) AND Paper 2 is NOT checked...
+                    // HIDE IT. (This applies to Default state too)
+                    if (topicId >= 13 && !isPaper2Selected) {
+                        return; // Skip this iteration
                     }
-                    
-                    if (!shouldShow) return; 
-                    // --- VISIBILITY LOGIC END ---
+                    // -----------------------------------------
 
                     if (!uniqueTopicsMap.has(item.TopicName)) {
                         uniqueTopicsMap.set(item.TopicName, { id: topicId, rawId: item.Topic, name: item.TopicName });
@@ -1285,21 +1267,17 @@
                     </label>`).join('');
 
                 const topicContainer = document.getElementById('topic-filters');
-                if (sortedTopics.length === 0) {
-                    topicContainer.innerHTML = `<div class="text-[10px] text-slate-400 italic px-2">Select a Paper to see topics</div>`;
-                } else {
-                    topicContainer.innerHTML = sortedTopics.map(t => `
-                        <label class="flex items-start space-x-2 cursor-pointer py-1 px-2 rounded hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100 transition-all">
-                            <input type="checkbox" onchange="smartDrill.toggleFilter('topic', '${t.name.replace(/'/g, "\\'")}')" value="${t.name}" ${this.filters.topic.has(t.name) ? 'checked' : ''} class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-0.5 shrink-0">
-                            <span class="text-xs text-slate-600 font-medium leading-tight"><span class="font-bold text-slate-400 mr-1">${t.rawId}.</span>${t.name}</span>
-                        </label>`).join('');
-                }
+                topicContainer.innerHTML = sortedTopics.map(t => `
+                    <label class="flex items-start space-x-2 cursor-pointer py-1 px-2 rounded hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100 transition-all">
+                        <input type="checkbox" onchange="smartDrill.toggleFilter('topic', '${t.name.replace(/'/g, "\\'")}')" value="${t.name}" ${this.filters.topic.has(t.name) ? 'checked' : ''} class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-0.5 shrink-0">
+                        <span class="text-xs text-slate-600 font-medium leading-tight"><span class="font-bold text-slate-400 mr-1">${t.rawId}.</span>${t.name}</span>
+                    </label>`).join('');
             }
 
             toggleFilter(type, value) {
                 if (this.filters[type].has(value)) { this.filters[type].delete(value); } else { this.filters[type].add(value); }
                 
-                // Re-render filters (topics) whenever Paper changes
+                // NEW: Re-render Filters if Paper changes (to update Topic list)
                 if (type === 'paper') {
                     this.renderFilters();
                 }
@@ -1313,14 +1291,11 @@
                 else if (type === 'paper') allValues = new Set(this.data.map(d => d.Paper));
                 else if (type === 'topic') allValues = new Set(this.data.map(d => d.TopicName));
 
-                // Standard Toggle All logic
-                if (allValues.size === this.filters[type].size) { 
-                    this.filters[type].clear(); 
-                } else { 
-                    this.filters[type] = allValues; 
-                }
+                if (allValues.size === this.filters[type].size) { this.filters[type].clear(); } else { this.filters[type] = allValues; }
                 
-                if (type === 'paper') this.renderFilters();
+                if (type === 'paper') {
+                    this.renderFilters();
+                }
                 this.applyFilters();
             }
 
@@ -1374,36 +1349,16 @@
             }
 
             applyFilters() {
-                // 1. Check if NO paper is selected
-                if (this.filters.paper.size === 0) {
-                    this.filteredData = []; // Clear table
-                    this.selectedQuestions.clear(); // Clear selections
-                    this.renderTable();
-                    this.updateStats();
-                    this.renderFAB();
-                    // Uncheck header checkbox
-                    const headerCheckbox = document.getElementById('header-checkbox');
-                    if (headerCheckbox) headerCheckbox.checked = false;
-                    return;
-                }
-
-                // 2. Standard Filter Logic
+                // 1. Standard Filter Logic
                 this.filteredData = this.data.filter(item => {
                     const uniqueId = this.getUniqueId(item);
                     if (this.showStarredOnly && !this.starredQuestions.has(uniqueId)) { return false; }
                     if (this.hideCompleted && this.completedQuestions[uniqueId]) { return false; }
 
-                    // Year Filter (If set is empty, do we show all? Usually yes, but let's stick to "User must select")
-                    // Actually, for years, usually "empty" means "all years" in most apps, but "empty" means "none" in our new logic?
-                    // Let's keep Year as "Empty = All" to avoid forcing user to click 5 boxes.
-                    const yearMatch = this.filters.year.size === 0 || this.filters.year.has(item.Year);
-                    
-                    // Paper Filter (We already know size > 0 from Step 1)
+                    const yearMatch = this.filters.year.has(item.Year);
                     const paperMatch = this.filters.paper.has(item.Paper);
+                    const topicMatch = this.filters.topic.has(item.TopicName);
                     
-                    // Topic Filter (Empty = All available topics for that paper)
-                    const topicMatch = this.filters.topic.size === 0 || this.filters.topic.has(item.TopicName);
-
                     const perfStr = (item.Performance || "").toString().replace('%', '');
                     const perfVal = parseInt(perfStr);
                     let perfMatch = false;
@@ -1413,13 +1368,13 @@
                     return yearMatch && paperMatch && topicMatch && perfMatch;
                 });
                 
-                // 3. AUTO-SELECT VISIBLE QUESTIONS
-                // This fulfills "I want to select all displayed questions by default"
+                // 2. AUTO-SELECT VISIBLE QUESTIONS
                 this.selectedQuestions.clear();
                 this.filteredData.forEach(item => this.selectedQuestions.add(item.id));
                 
+                // 3. Update Header Checkbox
                 const headerCheckbox = document.getElementById('header-checkbox');
-                if (headerCheckbox) headerCheckbox.checked = this.filteredData.length > 0;
+                if(headerCheckbox) headerCheckbox.checked = this.filteredData.length > 0;
 
                 if (!this.sortState.column) {
                     this.filteredData.sort((a, b) => {
@@ -1443,7 +1398,7 @@
                 const tbody = document.getElementById('table-body');
                 
                 if (this.filteredData.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="9" class="text-center p-8 text-slate-400 text-sm">No questions selected. Please choose a Paper from the sidebar.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-center p-8 text-slate-400 text-sm">No questions selected. Please adjust your filters.</td></tr>`;
                     return;
                 }
 
@@ -1526,7 +1481,7 @@
                 this.renderFAB();
             }
 
-            // --- REVIEW SUMMARY (FIXED) ---
+            // --- REVIEW SUMMARY ---
             showReviewSummary() {
                 // 1. Double-check: Filter the selection against the current data
                 const validIDs = Array.from(this.selectedQuestions).filter(id => this.data.find(d => d.id === id));
