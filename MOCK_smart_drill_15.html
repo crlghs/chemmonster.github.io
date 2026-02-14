@@ -1227,21 +1227,22 @@ renderFilters() {
                 const years = [...new Set(this.data.map(d => d.Year))].sort().reverse();
                 const papers = [...new Set(this.data.map(d => d.Paper))].sort();
 
-                // 1. Check if "Paper 2" is currently checked
+                // 1. STRICT RULE: Check if "Paper 2" is currently selected.
+                // If the set is empty (Default), this returns false.
                 const isPaper2Selected = this.filters.paper.has('2');
 
-                // 2. Filter Topics based on the rule
+                // 2. Filter Topics
                 const uniqueTopicsMap = new Map();
                 this.data.forEach(item => {
                     const topicId = parseInt(item.Topic) || 999;
                     
-                    // --- NEW LOGIC START ---
-                    // If it is an Elective Topic (13 or higher) AND Paper 2 is NOT checked...
-                    // SKIP IT (Don't show it in the list)
+                    // --- NEW LOGIC: CONDITIONAL VISIBILITY ---
+                    // If it is an Elective Topic (13+) AND Paper 2 is NOT checked...
+                    // HIDE IT. (This applies to Default state too)
                     if (topicId >= 13 && !isPaper2Selected) {
-                        return; 
+                        return; // Skip this iteration
                     }
-                    // --- NEW LOGIC END ---
+                    // -----------------------------------------
 
                     if (!uniqueTopicsMap.has(item.TopicName)) {
                         uniqueTopicsMap.set(item.TopicName, { id: topicId, rawId: item.Topic, name: item.TopicName });
@@ -1250,7 +1251,7 @@ renderFilters() {
                 
                 const sortedTopics = Array.from(uniqueTopicsMap.values()).sort((a, b) => a.id - b.id);
 
-                // 3. Render the HTML (Standard)
+                // 3. Render HTML
                 const yearContainer = document.getElementById('year-filters');
                 yearContainer.innerHTML = years.map(y => `
                     <label class="flex items-center justify-center space-x-1 cursor-pointer py-1 px-1 rounded hover:bg-slate-100 border border-slate-200 transition-all bg-white w-full">
