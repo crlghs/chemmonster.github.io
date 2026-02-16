@@ -165,7 +165,7 @@
                     </svg>
                 </div>
                 <h1 class="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-slate-700 to-slate-900 tracking-tight">
-                    Smart Drill: Mock Exams <span class="text-[10px] font-medium text-slate-400 ml-1 px-2 py-0.5 bg-slate-100 rounded-full border border-slate-200">v3.13 (Full Default)</span>
+                    Smart Drill: Mock Exams <span class="text-[10px] font-medium text-slate-400 ml-1 px-2 py-0.5 bg-slate-100 rounded-full border border-slate-200">v3.12 (Start Full)</span>
                 </h1>
             </div>
             
@@ -198,7 +198,7 @@
                 </div>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
+            <div class="flex-1 overflow-y-auto p-4 pn-32 space-y-4">
                 <div class="flex flex-col gap-2">
                     <div class="bg-indigo-50/50 p-2 rounded-lg border border-indigo-100">
                         <label class="flex items-center space-x-2 cursor-pointer w-full">
@@ -275,9 +275,9 @@
                  </div>
             </div>
 
-            <div class="flex-1 overflow-auto px-6 pb-32"> <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="flex-1 overflow-auto px-6 pb-20"> <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm border-b border-slate-200">
+<thead class="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm border-b border-slate-200">
                             <tr>
                                 <th class="p-3 w-28 text-left">
                                     <div class="flex items-center justify-start gap-1.5 pl-2">
@@ -402,6 +402,7 @@
     <script>
         // Updated CSV Data with Correct PDF Page Mappings for 2025 1B
         const EMBEDDED_CSV_DATA = `Year,Topics,Topic Name,Paper,Question No.,GHS % score,1A Answer
+
 2021,2,Microscopic World I,1A,1,81%,C
 2021,2,Microscopic World I,1A,2,40%,C
 2021,2,Microscopic World I,1A,3,77%,A
@@ -964,7 +965,9 @@
 2022,15,Analytical Chemistry,2,2(c)(iii),72%,5
 2022,15,Analytical Chemistry,2,2(d)(i)(1),28%,5
 2022,15,Analytical Chemistry,2,2(d)(i)(2),36%,5
-2022,15,Analytical Chemistry,2,2(d)(iii),48%,5;
+2022,15,Analytical Chemistry,2,2(d)(iii),48%,5
+
+`;
 
         class SmartDrill {
             constructor() {
@@ -1342,7 +1345,7 @@
                 this.applyFilters();
             }
 
-            handleSort(column) {
+handleSort(column) {
                 if (this.sortState.column === column) {
                     this.sortState.direction = this.sortState.direction === 'asc' ? 'desc' : 'asc';
                 } else {
@@ -1351,7 +1354,8 @@
                 }
                 const icons = ['Year', 'Paper', 'Question No.', 'Topic', 'Performance'];
                 icons.forEach(c => {
-                    const safeCol = c.replace(/\s/g, ''); // Sanitized ID
+                    // FIX: Remove ALL non-alphanumeric characters (spaces AND dots)
+                    const safeCol = c.replace(/[^a-zA-Z0-9]/g, ''); 
                     const iconEl = document.getElementById(`sort-icon-${safeCol}`);
                     if(iconEl) {
                         if(c === column) {
@@ -1366,29 +1370,6 @@
                     }
                 });
                 this.applySort();
-            }
-
-            applySort() {
-                if (!this.sortState.column) { this.renderTable(); return; }
-                const column = this.sortState.column;
-                const dir = this.sortState.direction === 'asc' ? 1 : -1;
-                this.filteredData.sort((a, b) => {
-                    let valA = a[column];
-                    let valB = b[column];
-                    if (column === 'Performance') {
-                        return ((parseFloat((valA||"").replace('%',''))||0) - (parseFloat((valB||"").replace('%',''))||0)) * dir;
-                    }
-                    if (column === 'Question No.') {
-                         return valA.toString().localeCompare(valB.toString(), undefined, {numeric: true, sensitivity: 'base'}) * dir;
-                    }
-                    if (column === 'Topic') {
-                        return (parseInt(valA) - parseInt(valB)) * dir;
-                    }
-                    if (valA < valB) return -1 * dir;
-                    if (valA > valB) return 1 * dir;
-                    return 0;
-                });
-                this.renderTable();
             }
 
             applyFilters() {
