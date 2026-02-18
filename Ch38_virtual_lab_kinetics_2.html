@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Lab: Concentration & Rate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 1);
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        /* Flask Profile */
+        .side-view-flask {
+            position: relative;
+            width: 260px;
+            height: 260px;
+        }
+
+        .flask-outline {
+            fill: none;
+            stroke: #0f172a;
+            stroke-width: 3.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .liquid-side {
+            transition: height 1.5s ease-in-out, fill 0.8s ease;
+        }
+
+        /* Observation View (Top Down) */
+        .flask-top-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            background: #fff;
+            border: 5px solid #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .cross-mark {
+            position: absolute;
+            font-size: 220px;
+            font-weight: 300;
+            color: #0f172a;
+            z-index: 1;
+        }
+
+        .sulfur-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 0, 0);
+            z-index: 3;
+        }
+
+        .view-transition {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .hidden-view {
+            opacity: 0;
+            transform: scale(0.97);
+            pointer-events: none;
+            position: absolute;
+        }
+
+        /* Interactive Pouring Effect */
+        .pour-stream {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 6px;
+            height: 0;
+            background: linear-gradient(to bottom, rgba(59, 130, 246, 0.4), rgba(255,255,255,0));
+            transform: translateX(-50%);
+            z-index: 5;
+            border-radius: 4px;
+        }
+
+        .active-pour .pour-stream {
+            height: 200px;
+            transition: height 0.3s ease;
+        }
+
+        /* Custom UI Enhancements */
+        input[type=range]::-webkit-slider-thumb {
+            height: 24px;
+            width: 24px;
+            background: #4f46e5;
+            border: 3px solid white;
+            box-shadow: 0 0 10px rgba(79, 70, 229, 0.3);
+            -webkit-appearance: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        /* Temperature Thumb Color */
+        #temp-slider::-webkit-slider-thumb {
+            background: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .mode-btn.active {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+        .mode-btn {
+            background-color: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+    </style>
+</head>
+<body class="p-4 lg:p-6">
+
+    <header class="max-w-[1600px] mx-auto mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">Virtual Lab: Reaction Kinetics</h1>
+            <p class="text-lg text-slate-500 font-medium mt-1">Investigating Factors Affecting Reaction Rate</p>
+        </div>
+        <div class="flex gap-4">
+            <div id="safety-badge" class="px-6 py-2.5 bg-slate-200 rounded-xl text-slate-600 text-sm font-bold uppercase tracking-wider transition-all border border-slate-300">
+                PPE: REQUIRED
+            </div>
+            <div id="fume-badge" class="px-6 py-2.5 bg-slate-200 rounded-xl text-slate-600 text-sm font-bold uppercase tracking-wider transition-all border border-slate-300">
+                Fume Cupboard: OFF
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Interaction & Observation -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="glass-panel p-8">
+                <!-- Mode Switcher -->
+                <div class="flex gap-2 mb-6 p-1 bg-slate-100 rounded-2xl">
+                    <button onclick="setMode('concentration')" id="mode-conc" class="mode-btn active flex-1 py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition-all">Concentration</button>
+                    <button onclick="setMode('temperature')" id="mode-temp" class="mode-btn flex-1 py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition-all">Temperature</button>
+                </div>
+
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Experimental Bench</h2>
+                    <button onclick="toggleSafety()" id="safety-btn" class="text-sm bg-indigo-600 text-white px-6 py-2 rounded-full font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95">Equip Safety Gear</button>
+                </div>
+
+                <!-- Simulation Visualizers -->
+                <div id="display-area" class="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-3xl relative min-h-[420px] overflow-hidden mb-8 border border-slate-200">
+                    
+                    <!-- Side View -->
+                    <div id="side-view" class="view-transition flex flex-col items-center w-full">
+                        <p class="text-xs text-slate-400 uppercase tracking-[0.2em] font-black mb-8">Side View: Volumetric Preparation</p>
+                        <div class="side-view-flask">
+                            <div class="pour-stream" id="pour-stream"></div>
+                            
+                            <!-- Thermometer Overlay (Temp Mode Only) -->
+                            <div id="thermometer" class="hidden absolute -right-4 top-10 flex flex-col items-center z-10">
+                                <div class="w-4 h-32 bg-slate-200 rounded-full border border-slate-400 relative overflow-hidden">
+                                    <div id="thermometer-fill" class="absolute bottom-0 w-full bg-red-500 transition-all duration-500" style="height: 20%"></div>
+                                </div>
+                                <div class="w-8 h-8 bg-red-500 rounded-full -mt-2 border-2 border-white shadow-md"></div>
+                                <span id="temp-display-flask" class="mt-2 font-mono font-bold text-red-600 bg-white px-2 rounded shadow text-sm">20°C</span>
+                            </div>
+
+                            <svg viewBox="0 0 200 220" class="w-full h-full">
+                                <defs>
+                                    <clipPath id="flask-clip">
+                                        <!-- New Path with Flared Rim -->
+                                        <path d="M 82 15 Q 85 20 85 25 L 85 75 L 35 200 Q 35 210 45 210 L 155 210 Q 165 210 165 200 L 115 75 L 115 25 Q 115 20 118 15 Z" />
+                                    </clipPath>
+                                </defs>
+                                
+                                <!-- Liquid is now a simple rectangle clipped by the flask shape -->
+                                <path id="side-liquid" class="liquid-side" clip-path="url(#flask-clip)" d="M0 210 L200 210 L200 220 L0 220 Z" fill="transparent" />
+                                
+                                <!-- Flask Outline (Matches Clip Path) -->
+                                <path class="flask-outline" d="M 82 15 Q 85 20 85 25 L 85 75 L 35 200 Q 35 210 45 210 L 155 210 Q 165 210 165 200 L 115 75 L 115 25 Q 115 20 118 15" />
+                                
+                                <!-- Graduations -->
+                                <line x1="105" y1="180" x2="115" y2="180" stroke="#94a3b8" stroke-width="1.5" />
+                                <line x1="100" y1="140" x2="112" y2="140" stroke="#94a3b8" stroke-width="1.5" />
+                                <line x1="95" y1="100" x2="110" y2="100" stroke="#94a3b8" stroke-width="1.5" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Top View -->
+                    <div id="top-view" class="view-transition hidden-view flex flex-col items-center">
+                        <p class="text-xs text-slate-400 uppercase tracking-[0.2em] font-black mb-8">Top View: Observing the Cross</p>
+                        <div class="flask-top-container">
+                            <div class="cross-mark">×</div>
+                            <div id="sulfur-overlay" class="sulfur-overlay"></div>
+                        </div>
+                        <div id="timer-display" class="mt-8 text-6xl font-black text-slate-800 font-mono tracking-tighter">00:00.00</div>
+                    </div>
+                </div>
+
+                <!-- Step Controls -->
+                <div id="bench-controls">
+                    
+                    <!-- Concentration Mode Controls -->
+                    <div id="conc-controls" class="grid grid-cols-2 gap-8 mb-8">
+                        <div class="space-y-6">
+                            <label class="block text-sm font-black text-slate-600 tracking-widest">Na<sub>2</sub>S<sub>2</sub>O<sub>3</sub> Volume</label>
+                            <input type="range" id="thio-slider" min="10" max="50" step="10" value="50" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                            <div class="flex justify-between items-center px-1">
+                                <span class="text-sm font-bold text-slate-400">10 cm<sup>3</sup></span>
+                                <span id="thio-label" class="text-xl font-extrabold text-indigo-600 px-2">50 cm<sup>3</sup></span>
+                                <span class="text-sm font-bold text-slate-400">50 cm<sup>3</sup></span>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <label class="block text-sm font-black text-slate-600 uppercase tracking-widest">Distilled Water</label>
+                            <div id="water-display" class="w-full py-3 bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl text-center text-xl font-extrabold text-slate-500">0 cm<sup>3</sup></div>
+                        </div>
+                    </div>
+
+                    <!-- Temperature Mode Controls -->
+                    <div id="temp-controls" class="hidden mb-8 space-y-6">
+                        <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 text-center mb-4">
+                            <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Fixed Variables</p>
+                            <p class="text-lg font-bold text-indigo-900">50 cm³ Na<sub>2</sub>S<sub>2</sub>O<sub>3</sub> + 0 cm³ Water</p>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            <label class="block text-sm font-black text-slate-600 uppercase tracking-widest">Temperature (°C)</label>
+                            <input type="range" id="temp-slider" min="10" max="70" step="10" value="20" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between items-center px-1">
+                                <span class="text-sm font-bold text-slate-400">10°C</span>
+                                <span id="temp-label" class="text-2xl font-extrabold text-red-500 bg-red-50 px-4 py-1 rounded-lg border border-red-100">20°C</span>
+                                <span class="text-sm font-bold text-slate-400">70°C</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <button id="btn-pour-thio" onclick="handlePour('thio')" class="flex-1 bg-indigo-600 text-white text-lg font-bold py-4 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95">1. Pour Thiosulfate</button>
+                            <button id="btn-pour-water" onclick="handlePour('water')" disabled class="flex-1 bg-slate-200 text-slate-400 text-lg font-bold py-4 rounded-2xl cursor-not-allowed transition-all">2. Pour Water</button>
+                        </div>
+                        <button id="btn-add-hcl" onclick="transitionAndStart()" disabled class="w-full bg-slate-200 text-slate-400 text-xl font-black py-5 rounded-2xl cursor-not-allowed transition-all shadow-md">3. Add 5 cm<sup>3</sup> HCl & Start</button>
+                    </div>
+                </div>
+
+                <button id="stop-btn" onclick="stopReaction()" class="hidden w-full bg-red-600 text-white font-black text-2xl py-6 rounded-2xl mt-4 shadow-2xl hover:bg-red-700 transition-all animate-pulse">STOP TIMER (CROSS GONE)</button>
+                <button id="reset-btn" onclick="resetLab()" class="hidden w-full bg-slate-900 text-white font-bold text-lg py-5 rounded-2xl mt-4 hover:shadow-xl transition-all">START NEW EXPERIMENT</button>
+            </div>
+        </div>
+
+        <!-- Right Column: Data Logs & Graphing -->
+        <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Table Panel -->
+            <div class="glass-panel p-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-xl">📋</span> Lab Notebook
+                        </h2>
+                        <div class="mt-2 flex gap-4 text-xs font-bold text-slate-500 tracking-tighter">
+                            <p>Stock Na<sub>2</sub>S<sub>2</sub>O<sub>3</sub>: <span class="text-indigo-600">0.25 mol dm<sup>-3</sup></span></p>
+                            <p>Stock HCl: <span class="text-indigo-600">1.0 mol dm<sup>-3</sup></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto min-h-[250px]">
+                    <table class="w-full text-left text-base">
+                        <thead id="table-head">
+                            <!-- Headers injected via JS -->
+                        </thead>
+                        <tbody id="results-body">
+                            <!-- Injected rows -->
+                        </tbody>
+                    </table>
+                    <div id="no-data" class="py-16 text-center text-slate-300 italic text-lg font-medium">Select a mode and run an experiment...</div>
+                </div>
+            </div>
+
+            <!-- Graph Panel -->
+            <div class="glass-panel p-8">
+                <div class="h-[400px] w-full">
+                    <canvas id="rateChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- State ---
+        let currentMode = 'concentration'; // 'concentration' or 'temperature'
+        let safetyOn = false;
+        
+        // Variables
+        let thioVolume = 50;
+        let waterVolume = 0;
+        let temperature = 20;
+        
+        // Simulation State
+        let currentFillTotal = 0;
+        let results = [];
+        let timerInterval;
+        let startTime;
+        let chart;
+
+        // Constants
+        const THIO_STOCK_M = 0.25; 
+        const PRE_MIX_VOL = 50; 
+        const ACID_VOL = 5; 
+        const TOTAL_VOL = PRE_MIX_VOL + ACID_VOL; // 55 cm3
+        
+        // Liquid Height Coordinates (SVG Y-axis)
+        // Base is 210, Full liquid height approx 85 for 55ml
+        const BASE_Y = 210;
+        const FULL_Y = 85; 
+
+        // --- Init ---
+        window.onload = () => {
+            initChart();
+            setMode('concentration'); // Default
+        };
+
+        // --- Mode Switching ---
+        function setMode(mode) {
+            currentMode = mode;
+            results = []; // Clear data on mode switch to prevent graph confusion
+            updateTableHeaders();
+            updateTable();
+            updateChart();
+            resetLab();
+
+            const btnConc = document.getElementById('mode-conc');
+            const btnTemp = document.getElementById('mode-temp');
+            const cControls = document.getElementById('conc-controls');
+            const tControls = document.getElementById('temp-controls');
+            const therm = document.getElementById('thermometer');
+
+            if (mode === 'concentration') {
+                btnConc.classList.add('active');
+                btnTemp.classList.remove('active');
+                cControls.classList.remove('hidden');
+                tControls.classList.add('hidden');
+                therm.classList.add('hidden');
+                
+                // Reset Slider Defaults
+                thioVolume = 50;
+                waterVolume = 0;
+                temperature = 20;
+                updateVolumeDisplay();
+            } else {
+                btnTemp.classList.add('active');
+                btnConc.classList.remove('active');
+                cControls.classList.add('hidden');
+                tControls.classList.remove('hidden');
+                therm.classList.remove('hidden');
+
+                // Fixed Volumes for Temp Mode
+                thioVolume = 50;
+                waterVolume = 0;
+                temperature = 20;
+                updateVolumeDisplay();
+                document.getElementById('temp-slider').value = 20;
+                updateTempDisplay();
+            }
+        }
+
+        // --- Input Handling ---
+        document.getElementById('thio-slider').addEventListener('input', (e) => {
+            thioVolume = parseInt(e.target.value);
+            waterVolume = PRE_MIX_VOL - thioVolume;
+            updateVolumeDisplay();
+        });
+
+        document.getElementById('temp-slider').addEventListener('input', (e) => {
+            temperature = parseInt(e.target.value);
+            updateTempDisplay();
+        });
+
+        function updateVolumeDisplay() {
+            document.getElementById('thio-label').innerHTML = thioVolume + ' cm<sup>3</sup>';
+            document.getElementById('water-display').innerHTML = waterVolume + ' cm<sup>3</sup>';
+        }
+
+        function updateTempDisplay() {
+            const label = document.getElementById('temp-label');
+            const display = document.getElementById('temp-display-flask');
+            const fill = document.getElementById('thermometer-fill');
+            
+            label.innerText = temperature + '°C';
+            display.innerText = temperature + '°C';
+            
+            // Map 10-70C to height percentage (approx 10% to 90%)
+            const height = 10 + ((temperature - 10) / 60) * 80;
+            fill.style.height = height + '%';
+        }
+
+        // --- Safety ---
+        function toggleSafety() {
+            safetyOn = !safetyOn;
+            const b1 = document.getElementById('safety-badge');
+            const b2 = document.getElementById('fume-badge');
+            const btn = document.getElementById('safety-btn');
+            
+            if (safetyOn) {
+                b1.className = "px-6 py-2.5 bg-green-500 text-white rounded-xl text-sm font-bold border border-green-600";
+                b1.innerText = "PPE: SECURE";
+                b2.className = "px-6 py-2.5 bg-green-500 text-white rounded-xl text-sm font-bold border border-green-600";
+                b2.innerText = "Fume Cupboard: ON";
+                btn.innerText = "Remove PPE";
+                btn.classList.replace('bg-indigo-600', 'bg-slate-600');
+            } else {
+                b1.className = "px-6 py-2.5 bg-slate-200 text-slate-600 rounded-xl text-sm font-bold border border-slate-300";
+                b1.innerText = "PPE: REQUIRED";
+                b2.className = "px-6 py-2.5 bg-slate-200 text-slate-600 rounded-xl text-sm font-bold border border-slate-300";
+                b2.innerText = "Fume Cupboard: OFF";
+                btn.innerText = "Equip Safety Gear";
+                btn.classList.replace('bg-slate-600', 'bg-indigo-600');
+            }
+        }
+
+        // --- Animation & Workflow ---
+        async function handlePour(type) {
+            if (!safetyOn) return showMessage("Access Denied: PPE required to handle reactants.");
+
+            const displayArea = document.getElementById('display-area');
+            if (displayArea.classList.contains('active-pour')) return;
+
+            const sideLiquid = document.getElementById('side-liquid');
+            const btnThio = document.getElementById('btn-pour-thio');
+            const btnWater = document.getElementById('btn-pour-water');
+            const btnHCl = document.getElementById('btn-add-hcl');
+
+            if (type === 'thio') {
+                btnThio.disabled = true;
+                btnThio.className = "flex-1 bg-slate-100 text-slate-300 text-lg font-bold py-4 rounded-2xl cursor-not-allowed";
+                if(currentMode === 'concentration') document.getElementById('thio-slider').disabled = true;
+                if(currentMode === 'temperature') document.getElementById('temp-slider').disabled = true;
+            } else {
+                btnWater.disabled = true;
+                btnWater.className = "flex-1 bg-slate-100 text-slate-300 text-lg font-bold py-4 rounded-2xl cursor-not-allowed";
+            }
+
+            const volumeToAdd = (type === 'thio') ? thioVolume : waterVolume;
+            const pourColor = (type === 'thio') ? "rgba(79, 70, 229, 0.4)" : "rgba(147, 197, 253, 0.4)";
+
+            displayArea.classList.add('active-pour');
+            await new Promise(r => setTimeout(r, 300));
+
+            currentFillTotal += volumeToAdd;
+            const fillHeight = BASE_Y - ((currentFillTotal / PRE_MIX_VOL) * (BASE_Y - FULL_Y));
+            
+            // Simplified Liquid Drawing (Clipped by SVG path)
+            // Draw a rectangle from bottom (220) to fillHeight. 
+            // Width is 0-200 (full width of clip area)
+            sideLiquid.setAttribute('d', `M0 ${fillHeight} L200 ${fillHeight} L200 220 L0 220 Z`);
+            sideLiquid.setAttribute('fill', pourColor);
+
+            await new Promise(r => setTimeout(r, 1200));
+            displayArea.classList.remove('active-pour');
+
+            if (type === 'thio') {
+                if (currentMode === 'temperature' || waterVolume === 0) {
+                     // In temp mode (fixed 50/0) or max conc, skip water step visually
+                    btnWater.disabled = true; 
+                    btnWater.className = "flex-1 bg-slate-100 text-slate-300 text-lg font-bold py-4 rounded-2xl cursor-not-allowed";
+                    btnHCl.disabled = false;
+                    btnHCl.className = "w-full bg-red-600 text-white text-xl font-black py-5 rounded-2xl hover:bg-red-700 shadow-lg active:scale-95 transition-all";
+                } else {
+                    btnWater.disabled = false;
+                    btnWater.className = "flex-1 bg-blue-500 text-white text-lg font-bold py-4 rounded-2xl hover:bg-blue-600 shadow-md active:scale-95 transition-all";
+                }
+            } else {
+                btnHCl.disabled = false;
+                btnHCl.className = "w-full bg-red-600 text-white text-xl font-black py-5 rounded-2xl hover:bg-red-700 shadow-lg active:scale-95 transition-all";
+            }
+        }
+
+        function transitionAndStart() {
+            const sideView = document.getElementById('side-view');
+            const topView = document.getElementById('top-view');
+            const benchControls = document.getElementById('bench-controls');
+            const stopBtn = document.getElementById('stop-btn');
+
+            sideView.classList.add('hidden-view');
+            
+            setTimeout(() => {
+                topView.classList.remove('hidden-view');
+                benchControls.classList.add('hidden');
+                stopBtn.classList.remove('hidden');
+                startReaction();
+            }, 500);
+        }
+
+        // --- Simulation Logic ---
+        function startReaction() {
+            startTime = Date.now();
+            const mixtureConc = (thioVolume * THIO_STOCK_M) / TOTAL_VOL;
+            
+            // K constant modified for 1.0M HCl (Fast Reaction)
+            const k20 = 4.5; 
+            
+            let expectedTime;
+
+            if (currentMode === 'concentration') {
+                // Rate proportional to concentration, assumed 20°C constant
+                expectedTime = k20 / mixtureConc; 
+            } else {
+                // Temperature Mode
+                // Q10 Logic: Rate doubles every 10C.
+                // Rate_T = Rate_20 * 2^((T-20)/10)
+                // Time_T = Time_20 * 0.5^((T-20)/10)
+                
+                const baseTime = k20 / mixtureConc; // Time at 20C for this conc
+                const factor = Math.pow(0.5, (temperature - 20) / 10);
+                expectedTime = baseTime * factor;
+            }
+
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / 1000;
+                updateTimerDisplay(elapsed);
+                const opacity = Math.min(elapsed / expectedTime, 1.0);
+                document.getElementById('sulfur-overlay').style.backgroundColor = `rgba(253, 224, 71, ${opacity})`;
+                if (elapsed > expectedTime * 3) stopReaction();
+            }, 10);
+        }
+
+        function updateTimerDisplay(s) {
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            const ms = Math.floor((s % 1) * 100);
+            document.getElementById('timer-display').innerText = `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}.${ms.toString().padStart(2,'0')}`;
+        }
+
+        function stopReaction() {
+            clearInterval(timerInterval);
+            const finalTime = ((Date.now() - startTime) / 1000).toFixed(2);
+            recordResult(finalTime);
+            document.getElementById('stop-btn').classList.add('hidden');
+            document.getElementById('reset-btn').classList.remove('hidden');
+        }
+
+        // --- Data & Tables ---
+        function updateTableHeaders() {
+            const thead = document.getElementById('table-head');
+            if (currentMode === 'concentration') {
+                thead.innerHTML = `
+                    <tr class="text-slate-400 border-b-2 border-slate-100 uppercase text-xs font-black tracking-widest">
+                        <th class="pb-4 px-2">Run</th>
+                        <th class="pb-4 px-2 text-indigo-600">Thio (cm<sup>3</sup>)</th>
+                        <th class="pb-4 px-2">Water (cm<sup>3</sup>)</th>
+                        <th class="pb-4 px-2">Conc (mol dm<sup>-3</sup>)</th>
+                        <th class="pb-4 px-2">Time (s)</th>
+                        <th class="pb-4 px-2 text-indigo-600">Rate (s<sup>-1</sup>)</th>
+                        <th class="pb-4 px-2">Action</th>
+                    </tr>`;
+            } else {
+                thead.innerHTML = `
+                    <tr class="text-slate-400 border-b-2 border-slate-100 uppercase text-xs font-black tracking-widest">
+                        <th class="pb-4 px-2">Run</th>
+                        <th class="pb-4 px-2 text-red-500">Temp (°C)</th>
+                        <th class="pb-4 px-2">Conc (mol dm<sup>-3</sup>)</th>
+                        <th class="pb-4 px-2">Time (s)</th>
+                        <th class="pb-4 px-2 text-indigo-600">Rate (s<sup>-1</sup>)</th>
+                        <th class="pb-4 px-2">Action</th>
+                    </tr>`;
+            }
+        }
+
+        function recordResult(time) {
+            const mixtureConc = (thioVolume * THIO_STOCK_M) / TOTAL_VOL;
+            const rate = (1 / time).toFixed(4);
+            
+            results.push({
+                thio: thioVolume,
+                water: waterVolume,
+                temp: temperature,
+                conc: parseFloat(mixtureConc.toFixed(4)),
+                time: time,
+                rate: parseFloat(rate)
+            });
+
+            updateTable();
+            updateChart();
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('results-body');
+            const noData = document.getElementById('no-data');
+            tbody.innerHTML = '';
+
+            if (results.length === 0) {
+                noData.classList.remove('hidden');
+                noData.innerText = currentMode === 'concentration' ? 
+                    "Vary concentration and measure rate..." : 
+                    "Vary temperature and measure rate...";
+            } else {
+                noData.classList.add('hidden');
+                results.forEach((r, index) => {
+                    let rowHtml = '';
+                    if (currentMode === 'concentration') {
+                        rowHtml = `
+                            <td class="py-5 px-2 font-black text-slate-300">R-${index + 1}</td>
+                            <td class="py-5 px-2 font-extrabold text-indigo-600">${r.thio}</td>
+                            <td class="py-5 px-2 font-bold">${r.water}</td>
+                            <td class="py-5 px-2 font-black text-slate-700">${r.conc.toFixed(3)}</td>
+                            <td class="py-5 px-2 font-mono text-slate-600">${r.time}s</td>
+                            <td class="py-5 px-2 font-black text-indigo-700">${r.rate}</td>`;
+                    } else {
+                        rowHtml = `
+                            <td class="py-5 px-2 font-black text-slate-300">R-${index + 1}</td>
+                            <td class="py-5 px-2 font-extrabold text-red-500">${r.temp}°C</td>
+                            <td class="py-5 px-2 font-bold text-slate-400">${r.conc.toFixed(3)}</td>
+                            <td class="py-5 px-2 font-mono text-slate-600">${r.time}s</td>
+                            <td class="py-5 px-2 font-black text-indigo-700">${r.rate}</td>`;
+                    }
+                    
+                    const row = `
+                        <tr class="border-b-2 border-slate-50 hover:bg-slate-50 transition-colors font-medium">
+                            ${rowHtml}
+                            <td class="py-5 px-2">
+                                <button onclick="deleteRun(${index})" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                </button>
+                            </td>
+                        </tr>`;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+        }
+
+        function deleteRun(index) {
+            results.splice(index, 1);
+            updateTable();
+            updateChart();
+        }
+
+        // --- Chart ---
+        function initChart() {
+            const ctx = document.getElementById('rateChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        data: [],
+                        backgroundColor: '#4f46e5',
+                        borderColor: '#4f46e5',
+                        showLine: true,
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
+                        tension: 0.2,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Concentration (mol dm⁻³)', font: { size: 14, weight: '800' } }, 
+                            grid: { color: '#f1f5f9' }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Reaction Rate (s⁻¹)', font: { size: 14, weight: '800' } }, 
+                            min: 0,
+                            grid: { color: '#f1f5f9' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            let chartData;
+            if (currentMode === 'concentration') {
+                chart.options.scales.x.title.text = 'Concentration of Na₂S₂O₃ (mol dm⁻³)';
+                chartData = results.map(r => ({ x: r.conc, y: r.rate }));
+            } else {
+                chart.options.scales.x.title.text = 'Temperature (°C)';
+                chartData = results.map(r => ({ x: r.temp, y: r.rate }));
+            }
+            
+            chartData.sort((a,b) => a.x - b.x);
+            chart.data.datasets[0].data = chartData;
+            chart.update();
+        }
+
+        function resetLab() {
+            currentFillTotal = 0;
+            const sideLiquid = document.getElementById('side-liquid');
+            sideLiquid.setAttribute('d', "M0 210 L200 210 L200 220 L0 220 Z");
+            sideLiquid.setAttribute('fill', 'transparent');
+            document.getElementById('sulfur-overlay').style.backgroundColor = "transparent";
+            document.getElementById('timer-display').innerText = "00:00.00";
+            
+            document.getElementById('reset-btn').classList.add('hidden');
+            document.getElementById('top-view').classList.add('hidden-view');
+            document.getElementById('side-view').classList.remove('hidden-view');
+            document.getElementById('bench-controls').classList.remove('hidden');
+
+            const btnThio = document.getElementById('btn-pour-thio');
+            btnThio.disabled = false;
+            btnThio.className = "flex-1 bg-indigo-600 text-white text-lg font-bold py-4 rounded-2xl hover:bg-indigo-700 shadow-lg active:scale-95 transition-all";
+            
+            if (currentMode === 'concentration') {
+                document.getElementById('thio-slider').disabled = false;
+                document.getElementById('btn-pour-water').disabled = true;
+                document.getElementById('btn-pour-water').className = "flex-1 bg-slate-200 text-slate-400 text-lg font-bold py-4 rounded-2xl cursor-not-allowed";
+            } else {
+                 document.getElementById('temp-slider').disabled = false;
+                 // In temp mode, water is unused, so disable visually
+                 document.getElementById('btn-pour-water').disabled = true;
+                 document.getElementById('btn-pour-water').className = "flex-1 bg-slate-100 text-slate-300 text-lg font-bold py-4 rounded-2xl cursor-not-allowed";
+            }
+            
+            document.getElementById('btn-add-hcl').disabled = true;
+            document.getElementById('btn-add-hcl').className = "w-full bg-slate-200 text-slate-400 text-xl font-black py-5 rounded-2xl cursor-not-allowed transition-all";
+        }
+
+        function showMessage(msg) {
+            const n = document.createElement('div');
+            n.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-10 py-5 rounded-3xl shadow-2xl z-[100] font-black tracking-wide border border-slate-700';
+            n.innerText = "🛑 " + msg;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
