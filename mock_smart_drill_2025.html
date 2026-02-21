@@ -5,38 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Drill: Mock Exams</title>
 
-<script>
+    <script>
         function checkAccess() {
-            // 1. Get the URL of the page the user just came from
-            const referrer = document.referrer.toLowerCase();
-            
-            // 2. Check if they physically clicked a link FROM your Google Site or school domain
-            const fromSchoolSite = referrer.includes("sites.google.com") || 
-                                   referrer.includes("crlghs"); // Accounts for your specific school domain
-
-            // 3. If they came from the school site, let them in and save a session token
-            if (fromSchoolSite) {
-                // We save this token so that if the student hits "Refresh" (which clears the referrer), 
-                // they don't accidentally get locked out while studying.
-                try { sessionStorage.setItem('valid_school_session', 'true'); } catch(e) {}
-                return true;
-            }
-
-            // 4. Check if they are just refreshing a page they already legally accessed
-            try {
-                if (sessionStorage.getItem('valid_school_session') === 'true') {
-                    return true;
-                }
-            } catch(e) {}
-
-            // 5. Fallback just in case you ever decide to embed it inside an iframe later
-            try {
-                if (window.self !== window.top) return true;
-            } catch (e) {
-                return true;
-            }
-
-            // If none of the above are true, they copy-pasted the link directly! Block them.
+            if (window.self !== window.top) return true;
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('access') === 'school_verified') return true;
+            if (window.location.protocol === 'blob:') return true;
             return false;
         }
 
@@ -46,7 +20,7 @@
                     <div style="background:white; padding:40px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.1); max-width:400px; margin:20px;">
                         <div style="font-size:48px; margin-bottom:16px;">🚫</div>
                         <h1 style="color:#1e293b; margin:0 0 8px 0; font-size:24px;">Link Incomplete</h1>
-                        <p style="color:#64748b; margin:0;">This resource must be accessed via the official class Google Site.</p>
+                        <p style="color:#64748b; margin:0;">This resource must be accessed via the official class link.</p>
                     </div>
                 </div>
             `;
@@ -153,14 +127,12 @@
     </div>
 
     <script>
-const smartDrillLock = {
+        const smartDrillLock = {
             PASSCODE: "chem2025", 
             init: function() {
-                try {
-                    if (sessionStorage.getItem('smart_drill_unlocked') === 'true') {
-                        document.getElementById('security-overlay').style.display = 'none';
-                    }
-                } catch(e) { /* Ignore storage blocks from Google Sites */ }
+                if (sessionStorage.getItem('smart_drill_unlocked') === 'true') {
+                    document.getElementById('security-overlay').style.display = 'none';
+                }
             },
             check: function(e) {
                 e.preventDefault();
@@ -168,7 +140,7 @@ const smartDrillLock = {
                 const errorMsg = document.getElementById('lock-error-msg');
                 const overlay = document.getElementById('security-overlay');
                 if (input.value === this.PASSCODE) {
-                    try { sessionStorage.setItem('smart_drill_unlocked', 'true'); } catch(e) {}
+                    sessionStorage.setItem('smart_drill_unlocked', 'true');
                     overlay.style.transition = "opacity 0.5s ease";
                     overlay.style.opacity = "0";
                     setTimeout(() => overlay.style.display = 'none', 500);
@@ -1059,25 +1031,17 @@ const smartDrillLock = {
                 this.renderFAB();
             }
 
-loadUserData() {
-                try {
-                    const starred = localStorage.getItem('smart_drill_starred');
-                    if (starred) this.starredQuestions = new Set(JSON.parse(starred));
-                    
-                    const completed = localStorage.getItem('smart_drill_completed');
-                    if (completed) this.completedQuestions = JSON.parse(completed);
-                } catch(e) {
-                    console.warn("Browser blocked storage inside iframe.");
-                }
+            loadUserData() {
+                const starred = localStorage.getItem('smart_drill_starred');
+                if (starred) this.starredQuestions = new Set(JSON.parse(starred));
+                
+                const completed = localStorage.getItem('smart_drill_completed');
+                if (completed) this.completedQuestions = JSON.parse(completed);
             }
 
             saveUserData() {
-                try {
-                    localStorage.setItem('smart_drill_starred', JSON.stringify([...this.starredQuestions]));
-                    localStorage.setItem('smart_drill_completed', JSON.stringify(this.completedQuestions));
-                } catch(e) {
-                    console.warn("Browser blocked storage inside iframe.");
-                }
+                localStorage.setItem('smart_drill_starred', JSON.stringify([...this.starredQuestions]));
+                localStorage.setItem('smart_drill_completed', JSON.stringify(this.completedQuestions));
             }
 
             getUniqueId(item) {
