@@ -5,12 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Drill: Mock Exams</title>
 
-    <script>
+<script>
         function checkAccess() {
-            if (window.self !== window.top) return true;
+            // 1. Allow access if it is embedded directly in the Google Site
+            try {
+                if (window.self !== window.top) return true;
+            } catch (e) {
+                return true; // Cross-origin block means it's successfully embedded
+            }
+
+            // 2. Allow access if the URL has the correct "key" parameter
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('access') === 'school_verified') return true;
-            if (window.location.protocol === 'blob:') return true;
+            if (urlParams.get('access') === 'school_verified') {
+                return true;
+            }
+
+            // If neither condition is met, block access
             return false;
         }
 
@@ -20,7 +30,7 @@
                     <div style="background:white; padding:40px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.1); max-width:400px; margin:20px;">
                         <div style="font-size:48px; margin-bottom:16px;">🚫</div>
                         <h1 style="color:#1e293b; margin:0 0 8px 0; font-size:24px;">Link Incomplete</h1>
-                        <p style="color:#64748b; margin:0;">This resource must be accessed via the official class link.</p>
+                        <p style="color:#64748b; margin:0;">This resource must be accessed via the official class Google Site.</p>
                     </div>
                 </div>
             `;
@@ -127,12 +137,14 @@
     </div>
 
     <script>
-        const smartDrillLock = {
+const smartDrillLock = {
             PASSCODE: "chem2025", 
             init: function() {
-                if (sessionStorage.getItem('smart_drill_unlocked') === 'true') {
-                    document.getElementById('security-overlay').style.display = 'none';
-                }
+                try {
+                    if (sessionStorage.getItem('smart_drill_unlocked') === 'true') {
+                        document.getElementById('security-overlay').style.display = 'none';
+                    }
+                } catch(e) { /* Ignore storage blocks from Google Sites */ }
             },
             check: function(e) {
                 e.preventDefault();
@@ -140,7 +152,7 @@
                 const errorMsg = document.getElementById('lock-error-msg');
                 const overlay = document.getElementById('security-overlay');
                 if (input.value === this.PASSCODE) {
-                    sessionStorage.setItem('smart_drill_unlocked', 'true');
+                    try { sessionStorage.setItem('smart_drill_unlocked', 'true'); } catch(e) {}
                     overlay.style.transition = "opacity 0.5s ease";
                     overlay.style.opacity = "0";
                     setTimeout(() => overlay.style.display = 'none', 500);
@@ -1031,17 +1043,25 @@
                 this.renderFAB();
             }
 
-            loadUserData() {
-                const starred = localStorage.getItem('smart_drill_starred');
-                if (starred) this.starredQuestions = new Set(JSON.parse(starred));
-                
-                const completed = localStorage.getItem('smart_drill_completed');
-                if (completed) this.completedQuestions = JSON.parse(completed);
+loadUserData() {
+                try {
+                    const starred = localStorage.getItem('smart_drill_starred');
+                    if (starred) this.starredQuestions = new Set(JSON.parse(starred));
+                    
+                    const completed = localStorage.getItem('smart_drill_completed');
+                    if (completed) this.completedQuestions = JSON.parse(completed);
+                } catch(e) {
+                    console.warn("Browser blocked storage inside iframe.");
+                }
             }
 
             saveUserData() {
-                localStorage.setItem('smart_drill_starred', JSON.stringify([...this.starredQuestions]));
-                localStorage.setItem('smart_drill_completed', JSON.stringify(this.completedQuestions));
+                try {
+                    localStorage.setItem('smart_drill_starred', JSON.stringify([...this.starredQuestions]));
+                    localStorage.setItem('smart_drill_completed', JSON.stringify(this.completedQuestions));
+                } catch(e) {
+                    console.warn("Browser blocked storage inside iframe.");
+                }
             }
 
             getUniqueId(item) {
