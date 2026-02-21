@@ -5,12 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Drill: Mock Exams</title>
 
-    <script>
-        function checkAccess() {
-            if (window.self !== window.top) return true;
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('access') === 'school_verified') return true;
-            if (window.location.protocol === 'blob:') return true;
+function checkAccess() {
+            try {
+                // Check if the page is running inside an iframe
+                const isFramed = window.self !== window.top;
+                
+                // Check if the parent page is a Google Site
+                const isGoogleSite = document.referrer.includes("sites.google.com") || document.referrer.includes("googleusercontent.com");
+                
+                if (isFramed && isGoogleSite) {
+                    return true;
+                }
+            } catch (e) {
+                // If a browser blocks access to window.top due to cross-origin security,
+                // it means it's successfully embedded in a different domain (like your Google Site).
+                return true; 
+            }
+            
             return false;
         }
 
