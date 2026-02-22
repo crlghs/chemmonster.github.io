@@ -169,32 +169,16 @@
                 </h1>
             </div>
             
-            <div class="flex items-center gap-4">
-                 <input type="file" id="pdf-upload" multiple accept=".pdf" class="hidden">
-                 <button onclick="document.getElementById('pdf-upload').click()" class="hidden text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors flex items-center gap-2">
-                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                     Add Papers
-                 </button>
-            </div>
         </div>
     </header>
 
-    <div class="flex-1 flex overflow-hidden">
-        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-10 print:hidden shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
+<div class="flex-1 flex overflow-hidden">
+        <!-- Sidebar Filters -->
+        <aside id="main-sidebar" class="w-72 bg-white border-r border-slate-200 flex flex-col z-10 print:hidden shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] transition-all duration-300">
             <div class="p-4 border-b border-slate-100">
-                <div class="flex justify-end items-center mb-2">
+                <div class="flex justify-between items-center mb-2">
+                    <div id="source-label" class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Source: Embedded</div>
                     <span id="total-questions" class="text-[10px] font-medium px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100">0 Qs</span>
-                </div>
-                
-                <div class="mb-2">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1" id="source-label">Source</label>
-                    <input type="file" id="csv-upload" accept=".csv" class="block w-full text-xs text-slate-500
-                        file:mr-2 file:py-1.5 file:px-3
-                        file:rounded-md file:border-0
-                        file:text-[10px] file:font-semibold
-                        file:bg-indigo-50 file:text-indigo-700
-                        hover:file:bg-indigo-100 cursor-pointer
-                    "/>
                 </div>
             </div>
             
@@ -265,12 +249,24 @@
             </div>
         </aside>
 
+<!-- Main Content -->
         <main class="flex-1 bg-slate-50/50 flex flex-col overflow-hidden relative print:hidden">
-            <div class="px-6 pt-4 pb-2">
-                 <div class="flex justify-between items-end mb-3">
-                    <div>
-                        <h2 class="text-xl font-bold text-slate-800 tracking-tight">Question Bank</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Take control of your revision! Use the Star (<span class="text-yellow-500 font-bold">★</span>) to bookmark tricky questions, and hit Completed (<span class="text-emerald-500 font-bold">✓</span>) to track progress.</p>
+            <!-- UPDATED: Table Header with Action Buttons & Sidebar Toggle -->
+            <div class="px-6 pt-4 pb-3">
+                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2 border-b border-slate-200 pb-3">
+                    <div class="flex items-start gap-3">
+                        <!-- Toggle Sidebar Button -->
+                        <button onclick="document.getElementById('main-sidebar').classList.toggle('hidden')" class="mt-0.5 p-2 bg-white border border-slate-200 shadow-sm text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Toggle Sidebar">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        </button>
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800 tracking-tight">Question Bank</h2>
+                            <p class="text-xs text-slate-500 mt-0.5 max-w-2xl">Take control of your revision! Use the Star (<span class="text-yellow-500 font-bold">★</span>) to bookmark tricky questions, and hit Completed (<span class="text-emerald-500 font-bold">✓</span>) to track your progress.</p>
+                        </div>
+                    </div>
+                    <!-- Moved Action Buttons Container -->
+                    <div id="action-buttons-container" class="flex shrink-0 min-h-[36px]">
+                        <!-- Rendered by JS -->
                     </div>
                  </div>
             </div>
@@ -315,7 +311,6 @@
                 </div>
             </div>
             
-            <div id="fab-container" class="fixed bottom-10 right-6 flex flex-col items-end gap-2 pointer-events-none z-50 [&>*]:pointer-events-auto"></div>
         </main>
     </div>
 
@@ -326,7 +321,7 @@
                 <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center print:hidden">
                     <h3 class="text-lg font-semibold leading-6 text-slate-900" id="modal-title">Generated Quiz Paper</h3>
                     <div class="flex gap-2">
-                        <button onclick="window.print()" class="inline-flex justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500">🖨️ Print / Save PDF</button>
+                        <button onclick="smartDrill.printQuiz()" class="inline-flex justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500">🖨️ Print / Save PDF</button>
                         <button onclick="smartDrill.closeQuizModal()" class="text-slate-400 hover:text-slate-600 p-2"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
                     </div>
                 </div>
@@ -367,13 +362,14 @@
                             <h3 class="text-lg font-bold leading-6 text-slate-800" id="image-modal-title">Question View</h3>
                             <div class="flex items-center gap-3">
                                 <button id="modal-answer-btn" class="hidden text-slate-500 hover:text-indigo-600 transition-colors font-medium text-xs px-2 py-1 bg-slate-100 rounded border border-slate-200 mr-2 flex items-center gap-1" title="Show Answer"></button>
-                                <button id="modal-check-btn" onclick="smartDrill.toggleCompleteFromModal()" class="text-slate-300 hover:text-emerald-500 transition-colors transform hover:scale-110 flex items-center gap-1" title="Mark as Completed">
+<button id="modal-check-btn" onclick="smartDrill.toggleCompleteFromModal()" class="text-slate-300 transition-colors flex items-center gap-1 p-1" title="Mark as Completed">
                                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                     <span class="text-xs font-bold uppercase tracking-wide">Done</span>
                                 </button>
-                                <button id="modal-star-btn" onclick="smartDrill.toggleStarFromModal()" class="text-slate-300 hover:text-yellow-400 transition-colors transform hover:scale-110" title="Mark for review">
+                                <button id="modal-star-btn" onclick="smartDrill.toggleStarFromModal()" class="text-slate-300 transition-colors p-1" title="Mark for review">
                                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>
                                 </button>
+
                                 <button onclick="smartDrill.closeImageModal()" class="text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 rounded-full p-1 ml-2">
                                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
@@ -395,6 +391,21 @@
                         <div class="text-center mt-2 text-xs text-slate-400 hidden sm:block">Tip: Use Left/Right arrow keys to navigate</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+<!-- Custom Confirm Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="smartDrill.cancelToggleAllCompleted()"></div>
+        <div class="relative bg-white rounded-xl shadow-xl p-6 max-w-sm w-full text-center border border-slate-200 z-10 transform transition-all animate-bounce-in">
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Are you sure?</h3>
+            <p id="confirm-modal-text" class="text-sm text-slate-500 mb-6">Mark X visible questions as Completed?</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="smartDrill.cancelToggleAllCompleted()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-colors w-full">Cancel</button>
+                <button onclick="smartDrill.confirmToggleAllCompleted()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-lg transition-colors shadow-md w-full">Yes, do it</button>
             </div>
         </div>
     </div>
@@ -989,16 +1000,11 @@
                 this.init();
             }
 
-            init() {
+init() {
                 this.loadUserData();
-                document.getElementById('csv-upload').addEventListener('change', (e) => this.handleFileUpload(e));
-                document.getElementById('pdf-upload').addEventListener('change', (e) => this.handlePdfUpload(e));
                 
                 // LOAD EMBEDDED DATA
                 this.processCSVData(EMBEDDED_CSV_DATA);
-                
-                const label = document.getElementById('source-label');
-                if(label) label.innerHTML = "Source <span class='text-emerald-500 font-bold normal-case ml-1 text-[10px]'>(Embedded 2021-25)</span>";
 
                 // Keyboard Nav
                 document.addEventListener('keydown', (e) => {
@@ -1028,7 +1034,7 @@
 
                 this.applyFilters();
                 this.renderFilters();
-                this.renderFAB();
+                this.renderActionButtons();
             }
 
             loadUserData() {
@@ -1068,27 +1074,49 @@
                 this.renderTable();
             }
 
+// Bulk Toggle Completed (Custom Modal Version)
             toggleAllCompletedVisible(checkbox) {
-                const isChecking = checkbox.checked;
-                const action = isChecking ? "Completed" : "Incomplete";
-                
-                if (!confirm(`Are you sure you want to mark ${this.filteredData.length} visible questions as ${action}?`)) {
-                    checkbox.checked = !isChecking;
-                    return;
-                }
+                // Store the pending action in memory
+                this.pendingToggleAll = {
+                    isChecking: checkbox.checked,
+                    checkboxElement: checkbox
+                };
 
+                const count = this.filteredData.length;
+                const actionText = checkbox.checked ? "Completed" : "Incomplete";
+                
+                // Update text and show our custom modal
+                document.getElementById('confirm-modal-text').innerText = `Mark ${count} visible questions as ${actionText}?`;
+                document.getElementById('confirm-modal').classList.remove('hidden');
+            }
+
+            confirmToggleAllCompleted() {
+                if (!this.pendingToggleAll) return;
+
+                const isChecking = this.pendingToggleAll.isChecking;
                 const now = Date.now();
+                
                 this.filteredData.forEach(item => {
                     const uid = this.getUniqueId(item);
-                    if (isChecking) {
-                        if (!this.completedQuestions[uid]) this.completedQuestions[uid] = now;
-                    } else {
-                        if (this.completedQuestions[uid]) delete this.completedQuestions[uid];
-                    }
+                    if (isChecking) { if (!this.completedQuestions[uid]) this.completedQuestions[uid] = now; }
+                    else { if (this.completedQuestions[uid]) delete this.completedQuestions[uid]; }
                 });
                 
                 this.saveUserData();
                 this.renderTable();
+                
+                // Hide modal and clear memory
+                document.getElementById('confirm-modal').classList.add('hidden');
+                this.pendingToggleAll = null;
+            }
+
+            cancelToggleAllCompleted() {
+                if (this.pendingToggleAll) {
+                    // Revert the checkbox visually since they cancelled
+                    this.pendingToggleAll.checkboxElement.checked = !this.pendingToggleAll.isChecking;
+                    this.pendingToggleAll = null;
+                }
+                document.getElementById('confirm-modal').classList.add('hidden');
             }
 
             toggleStarredFilter() {
@@ -1413,7 +1441,7 @@
                     this.applySort();
                 }
                 this.updateStats();
-                this.renderFAB();
+                this.renderActionButtons();
             }
 
             renderTable() {
@@ -1483,7 +1511,7 @@
 
             toggleSelection(id) {
                 if (this.selectedQuestions.has(id)) { this.selectedQuestions.delete(id); } else { this.selectedQuestions.add(id); }
-                this.renderFAB();
+                this.renderActionButtons();
             }
 
             toggleAllDisplay(checkbox) {
@@ -1500,7 +1528,7 @@
                         if(rowCheckbox) rowCheckbox.checked = false;
                     }
                 });
-                this.renderFAB();
+                this.renderActionButtons();
             }
 
             // --- REVIEW SUMMARY ---
@@ -1660,26 +1688,14 @@
                 setTimeout(() => { document.getElementById('single-question-img').src = ''; }, 200);
             }
 
-            renderFAB() {
-                const fabContainer = document.getElementById('fab-container');
-                const count = this.selectedQuestions.size;
-                
-                if (count > 0) {
-                    fabContainer.innerHTML = `
-                        <div class="flex flex-col gap-3 items-end animate-bounce-in">
-                            <button onclick="smartDrill.showReviewSummary()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 text-xs font-bold rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 group border-2 border-white/20 backdrop-blur-sm">
-                                <svg class="w-4 h-4 text-emerald-100 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Review Answers
-                            </button>
-                            <button onclick="smartDrill.generateQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-xs font-bold rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 group border-2 border-white/20 backdrop-blur-sm">
-                                <svg class="w-4 h-4 text-indigo-100 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                Generate Quiz (${count})
-                            </button>
-                        </div>`;
-                } else {
-                    fabContainer.innerHTML = '';
-                }
-            }
+renderActionButtons() {
+            const container = document.getElementById('action-buttons-container');
+            if (!container) return;
+            const count = this.selectedQuestions.size;
+            container.innerHTML = count > 0 
+                ? `<div class="flex gap-2 animate-fade-in"><button onclick="smartDrill.generateQuiz()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold rounded shadow-sm transition-colors flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Generate Quiz (${count})</button><button onclick="smartDrill.showReviewSummary()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold rounded shadow-sm transition-colors flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> Review (${count})</button></div>` 
+                : `<span class="text-xs text-slate-400 font-medium px-3 py-2 bg-slate-100 rounded border border-slate-200">Select questions to start</span>`;
+        }
 
             generateQuiz() {
                 const container = document.getElementById('quiz-content');
@@ -1729,6 +1745,47 @@
                     questionCounter++;
                 }
                 document.getElementById('quiz-modal').classList.remove('hidden');
+            }
+printQuiz() {
+                if (window.self !== window.top) {
+                    // We are in Google Sites (iframe) and printing is blocked.
+                    // Solution: Open the quiz in a new tab to print it!
+                    const printWindow = window.open('', '_blank');
+                    if (!printWindow) {
+                        alert("⚠️ Popup Blocked! Please allow pop-ups for this site to print the quiz.");
+                        return;
+                    }
+                    
+                    const content = document.getElementById('quiz-content').innerHTML;
+                    
+                    printWindow.document.write(`
+                        <html>
+                        <head>
+                            <title>Print Quiz</title>
+                            <script src="https://cdn.tailwindcss.com"><\/script>
+                            <style>
+                                body { font-family: sans-serif; padding: 20px; background: white; color: black; }
+                                .quiz-item { margin-bottom: 2rem; padding: 1.5rem; page-break-inside: avoid; }
+                                .quiz-header { font-weight: bold; color: #64748b; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 14px; }
+                                img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+                            </style>
+                        </head>
+                        <body>
+                            ${content}
+                            <script>
+                                // Wait 1 second for the images to load in the new tab, then open print dialog
+                                setTimeout(() => {
+                                    window.print();
+                                }, 1000);
+                            <\/script>
+                        </body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                } else {
+                    // Running normally in a full window, standard print works
+                    window.print();
+                }
             }
 
             closeQuizModal() { document.getElementById('quiz-modal').classList.add('hidden'); }
