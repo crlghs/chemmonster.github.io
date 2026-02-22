@@ -362,13 +362,13 @@
                             <h3 class="text-lg font-bold leading-6 text-slate-800" id="image-modal-title">Question View</h3>
                             <div class="flex items-center gap-3">
                                 <button id="modal-answer-btn" class="hidden text-slate-500 hover:text-indigo-600 transition-colors font-medium text-xs px-2 py-1 bg-slate-100 rounded border border-slate-200 mr-2 flex items-center gap-1" title="Show Answer"></button>
-<button id="modal-check-btn" onclick="smartDrill.toggleCompleteFromModal()" class="text-slate-300 transition-colors p-1" title="Mark as Completed">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                            </button>
-                            
-                            <button id="modal-star-btn" onclick="smartDrill.toggleStarFromModal()" class="text-slate-300 transition-colors p-1" title="Mark for review">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>
-                            </button>
+                                <button id="modal-check-btn" onclick="smartDrill.toggleCompleteFromModal()" class="text-slate-300 hover:text-emerald-500 transition-colors transform hover:scale-110 flex items-center gap-1" title="Mark as Completed">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    <span class="text-xs font-bold uppercase tracking-wide">Done</span>
+                                </button>
+                                <button id="modal-star-btn" onclick="smartDrill.toggleStarFromModal()" class="text-slate-300 hover:text-yellow-400 transition-colors transform hover:scale-110" title="Mark for review">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>
+                                </button>
                                 <button onclick="smartDrill.closeImageModal()" class="text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 rounded-full p-1 ml-2">
                                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
