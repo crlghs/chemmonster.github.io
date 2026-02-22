@@ -5,22 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Drill: Mock Exams</title>
 
-<script>
+<!-- ========================================= -->
+    <!-- START: STRICT FRAME GUARD                 -->
+    <!-- ========================================= -->
+    <script>
         function checkAccess() {
-            // 1. Allow access if it is embedded directly in the Google Site
-            try {
-                if (window.self !== window.top) return true;
-            } catch (e) {
-                return true; // Cross-origin block means it's successfully embedded
-            }
+            // 1. PASS ONLY if we are inside a frame (Google Site Embed)
+            if (window.self !== window.top) return true;
 
-            // 2. Allow access if the URL has the correct "key" parameter
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('access') === 'school_verified') {
-                return true;
-            }
+            // 2. PASS if in Preview Mode (Blob) - just for testing
+            if (window.location.protocol === 'blob:') return true;
 
-            // If neither condition is met, block access
+            // 3. FAIL in all other cases (including Pop-outs and Direct Links)
             return false;
         }
 
@@ -29,14 +25,18 @@
                 <div style="height:100vh; display:flex; align-items:center; justify-content:center; background:#f1f5f9; font-family:sans-serif; text-align:center;">
                     <div style="background:white; padding:40px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.1); max-width:400px; margin:20px;">
                         <div style="font-size:48px; margin-bottom:16px;">🚫</div>
-                        <h1 style="color:#1e293b; margin:0 0 8px 0; font-size:24px;">Link Incomplete</h1>
-                        <p style="color:#64748b; margin:0;">This resource must be accessed via the official class Google Site.</p>
+                        <h1 style="color:#1e293b; margin:0 0 8px 0; font-size:24px;">Access Denied</h1>
+                        <p style="color:#64748b; margin:0;">This resource cannot be opened in a new tab.</p>
+                        <p style="color:#64748b; margin-top:12px; font-size:14px; line-height:1.5;">Please return to the <b>School Google Site</b> and view it directly on the page.</p>
                     </div>
                 </div>
             `;
-            throw new Error("Access Denied");
+            throw new Error("Access Denied: Strict Frame Guard Active");
         }
     </script>
+    <!-- ========================================= -->
+    <!-- END: STRICT FRAME GUARD                   -->
+    <!-- ========================================= -->
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
