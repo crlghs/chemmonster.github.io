@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specific Heat Capacity Virtual Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- MathJax for rendering LaTeX formulas -->
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+        
+        /* Custom range slider styling for Module C */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -8px; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #475569; border-radius: 2px; }
+        input[type=range]:disabled::-webkit-slider-thumb { background: #64748b; cursor: not-allowed; }
+        input[type=range]:disabled::-webkit-slider-runnable-track { cursor: not-allowed; }
+        
+        /* Tab styling */
+        .tab-btn { transition: all 0.2s ease; border-bottom: 2px solid transparent; }
+        .tab-btn.active { background-color: #3b82f6; color: white; border-color: #60a5fa; }
+        .tab-btn:not(.active) { background-color: transparent; color: #94a3b8; border-color: #475569; }
+        .tab-btn:not(.active):hover { color: #f8fafc; border-color: #94a3b8; }
+        
+        /* Disable text selection on fast-clicking buttons */
+        .no-select { user-select: none; -webkit-user-select: none; }
+
+        /* Push Panel Layout CSS */
+        #main-content-area {
+            transition: padding-right 0.3s ease-in-out;
+        }
+        @media (min-width: 1024px) {
+            body.side-quiz-active #main-content-area {
+                padding-right: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen overflow-x-hidden relative">
+
+    <!-- Main Container that shrinks when panel opens -->
+    <div id="main-content-area" class="w-full p-4 md:p-8 min-h-screen">
+        <div class="max-w-7xl mx-auto space-y-6">
+            
+            <!-- Global Navigation -->
+            <nav class="flex flex-col sm:flex-row gap-2 border-b border-slate-700 pb-6">
+                <button onclick="switchTab('A')" id="tab-A" class="tab-btn active px-6 py-3 rounded-t-lg font-bold text-sm sm:text-base tracking-wide flex-1 text-center">
+                    Module A: The Definition
+                </button>
+                <button onclick="switchTab('B')" id="tab-B" class="tab-btn px-6 py-3 rounded-t-lg font-bold text-sm sm:text-base tracking-wide flex-1 text-center">
+                    Module B: The Race
+                </button>
+                <button onclick="switchTab('C')" id="tab-C" class="tab-btn px-6 py-3 rounded-t-lg font-bold text-sm sm:text-base tracking-wide flex-1 text-center">
+                    Module C: The Variables
+                </button>
+            </nav>
+
+            <!-- ========================================== -->
+            <!-- MODULE A: THE DEFINITION EXPLORER          -->
+            <!-- ========================================== -->
+            <div id="container-A" class="module-container space-y-6">
+                <header class="border-b border-slate-800 pb-4">
+                    <h2 class="text-3xl font-bold text-blue-400">Module A: The Definition Explorer</h2>
+                    <p class="text-slate-400 mt-1">Goal: Discover the energy (<strong class="text-yellow-400">Q</strong>) required to raise <strong class="text-white">1 kg</strong> of material by exactly <strong class="text-red-400">1 °C</strong>.</p>
+                </header>
+                
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                    <div class="md:col-span-5 lg:col-span-4 bg-slate-800 p-6 rounded-xl border border-slate-700 flex flex-col items-center justify-center shadow-xl">
+                        <canvas id="modA_canvas" width="260" height="340"></canvas>
+                    </div>
+                    
+                    <div class="md:col-span-7 lg:col-span-8 space-y-6 flex flex-col justify-center">
+                        <div class="glass-panel p-6 rounded-xl border border-slate-700 space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Target Material (1 kg)</label>
+                                <select id="modA_select" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition-colors">
+                                    <option value="water">Water</option>
+                                    <option value="aluminum">Aluminum</option>
+                                    <option value="iron">Iron</option>
+                                    <option value="copper">Copper</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-slate-900/80 p-5 rounded-lg border border-slate-700 text-center">
+                                    <div class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-1">Energy Added</div>
+                                    <div id="modA_q" class="text-4xl font-mono text-yellow-400 font-bold">0 J</div>
+                                </div>
+                                <div class="bg-slate-900/80 p-5 rounded-lg border border-slate-700 text-center">
+                                    <div class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-1">Temp Change</div>
+                                    <div id="modA_t" class="text-4xl font-mono text-red-400 font-bold">0.00 °C</div>
+                                </div>
+                            </div>
+
+                            <button id="modA_btn" class="no-select w-full bg-red-600 hover:bg-red-500 text-white font-bold py-5 rounded-xl text-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                ADD HEAT ENERGY
+                            </button>
+                            <p class="text-center text-xs text-slate-500">Tap repeatedly to inject heat. Watch how the temperature responds!</p>
+
+                            <div id="modA_msg" class="hidden p-5 bg-emerald-900/40 border border-emerald-500 text-emerald-300 rounded-lg text-center text-lg shadow-inner">
+                                Success! It took exactly <span id="modA_final_q" class="font-bold text-white text-xl"></span> Joules to raise 1 kg of <span id="modA_mat_name" class="font-bold text-white"></span> by 1°C.<br>
+                                <span class="text-sm block mt-2 opacity-80">This value is known as its <strong>Specific Heat Capacity (c)</strong>.</span>
+                            </div>
+
+                            <!-- Results Table -->
+                            <div id="modA_table_container" class="hidden mt-4">
+                                <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Recorded Results</h4>
+                                <div class="rounded-lg border border-slate-700 overflow-hidden">
+                                    <table class="w-full text-sm text-left text-slate-300">
+                                        <thead class="bg-slate-800 text-xs uppercase text-slate-400">
+                                            <tr>
+                                                <th class="px-4 py-3">Material</th>
+                                                <th class="px-4 py-3">Energy Required (J)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="modA_results_body" class="divide-y divide-slate-700 bg-slate-900/50">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Step-by-Step Modal Trigger (Mod A) -->
+                        <div class="mt-4 text-center">
+                            <button onclick="openTheoryModal()" class="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-3 mx-auto w-full md:w-auto border border-blue-400">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                Review Theory & Take Quiz
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- MODULE B: THE RACE                         -->
+            <!-- ========================================== -->
+            <div id="container-B" class="module-container hidden space-y-6">
+                <header class="border-b border-slate-800 pb-4">
+                    <h2 class="text-3xl font-bold text-blue-400">Module B: The Race</h2>
+                    <p class="text-slate-400 mt-1">Compare how two different materials (<strong class="text-white">1 kg each</strong>) heat up under the exact same <strong class="text-orange-400">500W</strong> power source.</p>
+                </header>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-4 xl:col-span-3 space-y-6">
+                        <div class="glass-panel p-5 rounded-xl border border-slate-700 shadow-xl space-y-5">
+                            <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 flex justify-between items-center">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Mass</span>
+                                <span class="font-mono text-blue-400 font-bold">1.0 kg (Each)</span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-400 mb-3">Select Racers (1-4)</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" class="modB_check w-4 h-4 text-blue-600 bg-slate-900 border-slate-600 rounded focus:ring-blue-500" value="water" checked>
+                                        <span class="text-sm font-medium text-slate-300">Water</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" class="modB_check w-4 h-4 text-blue-600 bg-slate-900 border-slate-600 rounded focus:ring-blue-500" value="aluminum" checked>
+                                        <span class="text-sm font-medium text-slate-300">Aluminum</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" class="modB_check w-4 h-4 text-blue-600 bg-slate-900 border-slate-600 rounded focus:ring-blue-500" value="iron">
+                                        <span class="text-sm font-medium text-slate-300">Iron</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" class="modB_check w-4 h-4 text-blue-600 bg-slate-900 border-slate-600 rounded focus:ring-blue-500" value="copper">
+                                        <span class="text-sm font-medium text-slate-300">Copper</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-4 space-y-3">
+                                <button id="modB_btn" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-lg shadow-lg transition-colors">
+                                    START RACE
+                                </button>
+                                <button id="modB_reset" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-2 rounded-lg transition-colors">
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-xl flex justify-center w-full overflow-hidden">
+                            <canvas id="modB_canvas" width="480" height="200" style="max-width: 100%; height: auto;"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="lg:col-span-8 xl:col-span-9 glass-panel p-6 rounded-xl border border-slate-700 shadow-xl flex flex-col h-[400px] md:h-[500px]">
+                        
+                        <!-- Quiz Trigger for Mod B -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 border-b border-slate-700 pb-3">
+                            <h3 class="text-sm uppercase tracking-widest text-slate-400 font-bold">Heating Curves</h3>
+                            <button onclick="openSideQuiz('B')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded shadow transition-transform active:scale-95 flex items-center gap-2 text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                Take Module B Quiz
+                            </button>
+                        </div>
+
+                        <div class="relative flex-grow">
+                            <canvas id="modB_chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- MODULE C: THE VARIABLES LAB                -->
+            <!-- ========================================== -->
+            <div id="container-C" class="module-container hidden space-y-6">
+                <header class="border-b border-slate-800 pb-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-blue-400">Module C: The Variables Lab</h2>
+                        <p class="text-slate-400 mt-1">Experiment with Mass and Power to see how they alter the trajectory of the heating curve.</p>
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 text-center min-w-[150px]">
+                        <div class="text-xs text-slate-400 uppercase tracking-wide">Equation</div>
+                        <div class="font-mono text-yellow-400 font-bold text-lg flex items-center justify-center gap-2 mt-1">
+                            <span>ΔT =</span><div class="flex flex-col items-center text-sm"><span class="border-b border-yellow-400 px-1 leading-none pb-0.5">Q</span><span class="leading-none pt-0.5">mc</span></div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Left Panel -->
+                    <div class="lg:col-span-4 xl:col-span-3 space-y-6">
+                        <div class="glass-panel p-5 rounded-xl border border-slate-700 shadow-xl space-y-5">
+                            <div>
+                                <label class="flex justify-between text-sm font-semibold mb-2 text-slate-300">
+                                    <span>Material</span>
+                                </label>
+                                <select id="modC_select" class="w-full bg-slate-900 rounded px-3 py-2 outline-none border border-slate-600 focus:border-blue-500">
+                                    <option value="water">Water</option>
+                                    <option value="aluminum">Aluminum</option>
+                                    <option value="iron">Iron</option>
+                                    <option value="copper">Copper</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="flex justify-between text-sm font-semibold mb-2">
+                                    <span>Mass</span>
+                                    <span id="modC_lbl_mass" class="text-blue-400 font-mono">1.0 kg</span>
+                                </label>
+                                <input type="range" id="modC_mass" min="0.5" max="5.0" step="0.5" value="1.0">
+                            </div>
+                            <div>
+                                <label class="flex justify-between text-sm font-semibold mb-2">
+                                    <span>Heater Power (Constant)</span>
+                                    <span class="text-orange-400 font-mono">1000 W</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="flex justify-between text-sm font-semibold mb-2">
+                                    <span>Duration</span>
+                                    <span id="modC_lbl_dur" class="text-purple-400 font-mono">10 s</span>
+                                </label>
+                                <input type="range" id="modC_dur" min="10" max="120" step="10" value="10">
+                            </div>
+                            <div class="pt-2">
+                                <button id="modC_btn" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-all">
+                                    IGNITE HEATER
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-xl flex flex-col items-center justify-center relative overflow-hidden">
+                            <canvas id="modC_canvas" width="200" height="240" class="rounded-lg z-10"></canvas>
+                            <div class="mt-4 flex justify-between w-full px-2 z-10">
+                                <div class="text-center">
+                                    <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Time</div>
+                                    <div id="modC_time" class="font-mono text-lg text-white">0.0s</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Energy</div>
+                                    <div id="modC_energy" class="font-mono text-lg text-yellow-400">0 J</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel -->
+                    <div class="lg:col-span-8 xl:col-span-9 glass-panel p-6 rounded-xl border border-slate-700 shadow-xl flex flex-col">
+                        
+                        <!-- Quiz Trigger for Mod C -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 border-b border-slate-700 pb-3">
+                            <h3 class="text-sm uppercase tracking-widest text-slate-400 font-bold">Live Heating Curve Overlay</h3>
+                            <div class="flex items-center gap-4">
+                                <button id="modC_reset" class="text-sm text-slate-400 hover:text-white underline">Clear Graph</button>
+                                <button onclick="openSideQuiz('C')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded shadow transition-transform active:scale-95 flex items-center gap-2 text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                    Take Module C Quiz
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="relative flex-grow h-[350px] md:h-[450px]">
+                            <canvas id="modC_chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div> <!-- End Main Content Area -->
+
+
+    <!-- ========================================== -->
+    <!-- OVERLAYS AND MODALS                        -->
+    <!-- ========================================== -->
+
+    <!-- Module A: Center Screen Theory Modal -->
+    <div id="theory-modal-overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-900/50 rounded-t-2xl">
+                <h3 id="modal-title" class="text-xl font-bold text-blue-400">Theory & Knowledge Check</h3>
+                <button onclick="closeTheoryModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="modal-content-area" class="p-6 md:p-8 overflow-y-auto flex-grow text-slate-200">
+                <!-- Dynamic content injected here via JS -->
+            </div>
+            <div class="p-5 border-t border-slate-700 bg-slate-900/50 rounded-b-2xl flex justify-between items-center">
+                <span id="modal-progress" class="text-sm font-bold tracking-wider text-slate-400 uppercase">Step 1 of 6</span>
+                <button id="modal-next-btn" onclick="nextModalStep()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-colors shadow-lg active:scale-95">Begin Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modules B & C: Slide-Out Side Panel Quiz -->
+    <div id="side-quiz-panel" class="fixed top-0 right-0 h-full w-full sm:w-[400px] max-w-[100vw] bg-slate-800 border-l border-slate-700 shadow-2xl transform translate-x-full transition-transform duration-300 z-40 flex flex-col">
+        <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
+            <h3 id="side-quiz-title" class="text-xl font-bold text-blue-400">Module Quiz</h3>
+            <button onclick="closeSideQuiz()" class="text-slate-400 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="side-quiz-content" class="p-6 overflow-y-auto flex-grow">
+            <!-- Questions injected here dynamically -->
+        </div>
+    </div>
+
+
+    <script>
+        // ==========================================
+        // SHARED PHYSICS & RENDERING ENGINE
+        // ==========================================
+        const MATERIALS = {
+            water: { name: "Water", c: 4184, base: [52, 152, 219], type: 'liquid' },
+            aluminum: { name: "Aluminum", c: 900, base: [149, 165, 166], type: 'solid' },
+            iron: { name: "Iron", c: 450, base: [127, 140, 141], type: 'solid' },
+            copper: { name: "Copper", c: 385, base: [211, 84, 0], type: 'solid' }
+        };
+
+        const INITIAL_TEMP = 20.0;
+        let activeTab = 'A';
+        let lastTimestamp = 0;
+
+        // Shared function to draw a standardized beaker anywhere
+        function generateParticles(mass, bX, bY, bW, bH, matId) {
+            const mat = MATERIALS[matId];
+            
+            const heightRatio = Math.min(1, Math.max(0.1, mass / 3.0));
+            const liqH = bH * 0.15 + (heightRatio * (bH * 0.85 - bH * 0.15));
+            const liqY = bY + (bH - liqH);
+
+            const count = Math.floor(mass * 50);
+            const particles = [];
+
+            if (mat.type === 'solid') {
+                const area = (bW - 10) * (liqH - 10);
+                const particleArea = area / count;
+                const side = Math.sqrt(particleArea);
+
+                const cols = Math.max(2, Math.floor((bW - 10) / side));
+                const rows = Math.max(2, Math.floor((liqH - 10) / side));
+
+                const spacingX = (bW - 10) / cols;
+                const spacingY = (liqH - 10) / rows;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        particles.push({
+                            homeX: bX + 5 + (spacingX / 2) + c * spacingX,
+                            homeY: liqY + 5 + (spacingY / 2) + r * spacingY,
+                            x: 0, y: 0
+                        });
+                    }
+                }
+            } else {
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: bX + 5 + Math.random() * (bW - 10), 
+                        y: liqY + 5 + Math.random() * (liqH - 10),
+                        vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2
+                    });
+                }
+            }
+            return particles;
+        }
+
+        function drawBeaker(ctx, bX, bY, bW, bH, matId, temp, mass, particles, isHeating, power) {
+            const mat = MATERIALS[matId];
+            
+            const heightRatio = Math.min(1, Math.max(0.1, mass / 3.0)); 
+            const liqH = bH * 0.15 + (heightRatio * (bH * 0.85 - bH * 0.15));
+            const liqY = bY + (bH - liqH);
+
+            const heatFactor = Math.min(1, Math.max(0, (temp - 20) / 80));
+            const r = Math.floor(mat.base[0] + (255 - mat.base[0]) * heatFactor);
+            const g = Math.floor(mat.base[1] * (1 - heatFactor * 0.4));
+            const b = Math.floor(mat.base[2] * (1 - heatFactor * 0.4));
+            
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${mat.type === 'solid' ? '0.2' : '0.8'})`;
+            ctx.fillRect(bX, liqY, bW, liqH);
+
+            ctx.strokeStyle = "#cbd5e1";
+            ctx.lineWidth = 4;
+            ctx.lineCap = "round"; ctx.lineJoin = "round";
+            ctx.beginPath();
+            ctx.moveTo(bX, bY - 15); ctx.lineTo(bX, bY + bH); ctx.lineTo(bX + bW, bY + bH); ctx.lineTo(bX + bW, bY - 15);
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            
+            if (mat.type === 'solid') {
+                const amp = Math.min(2.5, 0.2 + (temp - 20) * 0.02); 
+                particles.forEach(p => {
+                    p.x = p.homeX + (Math.random() - 0.5) * amp;
+                    p.y = p.homeY + (Math.random() - 0.5) * amp;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
+                });
+            } else {
+                const speedScale = 1 + (temp - 20) * 0.1; 
+                particles.forEach(p => {
+                    p.x += p.vx * speedScale; p.y += p.vy * speedScale;
+                    if(p.x < bX + 4) { p.x = bX + 4; p.vx *= -1; }
+                    if(p.x > bX + bW - 4) { p.x = bX + bW - 4; p.vx *= -1; }
+                    if(p.y < liqY + 4) { p.y = liqY + 4; p.vy *= -1; }
+                    if(p.y > bY + bH - 4) { p.y = bY + bH - 4; p.vy *= -1; }
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
+                });
+            }
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = `bold ${bW > 100 ? 24 : 16}px monospace`;
+            ctx.textAlign = "center";
+            ctx.fillText(temp.toFixed(1) + "°C", bX + bW / 2, liqY - 10);
+
+            if (isHeating) {
+                let fireColor = "rgba(239, 68, 68, 0.8)"; 
+                if (power > 1500) fireColor = "rgba(147, 197, 253, 0.9)"; 
+                else if (power < 800) fireColor = "rgba(245, 158, 11, 0.7)"; 
+                
+                ctx.fillStyle = fireColor; 
+                ctx.fillRect(bX + bW*0.1, bY + bH + 2, bW*0.8, bH*0.06);
+                
+                for(let i=0; i<3; i++) {
+                    ctx.fillStyle = "rgba(245, 158, 11, 0.8)";
+                    ctx.beginPath();
+                    ctx.arc(bX + bW*0.1 + Math.random()*(bW*0.8), bY + bH + bH*0.1 + Math.random()*5, 3, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function createChartConfig(xMax, yMax) {
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = 'monospace';
+            return {
+                type: 'line',
+                data: { datasets: [] },
+                options: {
+                    responsive: true, maintainAspectRatio: false, animation: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { 
+                        legend: { position: 'top', labels: { boxWidth: 12, usePointStyle: true } },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#94a3b8', bodyColor: '#f8fafc',
+                            borderColor: '#334155', borderWidth: 1, padding: 10,
+                            callbacks: {
+                                title: (items) => `Time: ${items[0].parsed.x.toFixed(1)} s`,
+                                label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} °C`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { type: 'linear', title: { display: true, text: 'Time (s)' }, grid: { color: '#334155' }, min: 0, max: xMax },
+                        y: { title: { display: true, text: 'Temperature (°C)' }, grid: { color: '#334155' }, min: 20, max: yMax }
+                    }
+                }
+            };
+        }
+
+        const CHART_COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6'];
+
+        // ==========================================
+        // MODULE A LOGIC (Clicker / Definition)
+        // ==========================================
+        const ModA = {
+            q: 0, t: INITIAL_TEMP, matId: 'water',
+            canvas: document.getElementById('modA_canvas'),
+            ctx: document.getElementById('modA_canvas').getContext('2d'),
+            particles: [], isHeatingVisual: false, hasRecorded: false, recordedMats: new Set(),
+            
+            init() {
+                this.resetParticles();
+                
+                document.getElementById('modA_btn').addEventListener('click', () => {
+                    const c = MATERIALS[this.matId].c;
+                    if (this.t - INITIAL_TEMP >= 1.0) return; 
+                    
+                    this.isHeatingVisual = true;
+                    setTimeout(() => { this.isHeatingVisual = false; }, 150);
+
+                    const heatToAdd = 100; 
+                    const remainingHeat = c - this.q; 
+                    const actualAdded = Math.min(heatToAdd, remainingHeat);
+
+                    this.q += actualAdded;
+                    this.t = INITIAL_TEMP + (this.q / c);
+                    
+                    this.updateUI();
+
+                    if (this.t - INITIAL_TEMP >= 0.999) {
+                        this.t = INITIAL_TEMP + 1.0;
+                        document.getElementById('modA_msg').classList.remove('hidden');
+                        document.getElementById('modA_final_q').innerText = Math.round(this.q);
+                        document.getElementById('modA_mat_name').innerText = MATERIALS[this.matId].name;
+
+                        if (!this.hasRecorded) {
+                            this.hasRecorded = true;
+                            document.getElementById('modA_table_container').classList.remove('hidden');
+                            
+                            if (!this.recordedMats.has(this.matId)) {
+                                this.recordedMats.add(this.matId);
+                                const tbody = document.getElementById('modA_results_body');
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `<td class="px-4 py-3 font-bold text-white">${MATERIALS[this.matId].name}</td><td class="px-4 py-3 font-mono text-yellow-400">${Math.round(this.q)} J</td>`;
+                                tbody.appendChild(tr);
+                            }
+                        }
+                    }
+                });
+
+                document.getElementById('modA_select').addEventListener('change', (e) => {
+                    this.matId = e.target.value;
+                    this.reset();
+                });
+            },
+            reset() {
+                this.q = 0; this.t = INITIAL_TEMP; this.hasRecorded = false;
+                document.getElementById('modA_msg').classList.add('hidden');
+                this.resetParticles();
+                this.updateUI();
+            },
+            resetParticles() {
+                this.particles = generateParticles(1.0, 30, 40, this.canvas.width - 60, this.canvas.height - 80, this.matId);
+            },
+            updateUI() {
+                document.getElementById('modA_q').innerText = Math.round(this.q) + " J";
+                document.getElementById('modA_t').innerText = (this.t - INITIAL_TEMP).toFixed(2) + " °C";
+            },
+            update(dt) {
+                // Click-driven module
+            },
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                drawBeaker(this.ctx, 30, 40, this.canvas.width - 60, this.canvas.height - 80, 
+                           this.matId, this.t, 1.0, this.particles, this.isHeatingVisual, 1000);
+            }
+        };
+
+        // ==========================================
+        // MODULE B LOGIC (The Race)
+        // ==========================================
+        const ModB = {
+            isHeating: false, time: 0, timer: 0,
+            activeRacers: [], 
+            canvas: document.getElementById('modB_canvas'),
+            ctx: document.getElementById('modB_canvas').getContext('2d'),
+            chart: null,
+            
+            init() {
+                this.chart = new Chart(document.getElementById('modB_chart').getContext('2d'), createChartConfig(60, 100));
+                
+                document.querySelectorAll('.modB_check').forEach(cb => {
+                    cb.addEventListener('change', () => this.updateRacers());
+                });
+
+                document.getElementById('modB_btn').addEventListener('click', () => {
+                    if (this.activeRacers.length === 0) return; 
+                    this.isHeating = !this.isHeating;
+                    document.getElementById('modB_btn').innerText = this.isHeating ? "STOP RACE" : "START RACE";
+                    document.getElementById('modB_btn').classList.toggle('bg-red-600', !this.isHeating);
+                    document.getElementById('modB_btn').classList.toggle('bg-slate-700', this.isHeating);
+                });
+
+                document.getElementById('modB_reset').addEventListener('click', () => this.reset());
+                this.updateRacers();
+            },
+            updateRacers() {
+                const selected = Array.from(document.querySelectorAll('.modB_check:checked')).map(cb => cb.value);
+                this.activeRacers = selected.map((matId, idx) => ({
+                    matId: matId,
+                    t: INITIAL_TEMP,
+                    particles: [],
+                    color: CHART_COLORS[idx % CHART_COLORS.length],
+                    bX: 0, bW: 0
+                }));
+                this.reset();
+            },
+            setupChart() {
+                this.chart.data.datasets = this.activeRacers.map(racer => ({
+                    label: MATERIALS[racer.matId].name,
+                    data: [{x: 0, y: INITIAL_TEMP}],
+                    borderColor: racer.color,
+                    backgroundColor: racer.color,
+                    tension: 0.1, pointRadius: 0, borderWidth: 3
+                }));
+                this.chart.update();
+            },
+            reset() {
+                this.isHeating = false; this.time = 0; this.timer = 0;
+                this.activeRacers.forEach(r => r.t = INITIAL_TEMP);
+                document.getElementById('modB_btn').innerText = "START RACE";
+                document.getElementById('modB_btn').classList.remove('bg-slate-700');
+                document.getElementById('modB_btn').classList.add('bg-red-600');
+                this.resetParticles();
+                this.setupChart();
+            },
+            resetParticles() {
+                const count = this.activeRacers.length;
+                if(count === 0) return;
+                
+                const availWidth = this.canvas.width - 20; 
+                const maxBeakerWidth = 100;
+                const gap = 15;
+                
+                let beakerW = Math.min(maxBeakerWidth, (availWidth - (count - 1) * gap) / count);
+                let totalGroupWidth = (beakerW * count) + (gap * (count - 1));
+                let startX = 10 + (availWidth - totalGroupWidth) / 2;
+
+                this.activeRacers.forEach((racer, i) => {
+                    racer.bW = beakerW;
+                    racer.bX = startX + i * (beakerW + gap);
+                    racer.particles = generateParticles(1.0, racer.bX, 40, racer.bW, 120, racer.matId);
+                });
+            },
+            update(dt) {
+                let allOver100 = true;
+                this.activeRacers.forEach(r => { if(r.t < 100) allOver100 = false; });
+                
+                if (this.isHeating && this.time < 60 && !allOver100) {
+                    this.time += dt;
+                    this.timer += dt;
+                    const power = 500; 
+                    
+                    this.activeRacers.forEach(racer => {
+                        racer.t += (power * dt) / (1.0 * MATERIALS[racer.matId].c);
+                    });
+
+                    if (this.timer > 0.5) {
+                        this.activeRacers.forEach((racer, i) => {
+                            this.chart.data.datasets[i].data.push({ x: this.time, y: racer.t });
+                        });
+                        this.chart.update();
+                        this.timer = 0;
+                    }
+                }
+            },
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.activeRacers.forEach(racer => {
+                    drawBeaker(this.ctx, racer.bX, 40, racer.bW, 120, racer.matId, racer.t, 1.0, racer.particles, this.isHeating, 500);
+                });
+            }
+        };
+
+        // ==========================================
+        // MODULE C LOGIC (The Variables Lab)
+        // ==========================================
+        const ModC = {
+            isHeating: false, time: 0, timer: 0, energy: 0, runCount: 0,
+            matId: 'water', mass: 1.0, power: 1000, dur: 10, t: INITIAL_TEMP,
+            canvas: document.getElementById('modC_canvas'),
+            ctx: document.getElementById('modC_canvas').getContext('2d'),
+            particles: [], chart: null,
+
+            init() {
+                this.chart = new Chart(document.getElementById('modC_chart').getContext('2d'), createChartConfig(this.dur, 30));
+                this.resetParticles();
+
+                const bindSlider = (id, lblId, suffix, prop) => {
+                    document.getElementById(id).addEventListener('input', (e) => {
+                        this[prop] = parseFloat(e.target.value);
+                        document.getElementById(lblId).innerText = this[prop] + suffix;
+                        if (!this.isHeating) { this.softReset(); this.updateScales(); }
+                    });
+                };
+                bindSlider('modC_mass', 'modC_lbl_mass', ' kg', 'mass');
+                bindSlider('modC_dur', 'modC_lbl_dur', ' s', 'dur');
+                
+                document.getElementById('modC_select').addEventListener('change', (e) => {
+                    this.matId = e.target.value; 
+                    if (!this.isHeating) { this.softReset(); this.updateScales(); }
+                });
+
+                document.getElementById('modC_reset').addEventListener('click', () => {
+                    this.hardReset();
+                });
+
+                document.getElementById('modC_btn').addEventListener('click', () => {
+                    this.isHeating = !this.isHeating;
+                    const btn = document.getElementById('modC_btn');
+                    if (this.isHeating) {
+                        btn.innerText = "EXTINGUISH HEATER";
+                        btn.classList.replace('bg-red-600', 'bg-slate-700');
+                        this.softReset();
+                        this.runCount++;
+                        
+                        this.updateScales(true);
+
+                        this.chart.data.datasets.push({
+                            label: `Run ${this.runCount}: ${this.mass}kg ${MATERIALS[this.matId].name} @ ${this.power}W`,
+                            data: [{ x: 0, y: INITIAL_TEMP }],
+                            borderColor: CHART_COLORS[(this.runCount - 1) % CHART_COLORS.length],
+                            backgroundColor: CHART_COLORS[(this.runCount - 1) % CHART_COLORS.length],
+                            borderWidth: 3, pointRadius: 0, tension: 0.1
+                        });
+                        this.chart.update();
+                    } else {
+                        btn.innerText = "IGNITE HEATER";
+                        btn.classList.replace('bg-slate-700', 'bg-red-600');
+                    }
+                });
+            },
+            softReset() {
+                this.time = 0; this.timer = 0; this.energy = 0; this.t = INITIAL_TEMP;
+                this.resetParticles();
+            },
+            hardReset() {
+                this.isHeating = false;
+                document.getElementById('modC_btn').innerText = "IGNITE HEATER";
+                document.getElementById('modC_btn').classList.replace('bg-slate-700', 'bg-red-600');
+                this.runCount = 0;
+                this.chart.data.datasets = [];
+                this.softReset();
+                this.updateScales();
+            },
+            updateScales(forceExpand = false) {
+                const maxTemp = INITIAL_TEMP + ((this.power * this.dur) / (this.mass * MATERIALS[this.matId].c));
+                const paddedY = Math.min(100, Math.ceil((maxTemp + 2) / 5) * 5);
+                
+                if (this.chart.data.datasets.length === 0) {
+                    this.chart.options.scales.x.max = this.dur;
+                    this.chart.options.scales.y.max = Math.max(25, paddedY);
+                    this.chart.update();
+                } else if (forceExpand) {
+                    this.chart.options.scales.x.max = Math.max(this.chart.options.scales.x.max, this.dur);
+                    this.chart.options.scales.y.max = Math.max(this.chart.options.scales.y.max || 25, paddedY);
+                    this.chart.update();
+                }
+            },
+            resetParticles() {
+                this.particles = generateParticles(this.mass, 20, 20, this.canvas.width - 40, this.canvas.height - 50, this.matId);
+            },
+            update(dt) {
+                if (this.isHeating && this.t < 100 && this.time < this.dur) {
+                    this.time += dt;
+                    this.timer += dt;
+                    const addedE = this.power * dt;
+                    this.energy += addedE;
+                    this.t += addedE / (this.mass * MATERIALS[this.matId].c);
+
+                    if (this.t >= 100 || this.time >= this.dur) {
+                        if (this.t >= 100) this.t = 100;
+                        if (this.time >= this.dur) this.time = this.dur;
+                        document.getElementById('modC_btn').click(); 
+                    }
+
+                    if (this.timer >= 0.5 || !this.isHeating) {
+                        const activeDs = this.chart.data.datasets[this.chart.data.datasets.length - 1];
+                        activeDs.data.push({ x: this.time, y: this.t });
+                        this.chart.update();
+                        this.timer = 0;
+                    }
+                }
+            },
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                drawBeaker(this.ctx, 20, 20, this.canvas.width - 40, this.canvas.height - 50, 
+                           this.matId, this.t, this.mass, this.particles, this.isHeating, this.power);
+                
+                document.getElementById('modC_time').innerText = this.time.toFixed(1) + "s";
+                document.getElementById('modC_energy').innerText = Math.round(this.energy) + " J";
+            }
+        };
+
+        // ==========================================
+        // MODULE A: CENTER-SCREEN MODAL LOGIC
+        // ==========================================
+        let modalStep = 0;
+        let isQuestionAnswered = false;
+
+        const modAQuizData = [
+            { type: 'theory' }, // Step 0: The Information
+            {
+                type: 'question',
+                level: 'Level 1: Recall & Observation (Easy)',
+                q: 'Based on your experiments in this module, which material requires the most energy to raise its temperature by $1^\\circ\\text{C}$?',
+                options: ['Iron', 'Copper', 'Aluminum', 'Water'],
+                correct: 3,
+                expl: 'Correct! Water has the highest specific heat capacity of these materials, taking the most energy to change temperature.'
+            },
+            {
+                type: 'question',
+                level: 'Level 1: Recall & Observation (Easy)',
+                q: 'What are the standard units used to measure specific heat capacity?',
+                options: [
+                    'Joules (J)', 
+                    'Watts (W)', 
+                    'Joules per kilogram per degree Celsius ($\\text{J}/(\\text{kg}\\cdot^\\circ\\text{C})$)', 
+                    'Degrees Celsius ($^\\circ\\text{C}$)'
+                ],
+                correct: 2,
+                expl: 'Correct! It is measured in Energy (J) per unit Mass (kg) per unit of Temperature Change ($^\\circ\\text{C}$).'
+            },
+            {
+                type: 'question',
+                level: 'Level 2: Application (Medium)',
+                q: 'You found that it takes $450\\text{ J}$ to raise the temperature of $1\\text{ kg}$ of Iron by $1^\\circ\\text{C}$. If you had a block of Iron with a mass of $2\\text{ kg}$, how much energy would it take to raise its temperature by $1^\\circ\\text{C}$?',
+                options: ['$225\\text{ J}$', '$450\\text{ J}$', '$900\\text{ J}$', '$1800\\text{ J}$'],
+                correct: 2,
+                expl: 'Correct! Because you doubled the mass, you require double the energy ($450 \\times 2 = 900$).'
+            },
+            {
+                type: 'question',
+                level: 'Level 2: Application (Medium)',
+                q: 'You apply exactly $1000\\text{ J}$ of heat energy to $1\\text{ kg}$ of Aluminum ($c = 900\\text{ J}/(\\text{kg}\\cdot^\\circ\\text{C})$) and $1000\\text{ J}$ of heat energy to $1\\text{ kg}$ of Copper ($c = 385\\text{ J}/(\\text{kg}\\cdot^\\circ\\text{C})$). Which material will have the higher final temperature?',
+                options: ['Aluminum', 'Copper', 'They will have the same temperature.'],
+                correct: 1,
+                expl: 'Correct! Copper has a lower specific heat capacity, meaning it heats up much faster given the exact same amount of energy.'
+            },
+            {
+                type: 'question',
+                level: 'Level 3: Conceptual / Real-World Synthesis (Hard)',
+                q: 'Water has a specific heat capacity of about $4184\\text{ J}/(\\text{kg}\\cdot^\\circ\\text{C})$, while sand is about $830\\text{ J}/(\\text{kg}\\cdot^\\circ\\text{C})$. On a hot summer day, the sun shines equally on the ocean and the beach. Why does the sand feel scalding hot to your feet while the ocean water feels refreshingly cool?',
+                options: [
+                    "Because sand has a lower specific heat capacity, the sun's energy causes its temperature to rise much faster than the water's.",
+                    "Because water absorbs more heat energy from the sun than the sand does.",
+                    "Because sand is a solid and water is a liquid.",
+                    "Because water has a lower specific heat capacity, preventing it from getting hot."
+                ],
+                correct: 0,
+                expl: 'Correct! Due to its low specific heat capacity (low thermal inertia), the sand needs very little energy to drastically increase its temperature.'
+            }
+        ];
+
+        window.openTheoryModal = function() {
+            modalStep = 0;
+            document.getElementById('theory-modal-overlay').classList.remove('hidden');
+            renderModalStep();
+        };
+
+        window.closeTheoryModal = function() {
+            document.getElementById('theory-modal-overlay').classList.add('hidden');
+        };
+
+        window.nextModalStep = function() {
+            if (modalStep < modAQuizData.length - 1) {
+                modalStep++;
+                renderModalStep();
+            } else {
+                closeTheoryModal();
+            }
+        };
+
+        function renderModalStep() {
+            isQuestionAnswered = false;
+            const contentArea = document.getElementById('modal-content-area');
+            const btnNext = document.getElementById('modal-next-btn');
+            const progress = document.getElementById('modal-progress');
+            const stepData = modAQuizData[modalStep];
+
+            progress.innerText = `Step ${modalStep + 1} of ${modAQuizData.length}`;
+
+            if (stepData.type === 'theory') {
+                contentArea.innerHTML = `
+                    <h4 class="text-2xl font-bold text-white mb-6">1. Information to Present (The Theory)</h4>
+                    <p class="mb-4 text-slate-300">Before testing your knowledge, let's formally summarize what you just discovered experimentally:</p>
+                    <div class="space-y-4">
+                        <div class="bg-slate-900/80 p-5 rounded-lg border border-slate-700">
+                            <strong class="text-blue-400 block mb-2 uppercase tracking-wide text-sm">Formal Definition</strong>
+                            <p class="text-slate-200">Specific heat capacity (represented by the letter $c$) is the amount of heat energy ($Q$) required to raise the temperature of $1 \\text{ kg}$ of a substance by exactly $1^\\circ\\text{C}$.</p>
+                        </div>
+                        <div class="bg-slate-900/80 p-5 rounded-lg border border-slate-700">
+                            <strong class="text-blue-400 block mb-2 uppercase tracking-wide text-sm">The Equation</strong>
+                            <p class="text-2xl text-white my-3">$$c = \\frac{Q}{m \\Delta T}$$</p>
+                            <p class="text-sm text-slate-400 mt-2">(which is usually written as $Q = mc\\Delta T$)</p>
+                        </div>
+                        <div class="bg-slate-900/80 p-5 rounded-lg border border-slate-700">
+                            <strong class="text-blue-400 block mb-2 uppercase tracking-wide text-sm">Units</strong>
+                            <p class="text-slate-200">It is measured in Joules per kilogram per degree Celsius ($\\text{J}/(\\text{kg}\\cdot^\\circ\\text{C})$).</p>
+                        </div>
+                    </div>
+                `;
+                btnNext.innerText = "Begin Quiz";
+                btnNext.classList.remove('hidden');
+            } else {
+                let optionsHtml = stepData.options.map((opt, idx) => `
+                    <button onclick="selectModalQuizOption(${idx})" id="quiz-opt-${idx}" class="w-full text-left p-4 rounded-xl border-2 border-slate-700 bg-slate-800 hover:bg-slate-700 hover:border-blue-500 transition-all text-slate-200">
+                        <span class="font-bold text-blue-400 mr-2">${['A', 'B', 'C', 'D'][idx]})</span> ${opt}
+                    </button>
+                `).join('');
+
+                contentArea.innerHTML = `
+                    <div class="mb-3 text-sm font-bold text-blue-500 uppercase tracking-widest">${stepData.level}</div>
+                    <p class="text-xl font-semibold text-white mb-6 leading-relaxed">${stepData.q}</p>
+                    <div class="space-y-3">${optionsHtml}</div>
+                    <div id="quiz-feedback" class="mt-6 hidden"></div>
+                `;
+                btnNext.innerText = modalStep === modAQuizData.length - 1 ? "Finish Lab" : "Next Question";
+                btnNext.classList.add('hidden'); 
+            }
+
+            if (window.MathJax) MathJax.typesetPromise([contentArea]).catch(err => console.log(err));
+        }
+
+        window.selectModalQuizOption = function(idx) {
+            if (isQuestionAnswered) return; 
+            const stepData = modAQuizData[modalStep];
+            const isCorrect = (idx === stepData.correct);
+            const btn = document.getElementById(`quiz-opt-${idx}`);
+            const feedback = document.getElementById('quiz-feedback');
+
+            if (isCorrect) {
+                isQuestionAnswered = true;
+                btn.classList.replace('bg-slate-800', 'bg-emerald-900/50');
+                btn.classList.replace('border-slate-700', 'border-emerald-500');
+                btn.classList.add('text-emerald-200', 'ring-2', 'ring-emerald-400', 'ring-offset-2', 'ring-offset-slate-800');
+                
+                feedback.className = "mt-6 p-5 rounded-xl bg-emerald-900/30 border border-emerald-500 text-emerald-200 block";
+                feedback.innerHTML = `<div class="font-bold text-lg mb-2 text-emerald-400">Excellent!</div><p class="text-sm opacity-90">${stepData.expl}</p>`;
+                document.getElementById('modal-next-btn').classList.remove('hidden');
+            } else {
+                btn.classList.replace('bg-slate-800', 'bg-red-900/50');
+                btn.classList.replace('border-slate-700', 'border-red-500');
+                btn.classList.add('text-red-200');
+                
+                feedback.className = "mt-6 p-4 rounded-xl bg-red-900/30 border border-red-500 text-red-200 block";
+                feedback.innerHTML = `<div class="font-bold text-red-400">Not quite right. Try again!</div>`;
+            }
+        };
+
+
+        // ==========================================
+        // MODULES B & C: SLIDE-OUT PANEL LOGIC
+        // ==========================================
+        let sideQuizAnswers = {};
+        
+        const sideQuizData = {
+            'B': [
+                {
+                    q: "True or False: If two different materials receive the exact same amount of heat energy from the heater, they will reach the exact same final temperature.",
+                    options: ["True", "False"],
+                    correct: 1,
+                    expl: "Correct! Because different materials have different specific heat capacities, they will change temperature at different rates."
+                },
+                {
+                    q: "When racing Water against Copper, which material's temperature graph is steeper (rises faster), and why?",
+                    options: [
+                        "Water, because it has a higher specific heat capacity.",
+                        "Copper, because it has a higher specific heat capacity.",
+                        "Water, because it has a lower specific heat capacity.",
+                        "Copper, because it has a lower specific heat capacity."
+                    ],
+                    correct: 3,
+                    expl: "Correct! Copper has a lower specific heat capacity (less 'thermal inertia'), meaning it changes temperature very easily compared to water."
+                }
+            ],
+            'C': [
+                {
+                    q: "If you double the mass of the water from 1.0 kg to 2.0 kg but keep the heating duration the same, what happens to the final temperature change?",
+                    options: [
+                        "It doubles.",
+                        "It is cut in half.",
+                        "It stays exactly the same.",
+                        "It quadruples."
+                    ],
+                    correct: 1,
+                    expl: "Correct! Because there is twice as much mass (m) to heat up, the same amount of energy (Q) will only raise the temperature half as much."
+                },
+                {
+                    q: "To achieve the highest possible temperature in just 10 seconds, which combination should you choose?",
+                    options: [
+                        "The highest mass (5.0 kg) and Water",
+                        "The lowest mass (0.5 kg) and Water",
+                        "The lowest mass (0.5 kg) and Copper",
+                        "The highest mass (5.0 kg) and Copper"
+                    ],
+                    correct: 2,
+                    expl: "Correct! The lowest mass means less matter to heat, and Copper's low specific heat capacity means it changes temperature very rapidly."
+                },
+                {
+                    q: "What happens to the heating curve graph if you test the exact same material and heater, but you increase the mass from 1 kg to 2 kg?",
+                    options: [
+                        "The curve becomes much steeper (it heats up faster).",
+                        "The curve becomes flatter (it heats up slower).",
+                        "The curve stays exactly the same.",
+                        "The curve goes downwards (it cools off)."
+                    ],
+                    correct: 1,
+                    expl: "Correct! More mass means there are more particles that need to share the incoming heat energy, so the overall temperature rises more slowly."
+                }
+            ]
+        };
+
+        window.openSideQuiz = function(moduleId) {
+            sideQuizAnswers = {};
+            
+            // Add class to body to trigger CSS margin push
+            document.body.classList.add('side-quiz-active');
+            
+            // Slide in the panel
+            document.getElementById('side-quiz-panel').classList.remove('translate-x-full');
+            
+            // Re-render chart sizes smoothly as the container shrinks
+            setTimeout(() => {
+                if(ModB.chart) ModB.chart.resize();
+                if(ModC.chart) ModC.chart.resize();
+            }, 300);
+
+            renderSideQuiz(moduleId);
+        };
+
+        window.closeSideQuiz = function() {
+            document.body.classList.remove('side-quiz-active');
+            document.getElementById('side-quiz-panel').classList.add('translate-x-full');
+            
+            setTimeout(() => {
+                if(ModB.chart) ModB.chart.resize();
+                if(ModC.chart) ModC.chart.resize();
+            }, 300);
+        };
+
+        function renderSideQuiz(moduleId) {
+            const data = sideQuizData[moduleId];
+            const title = document.getElementById('side-quiz-title');
+            title.innerText = `Module ${moduleId} Quiz`;
+            
+            const content = document.getElementById('side-quiz-content');
+            let html = `<p class="text-slate-400 mb-6 text-sm">Answer the questions below. You can run experiments in the lab panel to help you find the answers!</p>`;
+            
+            data.forEach((qObj, qIndex) => {
+                let optionsHtml = qObj.options.map((opt, oIndex) => `
+                    <button id="side-btn-${moduleId}-${qIndex}-${oIndex}" onclick="selectSideQuizOption('${moduleId}', ${qIndex}, ${oIndex})" class="w-full text-left p-3 mt-2 rounded-lg border border-slate-600 bg-slate-900/50 hover:bg-slate-700 text-sm text-slate-300 transition-colors">
+                        <span class="font-bold text-blue-400 mr-2">${['A', 'B', 'C', 'D'][oIndex]})</span> ${opt}
+                    </button>
+                `).join('');
+                
+                html += `
+                    <div class="mb-10 bg-slate-900/30 p-4 rounded-xl border border-slate-700">
+                        <p class="font-semibold text-white mb-3 leading-snug"><span class="text-blue-500 mr-1">Q${qIndex + 1}.</span> ${qObj.q}</p>
+                        <div id="side-options-${moduleId}-${qIndex}">
+                            ${optionsHtml}
+                        </div>
+                        <div id="side-feedback-${moduleId}-${qIndex}" class="hidden mt-4 p-3 rounded-lg text-sm border"></div>
+                    </div>
+                `;
+            });
+            content.innerHTML = html;
+        }
+
+        window.selectSideQuizOption = function(moduleId, qIndex, oIndex) {
+            if (sideQuizAnswers[`${moduleId}-${qIndex}`]) return; 
+
+            const qObj = sideQuizData[moduleId][qIndex];
+            const isCorrect = (oIndex === qObj.correct);
+            const btn = document.getElementById(`side-btn-${moduleId}-${qIndex}-${oIndex}`);
+            const feedback = document.getElementById(`side-feedback-${moduleId}-${qIndex}`);
+
+            if (isCorrect) {
+                sideQuizAnswers[`${moduleId}-${qIndex}`] = true;
+                btn.classList.replace('bg-slate-900/50', 'bg-emerald-900/50');
+                btn.classList.replace('border-slate-600', 'border-emerald-500');
+                btn.classList.add('text-emerald-200');
+                
+                feedback.className = "mt-4 p-3 rounded-lg bg-emerald-900/30 border border-emerald-500 text-emerald-200 text-sm block shadow-inner";
+                feedback.innerHTML = `<strong class="text-emerald-400 block mb-1">Correct!</strong> ${qObj.expl}`;
+            } else {
+                btn.classList.replace('bg-slate-900/50', 'bg-red-900/50');
+                btn.classList.replace('border-slate-600', 'border-red-500');
+                btn.classList.add('text-red-200');
+                
+                feedback.className = "mt-4 p-3 rounded-lg bg-red-900/30 border border-red-500 text-red-200 text-sm block shadow-inner";
+                feedback.innerHTML = `<strong class="text-red-400">Not quite right.</strong> Check the graph or try running the experiment again!`;
+            }
+        };
+
+
+        // ==========================================
+        // GLOBAL APP CONTROLLER
+        // ==========================================
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.module-container').forEach(el => el.classList.add('hidden'));
+            document.getElementById('container-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            activeTab = tabId;
+            closeSideQuiz(); // Auto close side quiz when switching tabs
+        };
+
+        function globalLoop(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const dt = (timestamp - lastTimestamp) / 1000;
+            lastTimestamp = timestamp;
+
+            if (activeTab === 'A') { ModA.update(dt); ModA.draw(); }
+            if (activeTab === 'B') { ModB.update(dt); ModB.draw(); }
+            if (activeTab === 'C') { ModC.update(dt); ModC.draw(); }
+
+            requestAnimationFrame(globalLoop);
+        }
+
+        // Initialize All and Start Loop
+        ModA.init();
+        ModB.init();
+        ModC.init();
+        requestAnimationFrame(globalLoop);
+
+    </script>
+</body>
+</html>
