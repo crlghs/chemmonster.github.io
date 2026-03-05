@@ -1760,9 +1760,15 @@ viewQuestion(year, paper, questionNo) {
                 }
                 // --- END UPDATE ---
 
+// --- END UPDATE ---
+
                 document.getElementById('image-error-msg').classList.add('hidden');
-                    imgEl.style.display = 'none';
-                };
+                
+                // Define the image element properly and hide it while loading
+                const imgEl = document.getElementById('question-image');
+                imgEl.style.display = 'none';
+                
+                imgEl.onload = () => {
                 imgEl.onload = () => {
                     document.getElementById('image-error-msg').classList.add('hidden');
                     imgEl.style.display = 'block';
