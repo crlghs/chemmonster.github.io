@@ -318,7 +318,7 @@
         <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="smartDrill.closeQuizModal()"></div>
         <div class="relative z-10 flex min-h-full items-center justify-center p-4 text-center sm:p-0">
             <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl flex flex-col max-h-[90vh]">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center print:hidden">
+<div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center print:hidden">
                     <h3 class="text-lg font-semibold leading-6 text-slate-900" id="modal-title">Generated Quiz Paper</h3>
                     <div class="flex gap-2">
                         <button onclick="smartDrill.printQuiz()" class="inline-flex justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500">🖨️ Print / Save PDF</button>
@@ -358,8 +358,12 @@
             <div class="flex min-h-full items-center justify-center p-4 text-center">
                 <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-2xl transition-all sm:w-full sm:max-w-3xl border border-slate-700">
                     <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-                            <h3 class="text-lg font-bold leading-6 text-slate-800" id="image-modal-title">Question View</h3>
+<div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-lg font-bold leading-6 text-slate-800" id="image-modal-title">Question View</h3>
+                                <!-- New Performance Badge -->
+                                <span id="modal-perf-badge" class="hidden px-2 py-0.5 rounded text-xs font-bold border tracking-wide"></span>
+                            </div>
                             <div class="flex items-center gap-3">
                                 <button id="modal-answer-btn" class="hidden text-slate-500 hover:text-indigo-600 transition-colors font-medium text-xs px-2 py-1 bg-slate-100 rounded border border-slate-200 mr-2 flex items-center gap-1" title="Show Answer"></button>
 <button id="modal-check-btn" onclick="smartDrill.toggleCompleteFromModal()" class="text-slate-300 transition-colors flex items-center gap-1 p-1" title="Mark as Completed">
@@ -1723,9 +1727,10 @@ init() {
                 document.getElementById('review-modal').classList.add('hidden');
             }
 
-            viewQuestion(year, paper, questionNum) {
+viewQuestion(year, paper, questionNum) {
                 const imgFilename = this.getQuestionFilename(year, paper, questionNum);
                 this.currentViewingId = `${year}_${paper}_${questionNum}`;
+                
                 const imgEl = document.getElementById('single-question-img');
                 imgEl.src = imgFilename;
                 imgEl.onerror = () => {
@@ -1740,10 +1745,34 @@ init() {
                 }
 
                 document.getElementById('image-modal-title').innerText = `${year} Paper ${paper} - Q${questionNum}`;
+                
+                // --- NEW PERFORMANCE BADGE LOGIC ---
+                const item = this.data.find(d => this.getUniqueId(d) === this.currentViewingId);
+                const badge = document.getElementById('modal-perf-badge');
+                
+                if (badge && item && item.Performance && item.Performance !== 'N/A') {
+                    const perfStr = item.Performance.toString();
+                    const perfVal = parseFloat(perfStr.replace('%', ''));
+                    badge.innerText = perfStr.includes('%') ? perfStr : perfStr + '%';
+                    
+                    badge.className = 'px-2 py-0.5 rounded text-xs font-bold border tracking-wide';
+                    
+                    if (!isNaN(perfVal)) {
+                        if (perfVal < 40) badge.classList.add('bg-red-50', 'text-red-600', 'border-red-200');
+                        else if (perfVal < 60) badge.classList.add('bg-amber-50', 'text-amber-600', 'border-amber-200');
+                        else badge.classList.add('bg-emerald-50', 'text-emerald-600', 'border-emerald-200');
+                    } else {
+                        badge.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-200');
+                    }
+                    badge.classList.remove('hidden');
+                } else if (badge) {
+                    badge.classList.add('hidden');
+                }
+                // --- END BADGE LOGIC ---
+
                 this.updateModalButtons();
                 document.getElementById('image-viewer-modal').classList.remove('hidden');
 
-                const item = this.data.find(d => this.getUniqueId(d) === this.currentViewingId);
                 const ansBtn = document.getElementById('modal-answer-btn');
 
                 if (item && item.Answer) {
@@ -1783,16 +1812,16 @@ init() {
                     ansBtn.classList.add('hidden');
                 }
 
-                const badge = document.getElementById('focus-badge');
+                const focusBadge = document.getElementById('focus-badge');
                 const badgeText = document.getElementById('focus-text');
                 const qStr = questionNum.toString();
                 const match = qStr.match(/^\d+(.*)$/);
                 const subPart = match ? match[1].trim() : '';
                 if (subPart && paper !== '1A') {
                     badgeText.innerText = `Part ${subPart}`;
-                    badge.classList.remove('hidden');
+                    focusBadge.classList.remove('hidden');
                 } else {
-                    badge.classList.add('hidden');
+                    focusBadge.classList.add('hidden');
                 }
             }
 
@@ -1810,77 +1839,144 @@ renderActionButtons() {
                 : `<span class="text-xs text-slate-400 font-medium px-3 py-2 bg-slate-100 rounded border border-slate-200">Select questions to start</span>`;
         }
 
-            generateQuiz() {
-                const container = document.getElementById('quiz-content');
-                container.innerHTML = ''; 
-                if (this.selectedQuestions.size === 0) {
-                    alert("Please select questions from the list first.");
-                    return;
-                }
-                const indices = Array.from(this.selectedQuestions).sort((a, b) => a - b);
-                const groups = {}; 
+generateQuiz() {
+                if (this.selectedQuestions.size === 0) return;
 
-                indices.forEach((index) => {
-                    const item = this.filteredData.find(d => d.id === index);
-                    if (!item) return;
-                    
-                    const qIdentifier = this.getQuestionIdentifier(item.Paper, item['Question No.']);
-                    const groupKey = `${item.Year}_${item.Paper}_${qIdentifier}`;
-
-                    if (!groups[groupKey]) {
-                        groups[groupKey] = {
-                            year: item.Year,
-                            paper: item.Paper,
-                            qIdentifier: qIdentifier,
-                            subParts: []
-                        };
-                    }
-                    groups[groupKey].subParts.push(item['Question No.']);
+// 1. Gather all selected question data
+                let selectedItems = [];
+                this.selectedQuestions.forEach(id => {
+                    const item = this.data.find(d => d.id === id);
+                    if (item) selectedItems.push(item);
                 });
 
-                let questionCounter = 1;
-                for (const key in groups) {
-                    const group = groups[key];
-                    const subPartsText = group.subParts.join(', ');
-                    const imgFilename = this.getQuestionFilename(group.year, group.paper, group.qIdentifier);
+                // 2. Sort them (Year desc, Paper, Question No)
+                selectedItems.sort((a, b) => {
+                    if (a.Year !== b.Year) return b.Year - a.Year;
+                    if (a.Paper !== b.Paper) return a.Paper.localeCompare(b.Paper);
+                    const numA = parseInt(a['Question No.']) || 0;
+                    const numB = parseInt(b['Question No.']) || 0;
+                    if (numA !== numB) return numA - numB;
+                    return a['Question No.'].localeCompare(b['Question No.']);
+                });
 
-                    const div = document.createElement('div');
-                    div.className = 'quiz-item shadow-sm';
-                    div.innerHTML = `
-                        <div class="quiz-header text-sm">
-                            <span>Question ${questionCounter}</span>
-                            <span>${group.year} - Paper ${group.paper} - Q${subPartsText}</span>
-                        </div>
-                        <div class="flex justify-center">
-                            <img src="${imgFilename}" alt="Question Image" class="max-w-full h-auto object-contain" onerror="this.parentElement.innerHTML='<div class=\'text-red-500 bg-red-50 p-4 rounded w-full text-center\'>Image file not found: <b>${imgFilename}</b><br><span class=\'text-xs text-gray-500\'>Please ensure you have created a folder named <b>${group.year}</b> and placed the image inside it.</span></div>'">
+                // Helper Function: Create the colored percentage badge
+                const getBadgeHtml = (perfStr) => {
+                    if (!perfStr || perfStr === 'N/A') return '';
+                    const val = parseFloat(perfStr.toString().replace('%', ''));
+                    let colors = 'text-slate-600 bg-slate-100 border-slate-200'; // Default gray
+                    if (!isNaN(val)) {
+                        if (val < 40) colors = 'text-red-600 bg-red-50 border-red-200';
+                        else if (val < 60) colors = 'text-amber-600 bg-amber-50 border-amber-200';
+                        else colors = 'text-emerald-600 bg-emerald-50 border-emerald-200';
+                    }
+                    const display = perfStr.toString().includes('%') ? perfStr : perfStr + '%';
+                    return `<span class="inline-block px-1.5 py-0.5 ml-2 rounded text-[10px] font-bold border ${colors} print:border-gray-400 print:text-black print:bg-transparent">${display}</span>`;
+                };
+
+                // 3. Group Paper 1B/2 questions
+                const groupedItems = [];
+                let currentGroup = null;
+
+                selectedItems.forEach(item => {
+                    if (item.Paper === '1A') {
+                        groupedItems.push({ type: 'single', item: item });
+                    } else {
+                        const baseQ = parseInt(item['Question No.']);
+                        const groupKey = `${item.Year}_${item.Paper}_${baseQ}`;
+                        
+                        const qStr = item['Question No.'].toString();
+                        const match = qStr.match(/^\d+(.*)$/);
+                        const subPart = match ? match[1].trim() : '';
+
+                        if (!currentGroup || currentGroup.key !== groupKey) {
+                            currentGroup = {
+                                type: 'grouped', key: groupKey, year: item.Year, paper: item.Paper, baseQ: baseQ,
+                                parts: [], filename: this.getQuestionFilename(item.Year, item.Paper, baseQ)
+                            };
+                            groupedItems.push(currentGroup);
+                        }
+                        currentGroup.parts.push({ part: subPart || 'All', perf: item.Performance });
+                    }
+                });
+
+                // 4. Build the HTML string
+                let html = '';
+                let qCounter = 1;
+
+                groupedItems.forEach(group => {
+                    if (group.type === 'single') {
+                        const item = group.item;
+                        const filename = this.getQuestionFilename(item.Year, item.Paper, item['Question No.']);
+                        const badgeHtml = getBadgeHtml(item.Performance);
+
+                        html += `
+                        <div class="mb-8 break-inside-avoid">
+                            <div class="bg-slate-50 border border-slate-200 p-2 rounded flex justify-between items-center print:bg-transparent print:border-b print:border-slate-300 print:rounded-none print:pb-1">
+                                <h4 class="font-bold text-slate-700 print:text-black text-sm">Question ${qCounter}</h4>
+                                <div class="flex items-center">
+                                    <span class="text-xs text-slate-500 font-mono print:text-black">[${item.Year} Paper ${item.Paper} - Q${item['Question No.']}]</span>
+                                    ${badgeHtml}
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <img src="${filename}" class="max-w-full h-auto rounded border border-slate-200 shadow-sm print:shadow-none print:border-none" onerror="this.parentElement.innerHTML='<div class=\\'p-4 text-sm text-red-500 bg-red-50 border border-red-200 rounded\\'>Image not found: ${filename}</div>'">
+                            </div>
                         </div>`;
-                    container.appendChild(div);
-                    questionCounter++;
-                }
+                    } else {
+                        // Paper 1B Grouped Display
+                        const partsHtml = group.parts.map(p => {
+                            const badge = getBadgeHtml(p.perf);
+                            return `<span class="inline-flex items-center mr-3"><span class="font-bold text-slate-700 print:text-black">${p.part}</span>${badge}</span>`;
+                        }).join('');
+
+                        html += `
+                        <div class="mb-8 break-inside-avoid">
+                            <div class="bg-indigo-50 border border-indigo-100 p-2 rounded print:bg-transparent print:border-b print:border-slate-300 print:rounded-none print:pb-1">
+                                <div class="flex justify-between items-center mb-1">
+                                    <h4 class="font-bold text-indigo-900 print:text-black text-sm">Question ${qCounter}</h4>
+                                    <span class="text-xs text-indigo-500 font-mono print:text-black">[${group.year} Paper ${group.paper} - Q${group.baseQ}]</span>
+                                </div>
+                                <div class="text-xs text-indigo-700 print:text-black flex flex-wrap items-center mt-1">
+                                    <span class="mr-2 opacity-75">Focused Parts:</span> ${partsHtml}
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <img src="${group.filename}" class="max-w-full h-auto rounded border border-slate-200 shadow-sm print:shadow-none print:border-none" onerror="this.parentElement.innerHTML='<div class=\\'p-4 text-sm text-red-500 bg-red-50 border border-red-200 rounded\\'>Image not found: ${group.filename}</div>'">
+                            </div>
+                        </div>`;
+                    }
+                    qCounter++;
+                });
+
+                document.getElementById('quiz-content').innerHTML = html;
                 document.getElementById('quiz-modal').classList.remove('hidden');
             }
 printQuiz() {
+                const content = document.getElementById('quiz-content').innerHTML;
+                
+                // If we are in an iframe (like Google Sites)
                 if (window.self !== window.top) {
-                    // We are in Google Sites (iframe) and printing is blocked.
-                    // Solution: Open the quiz in a new tab to print it!
                     const printWindow = window.open('', '_blank');
-                    if (!printWindow) {
-                        alert("⚠️ Popup Blocked! Please allow pop-ups for this site to print the quiz.");
-                        return;
-                    }
-                    
-                    const content = document.getElementById('quiz-content').innerHTML;
-                    
                     printWindow.document.write(`
                         <html>
                         <head>
-                            <title>Print Quiz</title>
-                            <script src="https://cdn.tailwindcss.com"><\/script>
+                            <title>Smart Drill Practice Paper</title>
                             <style>
-                                body { font-family: sans-serif; padding: 20px; background: white; color: black; }
-                                .quiz-item { margin-bottom: 2rem; padding: 1.5rem; page-break-inside: avoid; }
-                                .quiz-header { font-weight: bold; color: #64748b; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 14px; }
+                                body { font-family: sans-serif; padding: 20px; }
+                                .mb-8 { margin-bottom: 2rem; page-break-inside: avoid; }
+                                .flex { display: flex; justify-content: space-between; align-items: center; }
+                                .bg-slate-50, .bg-indigo-50 { margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 14px; }
                                 img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+                                /* Add styles for our new badges so they print beautifully */
+                                .print\\:text-black { color: black !important; }
+                                .print\\:border-gray-400 { border: 1px solid #9ca3af !important; }
+                                .inline-block { display: inline-block; }
+                                .px-1\\.5 { padding-left: 6px; padding-right: 6px; }
+                                .py-0\\.5 { padding-top: 2px; padding-bottom: 2px; }
+                                .rounded { border-radius: 4px; }
+                                .text-\\[10px\\] { font-size: 10px; }
+                                .font-bold { font-weight: bold; }
+                                .ml-2 { margin-left: 8px; }
                             </style>
                         </head>
                         <body>
@@ -1900,6 +1996,8 @@ printQuiz() {
                     window.print();
                 }
             }
+
+            closeQuizModal() { document.getElementById('quiz-modal').classList.add('hidden'); }
 
             closeQuizModal() { document.getElementById('quiz-modal').classList.add('hidden'); }
             viewSelected() { alert("Use the new Review Answers feature to see details!"); }
