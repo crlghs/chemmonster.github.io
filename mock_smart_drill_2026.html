@@ -1872,15 +1872,20 @@ generateQuiz() {
                     const display = perfStr.toString().includes('%') ? perfStr : perfStr + '%';
                     return `<span class="inline-block px-1.5 py-0.5 ml-2 rounded text-[10px] font-bold border ${colors} print:border-gray-400 print:text-black print:bg-transparent">${display}</span>`;
                 };
-
-                // 3. Group Paper 1B/2 questions
+// 3. Smart Grouping for ALL Papers
                 const groupedItems = [];
                 let currentGroup = null;
 
                 selectedItems.forEach(item => {
-                    if (item.Paper === '1A') {
+                    // Clean the Paper string just in case there are hidden spaces in the CSV
+                    const paperStr = item.Paper.toString().trim();
+                    
+                    if (paperStr === '1A') {
+                        // Paper 1A: Treat as individual standalone questions
                         groupedItems.push({ type: 'single', item: item });
-                    } else {
+                        
+                    } else if (paperStr === '1B') {
+                        // Group Paper 1B by Number only (e.g., extracts '1' from '1a')
                         const baseQ = parseInt(item['Question No.']);
                         const groupKey = `${item.Year}_${item.Paper}_${baseQ}`;
                         
@@ -1891,7 +1896,31 @@ generateQuiz() {
                         if (!currentGroup || currentGroup.key !== groupKey) {
                             currentGroup = {
                                 type: 'grouped', key: groupKey, year: item.Year, paper: item.Paper, baseQ: baseQ,
-                                parts: [], filename: this.getQuestionFilename(item.Year, item.Paper, baseQ)
+                                parts: [], 
+                                filename: this.getQuestionFilename(item.Year, item.Paper, baseQ)
+                            };
+                            groupedItems.push(currentGroup);
+                        }
+                        currentGroup.parts.push({ part: subPart || 'All', perf: item.Performance });
+                        
+                    } else {
+                        // Paper 2 (and any others): Group by Number + Letter (e.g., extracts '1a' from '1a(i)')
+                        const qStr = item['Question No.'].toString().trim();
+                        
+                        // Ultra-robust formula: Grabs the number and the first letter/bracket as the Master Image
+                        const match = qStr.match(/^([^\d]*\d+\s*\(?[a-zA-Z]?\)?)(.*)$/);
+                        
+                        const baseQ = match ? match[1].trim() : qStr; // e.g., '1a' or '1(a)'
+                        const subPart = match ? match[2].trim() : ''; // e.g., '(i)'
+
+                        const groupKey = `${item.Year}_${item.Paper}_${baseQ}`;
+
+                        if (!currentGroup || currentGroup.key !== groupKey) {
+                            currentGroup = {
+                                type: 'grouped', key: groupKey, year: item.Year, paper: item.Paper, baseQ: baseQ,
+                                parts: [], 
+                                // CRUCIAL FIX: Ask for the Master Image (baseQ), not the full sub-part!
+                                filename: this.getQuestionFilename(item.Year, item.Paper, baseQ) 
                             };
                             groupedItems.push(currentGroup);
                         }
