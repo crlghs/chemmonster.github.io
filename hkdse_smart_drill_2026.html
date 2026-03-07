@@ -1454,7 +1454,6 @@
 2017,15,Analytical Chemistry,2,3(c)(i)(2),0.34,
 2017,15,Analytical Chemistry,2,3(c)(i)(3),0.11,
 2017,15,Analytical Chemistry,2,3(c)(ii),0.67,
-// ... PASTE THE REST OF YOUR CSV DATA HERE ...
 `;
 
 class SmartDrill {
@@ -1681,21 +1680,29 @@ class SmartDrill {
                     this.viewQuestion(nextItem.Year, nextItem.Paper, nextItem['Question No.']);
                 }
             }
-
-            parseCSV(text) {
-                const lines = text.split('\n').filter(line => line.trim());
+parseCSV(text) {
+                // Upgraded to handle Windows, Mac, and Linux invisible line endings
+                const lines = text.split(/\r?\n|\r/).filter(line => line.trim());
+                
                 return lines.slice(1).map((line, index) => {
+                    // Smart detection: Did you paste with Tabs (Excel) or Commas (Notepad)?
+                    const separator = line.includes('\t') ? '\t' : ',';
+                    
                     const rowData = [];
                     let inQuote = false;
                     let currentToken = '';
+                    
                     for (let i = 0; i < line.length; i++) {
                         const char = line[i];
                         if (char === '"') { inQuote = !inQuote; }
-                        else if (char === ',' && !inQuote) { rowData.push(currentToken); currentToken = ''; }
+                        else if (char === separator && !inQuote) { rowData.push(currentToken); currentToken = ''; }
                         else { currentToken += char; }
                     }
                     rowData.push(currentToken); 
+                    
                     const cleanData = rowData.map(val => val.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+                    
+                    // If a row is missing data, silently skip it instead of breaking
                     if (cleanData.length < 5) return null; 
 
                     let finalTopicName = cleanData[2];
