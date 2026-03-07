@@ -1681,35 +1681,37 @@ class SmartDrill {
                 }
             }
 parseCSV(text) {
-                // Upgraded to handle Windows, Mac, and Linux invisible line endings
-                const lines = text.split(/\r?\n|\r/).filter(line => line.trim());
+                // 1. AUTO-REPAIR: Remove AI citation tags and stitch broken lines back together
+                let cleanText = text.replace(/\r?\n\/g, ''); 
+                cleanText = cleanText.replace(/^\/, ''); 
+                
+                const lines = cleanText.split(/\r?\n/).filter(line => line.trim());
                 
                 return lines.slice(1).map((line, index) => {
-                    // Smart detection: Did you paste with Tabs (Excel) or Commas (Notepad)?
-                    const separator = line.includes('\t') ? '\t' : ',';
-                    
                     const rowData = [];
                     let inQuote = false;
                     let currentToken = '';
                     
+                    // 2. STRICT COMMA PARSING
                     for (let i = 0; i < line.length; i++) {
                         const char = line[i];
                         if (char === '"') { inQuote = !inQuote; }
-                        else if (char === separator && !inQuote) { rowData.push(currentToken); currentToken = ''; }
+                        else if (char === ',' && !inQuote) { rowData.push(currentToken); currentToken = ''; }
                         else { currentToken += char; }
                     }
                     rowData.push(currentToken); 
                     
                     const cleanData = rowData.map(val => val.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
                     
-                    // If a row is missing data, silently skip it instead of breaking
-                    if (cleanData.length < 5) return null; 
+                    // Discard incomplete rows safely without crashing the app
+                    if (cleanData.length < 5 || !cleanData[0] || !cleanData[3]) return null; 
 
                     let finalTopicName = cleanData[2];
                     if (finalTopicName === 'Redox Reactions, Chemical Cells and Electrolysis') {
                         finalTopicName = 'Electrochemistry';
                     }
 
+                    // 3. DECIMAL TO PERCENTAGE CONVERTER
                     let rawPerformance = cleanData[5] || 'N/A';
                     if (!rawPerformance.includes('%') && !isNaN(parseFloat(rawPerformance))) {
                         rawPerformance = Math.round(parseFloat(rawPerformance) * 100) + '%';
@@ -1727,7 +1729,6 @@ parseCSV(text) {
                     };
                 }).filter(item => item !== null);
             }
-
             initializeFilters() {
                 this.filters.year = new Set(this.data.map(d => d.Year));
                 this.filters.paper = new Set(this.data.map(d => d.Paper));
