@@ -165,7 +165,7 @@
                     </svg>
                 </div>
                 <h1 class="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-slate-700 to-slate-900 tracking-tight">
-                   <span onclick="smartDrill.promptTeacherMode()" class="cursor-pointer text-[10px] font-medium text-slate-400 ml-1 px-2 py-0.5 bg-slate-100 rounded-full border border-slate-200 hover:bg-slate-200 transition-colors" title="Teacher Access">v4.0 (HKDSE)</span>
+                   Smart Drill: HKDSE Past Papers <span class="text-[10px] font-medium text-slate-400 ml-1 px-2 py-0.5 bg-slate-100 rounded-full border border-slate-200">v4.0 (HKDSE)</span>
                 </h1>
             </div>
             
@@ -296,7 +296,7 @@
         <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-16 text-right">
             Score
         </th>
-<th id="th-view" class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-10 text-center hidden">View</th>
+        <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-10 text-center">View</th>
         <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-10 text-center">Star</th>
         <th class="p-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-20 text-center">
             <div class="flex items-center justify-center gap-1.5">
@@ -1454,9 +1454,10 @@
 2017,15,Analytical Chemistry,2,3(c)(i)(2),0.34,
 2017,15,Analytical Chemistry,2,3(c)(i)(3),0.11,
 2017,15,Analytical Chemistry,2,3(c)(ii),0.67,
+// ... PASTE THE REST OF YOUR CSV DATA HERE ...
 `;
 
-class SmartDrill {
+        class SmartDrill {
             constructor() {
                 this.data = [];
                 this.filteredData = [];
@@ -1470,10 +1471,8 @@ class SmartDrill {
                 
                 this.showStarredOnly = false;
                 this.hideCompleted = false;
+                
                 this.currentViewingId = null;
-
-                // 1. Initialize Teacher Mode from short-term memory
-                this.isTeacherMode = sessionStorage.getItem('smart_drill_teacher_mode') === 'true';
 
                 this.init();
             }
@@ -1481,58 +1480,35 @@ class SmartDrill {
             init() {
                 this.loadUserData();
                 
-                // Show the View column header immediately if teacher mode was already active
-                if (this.isTeacherMode) {
-                    const thView = document.getElementById('th-view');
-                    if (thView) thView.classList.remove('hidden');
-                }
-
+                // LOAD EMBEDDED DATA
                 this.processCSVData(EMBEDDED_CSV_DATA);
 
+                // Keyboard Nav
                 document.addEventListener('keydown', (e) => {
                     const modal = document.getElementById('image-viewer-modal');
                     if (!modal.classList.contains('hidden')) {
-                        if (e.key === 'ArrowLeft') this.navigateQuestion(-1);
-                        else if (e.key === 'ArrowRight') this.navigateQuestion(1);
-                        else if (e.key === 'Escape') this.closeImageModal();
+                        if (e.key === 'ArrowLeft') {
+                            this.navigateQuestion(-1);
+                        } else if (e.key === 'ArrowRight') {
+                            this.navigateQuestion(1);
+                        } else if (e.key === 'Escape') {
+                            this.closeImageModal();
+                        }
                     }
                 });
-            }
-
-            // 2. The Teacher Login Function
-            promptTeacherMode() {
-                if (this.isTeacherMode) {
-                    if(confirm("Disable Teacher Mode?")) {
-                        this.isTeacherMode = false;
-                        sessionStorage.removeItem('smart_drill_teacher_mode');
-                        document.getElementById('th-view').classList.add('hidden');
-                        this.renderTable();
-                        this.renderActionButtons();
-                    }
-                    return;
-                }
-                
-                const pwd = prompt("Enter Teacher Passcode:");
-                // Change "teacher2026" to whatever password you want to use
-                if (pwd === "teacher2026") { 
-                    this.isTeacherMode = true;
-                    sessionStorage.setItem('smart_drill_teacher_mode', 'true');
-                    document.getElementById('th-view').classList.remove('hidden');
-                    this.renderTable();
-                    this.renderActionButtons();
-                    alert("Teacher Mode Unlocked: Image viewing and Quiz generation enabled.");
-                } else if (pwd !== null) {
-                    alert("Incorrect Passcode.");
-                }
             }
 
             processCSVData(text) {
                 this.data = this.parseCSV(text);
                 this.initializeFilters();
+                
+                // Default: ALL Selected
                 this.selectedQuestions.clear();
                 this.data.forEach(item => this.selectedQuestions.add(item.id));
+
                 const headerCheckbox = document.getElementById('header-checkbox');
                 if(headerCheckbox) headerCheckbox.checked = true;
+
                 this.applyFilters();
                 this.renderFilters();
                 this.renderActionButtons();
@@ -1541,6 +1517,7 @@ class SmartDrill {
             loadUserData() {
                 const starred = localStorage.getItem('smart_drill_starred');
                 if (starred) this.starredQuestions = new Set(JSON.parse(starred));
+                
                 const completed = localStorage.getItem('smart_drill_completed');
                 if (completed) this.completedQuestions = JSON.parse(completed);
             }
@@ -1555,44 +1532,64 @@ class SmartDrill {
             }
 
             toggleStar(uniqueId) {
-                if (this.starredQuestions.has(uniqueId)) this.starredQuestions.delete(uniqueId);
-                else this.starredQuestions.add(uniqueId);
+                if (this.starredQuestions.has(uniqueId)) {
+                    this.starredQuestions.delete(uniqueId);
+                } else {
+                    this.starredQuestions.add(uniqueId);
+                }
                 this.saveUserData();
                 this.renderTable(); 
             }
 
             toggleComplete(uniqueId) {
-                if (this.completedQuestions[uniqueId]) delete this.completedQuestions[uniqueId];
-                else this.completedQuestions[uniqueId] = Date.now();
+                if (this.completedQuestions[uniqueId]) {
+                    delete this.completedQuestions[uniqueId];
+                } else {
+                    this.completedQuestions[uniqueId] = Date.now();
+                }
                 this.saveUserData();
                 this.renderTable();
             }
 
+            // Bulk Toggle Completed (Custom Modal Version)
             toggleAllCompletedVisible(checkbox) {
-                this.pendingToggleAll = { isChecking: checkbox.checked, checkboxElement: checkbox };
+                // Store the pending action in memory
+                this.pendingToggleAll = {
+                    isChecking: checkbox.checked,
+                    checkboxElement: checkbox
+                };
+
                 const count = this.filteredData.length;
                 const actionText = checkbox.checked ? "Completed" : "Incomplete";
+                
+                // Update text and show our custom modal
                 document.getElementById('confirm-modal-text').innerText = `Mark ${count} visible questions as ${actionText}?`;
                 document.getElementById('confirm-modal').classList.remove('hidden');
             }
 
             confirmToggleAllCompleted() {
                 if (!this.pendingToggleAll) return;
+
                 const isChecking = this.pendingToggleAll.isChecking;
                 const now = Date.now();
+                
                 this.filteredData.forEach(item => {
                     const uid = this.getUniqueId(item);
                     if (isChecking) { if (!this.completedQuestions[uid]) this.completedQuestions[uid] = now; }
                     else { if (this.completedQuestions[uid]) delete this.completedQuestions[uid]; }
                 });
+                
                 this.saveUserData();
                 this.renderTable();
+                
+                // Hide modal and clear memory
                 document.getElementById('confirm-modal').classList.add('hidden');
                 this.pendingToggleAll = null;
             }
 
             cancelToggleAllCompleted() {
                 if (this.pendingToggleAll) {
+                    // Revert the checkbox visually since they cancelled
                     this.pendingToggleAll.checkboxElement.checked = !this.pendingToggleAll.isChecking;
                     this.pendingToggleAll = null;
                 }
@@ -1600,12 +1597,14 @@ class SmartDrill {
             }
 
             toggleStarredFilter() {
-                this.showStarredOnly = document.getElementById('filter-starred-only').checked;
+                const checkbox = document.getElementById('filter-starred-only');
+                this.showStarredOnly = checkbox.checked;
                 this.applyFilters();
             }
 
             toggleCompletedFilter() {
-                this.hideCompleted = document.getElementById('filter-hide-completed').checked;
+                const checkbox = document.getElementById('filter-hide-completed');
+                this.hideCompleted = checkbox.checked;
                 this.applyFilters();
             }
 
@@ -1674,35 +1673,38 @@ class SmartDrill {
             navigateQuestion(offset) {
                 const currentIndex = this.filteredData.findIndex(item => this.getUniqueId(item) === this.currentViewingId);
                 if (currentIndex === -1) return;
+
                 const newIndex = currentIndex + offset;
                 if (newIndex >= 0 && newIndex < this.filteredData.length) {
                     const nextItem = this.filteredData[newIndex];
                     this.viewQuestion(nextItem.Year, nextItem.Paper, nextItem['Question No.']);
                 }
             }
-parseCSV(text) {
-                // Upgraded to handle Windows, Mac, and Linux invisible line endings
-                const lines = text.split(/\r?\n|\r/).filter(line => line.trim());
-                
+
+            handleFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.processCSVData(e.target.result);
+                };
+                reader.readAsText(file);
+            }
+
+            parseCSV(text) {
+                const lines = text.split('\n').filter(line => line.trim());
                 return lines.slice(1).map((line, index) => {
-                    // Smart detection: Did you paste with Tabs (Excel) or Commas (Notepad)?
-                    const separator = line.includes('\t') ? '\t' : ',';
-                    
                     const rowData = [];
                     let inQuote = false;
                     let currentToken = '';
-                    
                     for (let i = 0; i < line.length; i++) {
                         const char = line[i];
                         if (char === '"') { inQuote = !inQuote; }
-                        else if (char === separator && !inQuote) { rowData.push(currentToken); currentToken = ''; }
+                        else if (char === ',' && !inQuote) { rowData.push(currentToken); currentToken = ''; }
                         else { currentToken += char; }
                     }
                     rowData.push(currentToken); 
-                    
                     const cleanData = rowData.map(val => val.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
-                    
-                    // If a row is missing data, silently skip it instead of breaking
                     if (cleanData.length < 5) return null; 
 
                     let finalTopicName = cleanData[2];
@@ -1710,6 +1712,7 @@ parseCSV(text) {
                         finalTopicName = 'Electrochemistry';
                     }
 
+                    // Convert raw decimal performance to percentage (e.g., 0.89 -> 89%)
                     let rawPerformance = cleanData[5] || 'N/A';
                     if (!rawPerformance.includes('%') && !isNaN(parseFloat(rawPerformance))) {
                         rawPerformance = Math.round(parseFloat(rawPerformance) * 100) + '%';
@@ -1729,6 +1732,7 @@ parseCSV(text) {
             }
 
             initializeFilters() {
+                // Default: ALL Checked
                 this.filters.year = new Set(this.data.map(d => d.Year));
                 this.filters.paper = new Set(this.data.map(d => d.Paper));
                 this.filters.topic = new Set(this.data.map(d => d.TopicName));
@@ -1751,18 +1755,26 @@ parseCSV(text) {
 
             getQuestionFilename(year, paper, questionNo) {
                 const qId = this.getQuestionIdentifier(paper, questionNo);
+                // Updated to target HKDSE folder and naming format
                 return `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}.png`;
             }
 
             renderFilters() {
                 const years = [...new Set(this.data.map(d => d.Year))].sort().reverse();
                 const papers = [...new Set(this.data.map(d => d.Paper))].sort();
+
+                // 1. STRICT RULE: Check if "Paper 2" is currently selected.
                 const isPaper2Selected = this.filters.paper.has('2');
+
+                // 2. Filter Topics
                 const uniqueTopicsMap = new Map();
-                
                 this.data.forEach(item => {
                     const topicId = parseInt(item.Topic) || 999;
-                    if (topicId >= 13 && !isPaper2Selected) return;
+                    
+                    if (topicId >= 13 && !isPaper2Selected) {
+                        return; // Skip this iteration
+                    }
+
                     if (!uniqueTopicsMap.has(item.TopicName)) {
                         uniqueTopicsMap.set(item.TopicName, { id: topicId, rawId: item.Topic, name: item.TopicName });
                     }
@@ -1770,19 +1782,23 @@ parseCSV(text) {
                 
                 const sortedTopics = Array.from(uniqueTopicsMap.values()).sort((a, b) => a.id - b.id);
 
-                document.getElementById('year-filters').innerHTML = years.map(y => `
+                // 3. Render HTML
+                const yearContainer = document.getElementById('year-filters');
+                yearContainer.innerHTML = years.map(y => `
                     <label class="flex items-center justify-center space-x-1 cursor-pointer py-1 px-1 rounded hover:bg-slate-100 border border-slate-200 transition-all bg-white w-full">
                         <input type="checkbox" onchange="smartDrill.toggleFilter('year', '${y}')" value="${y}" ${this.filters.year.has(y) ? 'checked' : ''} class="w-3 h-3 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                         <span class="text-[10px] text-slate-600 font-medium">${y}</span>
                     </label>`).join('');
 
-                document.getElementById('paper-filters').innerHTML = papers.map(p => `
+                const paperContainer = document.getElementById('paper-filters');
+                paperContainer.innerHTML = papers.map(p => `
                     <label class="flex items-center justify-center space-x-1 cursor-pointer py-1 px-1 rounded hover:bg-slate-100 border border-slate-200 transition-all bg-white w-full">
                         <input type="checkbox" onchange="smartDrill.toggleFilter('paper', '${p}')" value="${p}" ${this.filters.paper.has(p) ? 'checked' : ''} class="w-3 h-3 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                         <span class="text-[10px] text-slate-600 font-medium">${p}</span>
                     </label>`).join('');
 
-                document.getElementById('topic-filters').innerHTML = sortedTopics.map(t => `
+                const topicContainer = document.getElementById('topic-filters');
+                topicContainer.innerHTML = sortedTopics.map(t => `
                     <label class="flex items-start space-x-2 cursor-pointer py-1 px-2 rounded hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100 transition-all">
                         <input type="checkbox" onchange="smartDrill.toggleFilter('topic', '${t.name.replace(/'/g, "\\'")}')" value="${t.name}" ${this.filters.topic.has(t.name) ? 'checked' : ''} class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-0.5 shrink-0">
                         <span class="text-xs text-slate-600 font-medium leading-tight"><span class="font-bold text-slate-400 mr-1">${t.rawId}.</span>${t.name}</span>
@@ -1790,9 +1806,12 @@ parseCSV(text) {
             }
 
             toggleFilter(type, value) {
-                if (this.filters[type].has(value)) this.filters[type].delete(value);
-                else this.filters[type].add(value);
-                if (type === 'paper') this.renderFilters();
+                if (this.filters[type].has(value)) { this.filters[type].delete(value); } else { this.filters[type].add(value); }
+                
+                if (type === 'paper') {
+                    this.renderFilters();
+                }
+                
                 this.applyFilters();
             }
 
@@ -1802,8 +1821,7 @@ parseCSV(text) {
                 else if (type === 'paper') allValues = new Set(this.data.map(d => d.Paper));
                 else if (type === 'topic') allValues = new Set(this.data.map(d => d.TopicName));
 
-                if (allValues.size === this.filters[type].size) this.filters[type].clear();
-                else this.filters[type] = allValues;
+                if (allValues.size === this.filters[type].size) { this.filters[type].clear(); } else { this.filters[type] = allValues; }
                 
                 this.renderFilters();
                 this.applyFilters();
@@ -1861,8 +1879,8 @@ parseCSV(text) {
             applyFilters() {
                 this.filteredData = this.data.filter(item => {
                     const uniqueId = this.getUniqueId(item);
-                    if (this.showStarredOnly && !this.starredQuestions.has(uniqueId)) return false;
-                    if (this.hideCompleted && this.completedQuestions[uniqueId]) return false;
+                    if (this.showStarredOnly && !this.starredQuestions.has(uniqueId)) { return false; }
+                    if (this.hideCompleted && this.completedQuestions[uniqueId]) { return false; }
 
                     const yearMatch = this.filters.year.has(item.Year);
                     const paperMatch = this.filters.paper.has(item.Paper);
@@ -1901,7 +1919,6 @@ parseCSV(text) {
                 this.renderActionButtons();
             }
 
-            // 3. Conditional Table Rendering based on Teacher Mode
             renderTable() {
                 const tbody = document.getElementById('table-body');
                 
@@ -1924,14 +1941,6 @@ parseCSV(text) {
                     }
                     const rowClass = isCompleted ? 'bg-emerald-50/60 hover:bg-emerald-100/50' : 'hover:bg-slate-50';
 
-                    // Only render the view button cell if in Teacher Mode
-                    const viewCell = this.isTeacherMode ? `
-                        <td class="p-3 text-center animate-fade-in">
-                             <button onclick="smartDrill.viewQuestion('${item.Year}', '${item.Paper}', '${item['Question No.']}')" class="text-slate-400 hover:text-indigo-600 p-1 rounded-full hover:bg-indigo-50 transition-colors" title="View">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            </button>
-                        </td>` : '';
-
                     return `
                     <tr class="${rowClass} transition-colors group animate-fade-in">
                         <td class="p-3 text-left pl-5">
@@ -1942,7 +1951,11 @@ parseCSV(text) {
                         <td class="p-3 text-xs font-bold text-slate-800">${item['Question No.']}</td>
                         <td class="p-3 text-xs text-slate-600 text-center">${item.Topic}</td>
                         <td class="p-3 text-right"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${scoreClass}">${item.Performance}</span></td>
-                        ${viewCell}
+                        <td class="p-3 text-center">
+                             <button onclick="smartDrill.viewQuestion('${item.Year}', '${item.Paper}', '${item['Question No.']}')" class="text-slate-400 hover:text-indigo-600 p-1 rounded-full hover:bg-indigo-50 transition-colors" title="View">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </button>
+                        </td>
                         <td class="p-3 text-center">
                              <button onclick="smartDrill.toggleStar('${uniqueId}')" class="p-1 rounded-full hover:bg-slate-100 transition-transform transform hover:scale-110" title="Star">
                                 <svg class="w-4 h-4 ${isStarred ? 'text-yellow-400' : 'text-slate-300'}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>
@@ -1967,11 +1980,12 @@ parseCSV(text) {
                 }
             }
 
-            updateStats() { document.getElementById('total-questions').textContent = `${this.filteredData.length} Qs`; }
+            updateStats() {
+                document.getElementById('total-questions').textContent = `${this.filteredData.length} Qs`;
+            }
 
             toggleSelection(id) {
-                if (this.selectedQuestions.has(id)) this.selectedQuestions.delete(id);
-                else this.selectedQuestions.add(id);
+                if (this.selectedQuestions.has(id)) { this.selectedQuestions.delete(id); } else { this.selectedQuestions.add(id); }
                 this.renderActionButtons();
             }
 
@@ -1980,6 +1994,7 @@ parseCSV(text) {
                 this.filteredData.forEach(item => {
                     const id = item.id;
                     const rowCheckbox = document.querySelector(`input[onchange="smartDrill.toggleSelection(${id})"]`);
+                    
                     if (isChecked) {
                         this.selectedQuestions.add(id);
                         if(rowCheckbox) rowCheckbox.checked = true;
@@ -1993,7 +2008,11 @@ parseCSV(text) {
 
             showReviewSummary() {
                 const validIDs = Array.from(this.selectedQuestions).filter(id => this.data.find(d => d.id === id));
-                if (validIDs.length === 0) { alert("Please select questions first."); return; }
+                
+                if (validIDs.length === 0) {
+                    alert("Please select questions first to generate a summary.");
+                    return;
+                }
                 
                 const container = document.getElementById('review-content');
                 let html = `
@@ -2009,16 +2028,19 @@ parseCSV(text) {
                 `;
 
                 const sortedIDs = validIDs.sort((a, b) => a - b);
+
                 sortedIDs.forEach(id => {
                     const item = this.data.find(d => d.id === id);
                     if (!item) return;
 
                     let answerDisplay = '<span class="text-slate-300 italic text-xs">N/A</span>';
+                    
                     if (item.Answer) {
                         if (item.Paper === '1A') {
                             answerDisplay = `<span class="font-bold text-indigo-600 text-lg">${item.Answer}</span>`;
                         } else {
                             const pageNum = parseInt(item.Answer);
+                            // Updated to HKDSE format folder path
                             const pdfFilename = `HKDSE_${item.Year}/${item.Year}_HKDSE_paper_${item.Paper}_ans_marked.pdf`;
                             answerDisplay = `
                                 <button onclick="window.open('${pdfFilename}#page=${pageNum}', '_blank')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors group">
@@ -2041,9 +2063,13 @@ parseCSV(text) {
                             <td class="px-4 py-3 text-xs font-medium text-slate-700">
                                 <span class="font-bold">${item.Year}</span> <span class="text-slate-300 mx-1">|</span> Paper ${item.Paper} <span class="text-slate-300 mx-1">|</span> Q${item['Question No.']}
                             </td>
-                            <td class="px-4 py-3 text-sm">${answerDisplay}</td>
+                            <td class="px-4 py-3 text-sm">
+                                ${answerDisplay}
+                            </td>
                             <td class="px-4 py-3 text-right">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${scoreClass}">${item.Performance}</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${scoreClass}">
+                                    ${item.Performance}
+                                </span>
                             </td>
                         </tr>
                     `;
@@ -2054,7 +2080,9 @@ parseCSV(text) {
                 document.getElementById('review-modal').classList.remove('hidden');
             }
 
-            closeReviewModal() { document.getElementById('review-modal').classList.add('hidden'); }
+            closeReviewModal() {
+                document.getElementById('review-modal').classList.add('hidden');
+            }
 
             viewQuestion(year, paper, questionNum) {
                 const imgFilename = this.getQuestionFilename(year, paper, questionNum);
@@ -2103,8 +2131,10 @@ parseCSV(text) {
                         ansBtn.innerHTML = `
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                             <span>Open Marking Scheme</span>`;
+                        
                         ansBtn.onclick = () => {
                             const pageNum = parseInt(item.Answer);
+                            // Updated to HKDSE format folder path
                             const pdfFilename = `HKDSE_${item.Year}/${item.Year}_HKDSE_paper_${item.Paper}_ans_marked.pdf`;
                             window.open(`${pdfFilename}#page=${pageNum}`, '_blank');
                         };
@@ -2115,7 +2145,8 @@ parseCSV(text) {
 
                 const badge = document.getElementById('focus-badge');
                 const badgeText = document.getElementById('focus-text');
-                const match = questionNum.toString().match(/^\d+(.*)$/);
+                const qStr = questionNum.toString();
+                const match = qStr.match(/^\d+(.*)$/);
                 const subPart = match ? match[1].trim() : '';
                 if (subPart && paper !== '1A') {
                     badgeText.innerText = `Part ${subPart}`;
@@ -2130,17 +2161,9 @@ parseCSV(text) {
                 setTimeout(() => { document.getElementById('single-question-img').src = ''; }, 200);
             }
 
-            // 4. Conditional Action Button Rendering based on Teacher Mode
             renderActionButtons() {
                 const container = document.getElementById('action-buttons-container');
                 if (!container) return;
-                
-                // If not in teacher mode, show a subtle "coming soon" message instead of buttons
-                if (!this.isTeacherMode) {
-                    container.innerHTML = `<span class="text-xs text-slate-400 font-medium px-3 py-2 bg-slate-100 rounded border border-slate-200">Images & Quiz features coming soon</span>`;
-                    return;
-                }
-
                 const count = this.selectedQuestions.size;
                 container.innerHTML = count > 0 
                     ? `<div class="flex gap-2 animate-fade-in"><button onclick="smartDrill.generateQuiz()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold rounded shadow-sm transition-colors flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Generate Quiz (${count})</button><button onclick="smartDrill.showReviewSummary()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold rounded shadow-sm transition-colors flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> Review (${count})</button></div>` 
@@ -2150,17 +2173,27 @@ parseCSV(text) {
             generateQuiz() {
                 const container = document.getElementById('quiz-content');
                 container.innerHTML = ''; 
-                if (this.selectedQuestions.size === 0) { alert("Please select questions first."); return; }
+                if (this.selectedQuestions.size === 0) {
+                    alert("Please select questions from the list first.");
+                    return;
+                }
                 const indices = Array.from(this.selectedQuestions).sort((a, b) => a - b);
                 const groups = {}; 
 
                 indices.forEach((index) => {
                     const item = this.filteredData.find(d => d.id === index);
                     if (!item) return;
+                    
                     const qIdentifier = this.getQuestionIdentifier(item.Paper, item['Question No.']);
                     const groupKey = `${item.Year}_${item.Paper}_${qIdentifier}`;
+
                     if (!groups[groupKey]) {
-                        groups[groupKey] = { year: item.Year, paper: item.Paper, qIdentifier: qIdentifier, subParts: [] };
+                        groups[groupKey] = {
+                            year: item.Year,
+                            paper: item.Paper,
+                            qIdentifier: qIdentifier,
+                            subParts: []
+                        };
                     }
                     groups[groupKey].subParts.push(item['Question No.']);
                 });
@@ -2170,6 +2203,7 @@ parseCSV(text) {
                     const group = groups[key];
                     const subPartsText = group.subParts.join(', ');
                     const imgFilename = this.getQuestionFilename(group.year, group.paper, group.qIdentifier);
+
                     const div = document.createElement('div');
                     div.className = 'quiz-item shadow-sm';
                     div.innerHTML = `
@@ -2189,22 +2223,49 @@ parseCSV(text) {
             printQuiz() {
                 if (window.self !== window.top) {
                     const printWindow = window.open('', '_blank');
-                    if (!printWindow) { alert("⚠️ Popup Blocked! Please allow pop-ups for this site to print the quiz."); return; }
+                    if (!printWindow) {
+                        alert("⚠️ Popup Blocked! Please allow pop-ups for this site to print the quiz.");
+                        return;
+                    }
+                    
                     const content = document.getElementById('quiz-content').innerHTML;
+                    
                     printWindow.document.write(`
-                        <html><head><title>Print Quiz</title><script src="https://cdn.tailwindcss.com"><\/script>
-                        <style>body{font-family:sans-serif;padding:20px;background:white;color:black}.quiz-item{margin-bottom:2rem;padding:1.5rem;page-break-inside:avoid}.quiz-header{font-weight:bold;color:#64748b;margin-bottom:1rem;border-bottom:1px solid #e2e8f0;padding-bottom:0.5rem;display:flex;justify-content:space-between;font-size:14px}img{max-width:100%;height:auto;display:block;margin:0 auto}</style>
-                        </head><body>${content}<script>setTimeout(()=>{window.print();}, 1000);<\/script></body></html>`);
+                        <html>
+                        <head>
+                            <title>Print Quiz</title>
+                            <script src="https://cdn.tailwindcss.com"><\/script>
+                            <style>
+                                body { font-family: sans-serif; padding: 20px; background: white; color: black; }
+                                .quiz-item { margin-bottom: 2rem; padding: 1.5rem; page-break-inside: avoid; }
+                                .quiz-header { font-weight: bold; color: #64748b; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 14px; }
+                                img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+                            </style>
+                        </head>
+                        <body>
+                            ${content}
+                            <script>
+                                setTimeout(() => {
+                                    window.print();
+                                }, 1000);
+                            <\/script>
+                        </body>
+                        </html>
+                    `);
                     printWindow.document.close();
-                } else window.print();
+                } else {
+                    window.print();
+                }
             }
 
             closeQuizModal() { document.getElementById('quiz-modal').classList.add('hidden'); }
             viewSelected() { alert("Use the new Review Answers feature to see details!"); }
+            handlePdfUpload(event) { console.log("Legacy PDF upload handler"); }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             window.smartDrill = new SmartDrill();
         });
+    </script>
 </body>
 </html>
