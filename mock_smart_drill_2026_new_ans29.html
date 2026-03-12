@@ -1766,46 +1766,30 @@ toggleAnswerImage(year, paper, questionNum) {
                                 Correct Answer: <span class="font-black text-indigo-600 text-sm ml-1">${ansLetter}</span>
                             </div>
                         `;
-                    } else {
-                        const focusedPartsHTML = group.subParts.map((part, idx) => {
-                            let subLetter = part;
-                            let prefixToStrip = group.qIdentifier.toString();
-                            if (group.paper === '2') {
-                                const match = prefixToStrip.match(/^(\d+)([a-zA-Z])$/);
-                                if (match) prefixToStrip = `${match[1]}(${match[2]})`;
-                            }
-                            if (subLetter.startsWith(prefixToStrip) && subLetter !== prefixToStrip) {
-                                subLetter = subLetter.substring(prefixToStrip.length);
-                            } else if (subLetter === prefixToStrip) { subLetter = ''; }
-                            
-                            const perf = group.performances[idx];
-                            let perfClass = 'bg-slate-100 text-slate-800 border-slate-200';
-                            if (perf && perf !== 'N/A') {
-                                const val = parseInt(perf);
-                                if (!isNaN(val)) {
-                                    if (val < 40) perfClass = 'bg-red-50 text-red-600 border-red-100';
-                                    else if (val < 60) perfClass = 'bg-amber-50 text-amber-600 border-amber-100';
-                                    else perfClass = 'bg-emerald-50 text-emerald-600 border-emerald-100';
-                                }
-                            }
-                            return `<span class="inline-flex items-center mr-1.5 mb-0.5 text-[10px]"><span class="font-bold text-slate-700 mr-1">${subLetter}</span> <span class="inline-flex items-center px-1 py-0.5 rounded font-bold border ${perfClass}">${perf || '-'}</span></span>`;
-                        }).join('');
+} else {
+                        // ... (Keep your focusedPartsHTML mapping logic exactly the same above this line) ...
 
-                        const ansFilename = `${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans.webp`;
+                        // 1. Define all three possible answer image names
+                        const baseAns = `${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans.webp`;
+                        const p1Ans = `${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans_p1.webp`;
+                        const p2Ans = `${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans_p2.webp`;
                         
-                        div.className = 'quiz-item shadow-sm border border-blue-100 rounded-md mb-2 page-break-inside-avoid bg-white'; 
+                        // 2. REMOVED 'page-break-inside-avoid' from the main container
+                        div.className = 'quiz-item shadow-sm border border-blue-100 rounded-md mb-2 bg-white'; 
                         
-                        // NO MORE TOGGLE BUTTON - IMAGE IS ALWAYS VISIBLE!
+                        // 3. Added the smart fallback image logic for answers
                         div.innerHTML = `
-                            <div class="quiz-header flex flex-col items-start gap-0.5 pb-1 border-b border-blue-200 bg-blue-50 px-3 py-1.5 rounded-t-md">
+                            <div class="quiz-header flex flex-col items-start gap-0.5 pb-1 border-b border-blue-200 bg-blue-50 px-3 py-1.5 rounded-t-md" style="page-break-inside: avoid;">
                                 <div class="font-bold text-slate-800 text-xs">Question ${questionCounter} [${group.year} Paper ${group.paper} - Q${group.qIdentifier}]</div>
                                 <div class="text-[10px] flex flex-wrap items-center mt-0.5 w-full">
                                     <span class="text-slate-600 font-semibold mr-1.5 italic">Focused Parts:</span>
                                     ${focusedPartsHTML}
                                 </div>
                             </div>
-                            <div class="w-full flex justify-center p-1">
-                                <img src="${ansFilename}" alt="Answer Image" class="w-full h-auto object-contain rounded" onerror="this.parentElement.innerHTML='<div class=\\'text-red-500 bg-red-50 p-2 rounded w-full text-center text-xs\\'>Answer image file not found: <b>${ansFilename}</b></div>'">
+                            <div class="w-full flex flex-col items-center p-1 gap-2">
+                                <img src="${baseAns}" alt="Answer Image" class="w-full h-auto object-contain rounded" style="page-break-inside: avoid;" onerror="this.onerror=function(){ this.outerHTML='<div class=\\'text-red-500 bg-red-50 p-2 rounded w-full text-center text-xs\\'>Answer image not found: <b>${baseAns}</b> or <b>${p1Ans}</b></div>'; }; this.src='${p1Ans}';">
+                                
+                                <img src="${p2Ans}" alt="Answer Image Part 2" class="w-full h-auto object-contain rounded hidden" style="page-break-inside: avoid;" onload="this.classList.remove('hidden')" onerror="this.remove()">
                             </div>
                         `;
                     }
@@ -2025,32 +2009,35 @@ renderActionButtons() {
                                 <img src="${imgFilename}" alt="Question Image" class="w-full h-auto object-contain rounded" onerror="this.parentElement.innerHTML='<div class=\\'text-red-500 bg-red-50 p-2 rounded w-full text-center text-xs\\'>Image file not found: <b>${imgFilename}</b><br><span class=\\'text-[10px] text-gray-500\\'>Please ensure you have created the folder and placed the image inside it.</span></div>'">
                             </div>`;
 } else {
-                        // ... (Keep your focusedPartsHTML mapping logic exactly the same above this line) ...
+                        const focusedPartsHTML = group.subParts.map((part, idx) => {
+                            let subLetter = part;
+                            let prefixToStrip = group.qIdentifier.toString();
+                            
+                            // Smart prefix matching for Paper 2
+                            if (group.paper === '2') {
+                                const match = prefixToStrip.match(/^(\d+)([a-zA-Z])$/);
+                                if (match) {
+                                    prefixToStrip = `${match[1]}(${match[2]})`;
+                                }
+                            }
 
-                        // 1. Define all three possible answer image names
-                        const baseAns = `${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans.webp`;
-                        const p1Ans = `${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans_p1.webp`;
-                        const p2Ans = `${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans_p2.webp`;
-                        
-                        // 2. REMOVED 'page-break-inside-avoid' from the main container
-                        div.className = 'quiz-item shadow-sm border border-blue-100 rounded-md mb-2 bg-white'; 
-                        
-                        // 3. Added the smart fallback image logic for answers
-                        div.innerHTML = `
-                            <div class="quiz-header flex flex-col items-start gap-0.5 pb-1 border-b border-blue-200 bg-blue-50 px-3 py-1.5 rounded-t-md" style="page-break-inside: avoid;">
-                                <div class="font-bold text-slate-800 text-xs">Question ${questionCounter} [${group.year} Paper ${group.paper} - Q${group.qIdentifier}]</div>
-                                <div class="text-[10px] flex flex-wrap items-center mt-0.5 w-full">
-                                    <span class="text-slate-600 font-semibold mr-1.5 italic">Focused Parts:</span>
-                                    ${focusedPartsHTML}
-                                </div>
-                            </div>
-                            <div class="w-full flex flex-col items-center p-1 gap-2">
-                                <img src="${baseAns}" alt="Answer Image" class="w-full h-auto object-contain rounded" style="page-break-inside: avoid;" onerror="this.onerror=function(){ this.outerHTML='<div class=\\'text-red-500 bg-red-50 p-2 rounded w-full text-center text-xs\\'>Answer image not found: <b>${baseAns}</b> or <b>${p1Ans}</b></div>'; }; this.src='${p1Ans}';">
-                                
-                                <img src="${p2Ans}" alt="Answer Image Part 2" class="w-full h-auto object-contain rounded hidden" style="page-break-inside: avoid;" onload="this.classList.remove('hidden')" onerror="this.remove()">
-                            </div>
-                        `;
-                    }
+                            // Strip the matched prefix
+                            if (subLetter.startsWith(prefixToStrip) && subLetter !== prefixToStrip) {
+                                subLetter = subLetter.substring(prefixToStrip.length);
+                            } else if (subLetter === prefixToStrip) {
+                                subLetter = ''; 
+                            }
+                            
+                            const perf = group.performances[idx];
+                            let perfClass = 'bg-slate-100 text-slate-800 border-slate-200';
+                            if (perf && perf !== 'N/A') {
+                                const val = parseInt(perf);
+                                if (!isNaN(val)) {
+                                    if (val < 40) perfClass = 'bg-red-50 text-red-600 border-red-100';
+                                    else if (val < 60) perfClass = 'bg-amber-50 text-amber-600 border-amber-100';
+                                    else perfClass = 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                                }
+                            }
                             
                             return `<span class="inline-flex items-center mr-1.5 mb-0.5 text-[10px]"><span class="font-bold text-slate-700 mr-1">${subLetter}</span> <span class="inline-flex items-center px-1 py-0.5 rounded font-bold border ${perfClass}">${perf || '-'}</span></span>`;
                         }).join('');
