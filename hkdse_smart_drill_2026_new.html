@@ -1806,9 +1806,9 @@ toggleAnswerImage(year, paper, questionNum) {
                     this.isShowingAnswer = true;
                 } else {
                     // 2. Switch back to Question Image (With Fallbacks)
-                    const baseImg = `${year}/${year}_HKDSE_${paper}_Q${qId}.webp`;
-                    const p1Img = `${year}/${year}_HKDSE_${paper}_Q${qId}_p1.webp`;
-                    const p2Img = `${year}/${year}_HKDSE_${paper}_Q${qId}_p2.webp`;
+                    const baseImg = `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}.webp`;
+                    const p1Img = `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}_p1.webp`;
+                    const p2Img = `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}_p2.webp`;
 
                     imgEl.src = baseImg;
                     imgEl.onerror = () => {
