@@ -1768,7 +1768,7 @@ init() {
 
             getQuestionFilename(year, paper, questionNo) {
                 const qId = this.getQuestionIdentifier(paper, questionNo);
-                return `HKDSE_${year}/${year}_mock_${paper}_Q${qId}.webp`;
+                return `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}.webp`;
             }
 toggleAnswerImage(year, paper, questionNum) {
                 const imgEl = document.getElementById('single-question-img');
@@ -1778,9 +1778,9 @@ toggleAnswerImage(year, paper, questionNum) {
                 
                 if (!this.isShowingAnswer) {
                     // 1. Switch to Answer Image (With Fallbacks)
-                    const baseAns = `HKDSE_${year}/${year}_mock_${paper}_Q${qId}_ans.webp`;
-                    const p1Ans = `HKDSE_${year}/${year}_mock_${paper}_Q${qId}_ans_p1.webp`;
-                    const p2Ans = `HKDSE_${year}/${year}_mock_${paper}_Q${qId}_ans_p2.webp`;
+                    const baseAns = `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}_ans.webp`;
+                    const p1Ans = `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}_ans_p1.webp`;
+                    const p2Ans = `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}_ans_p2.webp`;
                     
                     imgEl.src = baseAns;
                     imgEl.onerror = () => {
@@ -1806,9 +1806,9 @@ toggleAnswerImage(year, paper, questionNum) {
                     this.isShowingAnswer = true;
                 } else {
                     // 2. Switch back to Question Image (With Fallbacks)
-                    const baseImg = `${year}/${year}_mock_${paper}_Q${qId}.webp`;
-                    const p1Img = `${year}/${year}_mock_${paper}_Q${qId}_p1.webp`;
-                    const p2Img = `${year}/${year}_mock_${paper}_Q${qId}_p2.webp`;
+                    const baseImg = `${year}/${year}_HKDSE_${paper}_Q${qId}.webp`;
+                    const p1Img = `${year}/${year}_HKDSE_${paper}_Q${qId}_p1.webp`;
+                    const p2Img = `${year}/${year}_HKDSE_${paper}_Q${qId}_p2.webp`;
 
                     imgEl.src = baseImg;
                     imgEl.onerror = () => {
@@ -2173,9 +2173,9 @@ toggleAnswerImage(year, paper, questionNum) {
                             return `<span class="inline-flex items-center mr-1.5 mb-0.5 text-[10px]"><span class="font-bold text-slate-700 mr-1">${subLetter}</span> <span class="inline-flex items-center px-1 py-0.5 rounded font-bold border ${perfClass}">${perf || '-'}</span></span>`;
                         }).join('');
 
-const baseAns = `HKDSE_${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans.webp`;
-                        const p1Ans = `HKDSE_${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans_p1.webp`;
-                        const p2Ans = `HKDSE_${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_ans_p2.webp`;
+const baseAns = `HKDSE_${group.year}/${group.year}_HKDSE_${group.paper}_Q${group.qIdentifier}_ans.webp`;
+                        const p1Ans = `HKDSE_${group.year}/${group.year}_HKDSE_${group.paper}_Q${group.qIdentifier}_ans_p1.webp`;
+                        const p2Ans = `HKDSE_${group.year}/${group.year}_HKDSE_${group.paper}_Q${group.qIdentifier}_ans_p2.webp`;
                         
                         // REMOVED 'page-break-inside-avoid' from the main container so it can split across pages
                         div.className = 'quiz-item shadow-sm border border-blue-100 rounded-md mb-2 bg-white'; 
@@ -2257,9 +2257,9 @@ viewQuestion(year, paper, questionNum) {
                 const imgElP2 = document.getElementById('single-question-img-p2');
                 
                 // Fallback Image Logic
-                const baseImg = `HKDSE_${year}/${year}_mock_${paper}_Q${qId}.webp`;
-                const p1Img = `HKDSE_${year}/${year}_mock_${paper}_Q${qId}_p1.webp`;
-                const p2Img = `HKDSE_${year}/${year}_mock_${paper}_Q${qId}_p2.webp`;
+                const baseImg = `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}.webp`;
+                const p1Img = `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}_p1.webp`;
+                const p2Img = `HKDSE_${year}/${year}_HKDSE_${paper}_Q${qId}_p2.webp`;
 
                 imgEl.src = baseImg;
                 imgEl.onerror = () => {
@@ -2466,9 +2466,9 @@ renderActionButtons() {
                             return `<span class="inline-flex items-center mr-1.5 mb-0.5 text-[10px]"><span class="font-bold text-slate-700 mr-1">${subLetter}</span> <span class="inline-flex items-center px-1 py-0.5 rounded font-bold border ${perfClass}">${perf || '-'}</span></span>`;
                         }).join('');
 
-const baseImg = `HKDSE_${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}.webp`;
-                        const p1Img = `HKDSE_${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_p1.webp`;
-                        const p2Img = `HKDSE_${group.year}/${group.year}_mock_${group.paper}_Q${group.qIdentifier}_p2.webp`;
+const baseImg = `HKDSE_${group.year}/${group.year}_HKDSE_${group.paper}_Q${group.qIdentifier}.webp`;
+                        const p1Img = `HKDSE_${group.year}/${group.year}_HKDSE_${group.paper}_Q${group.qIdentifier}_p1.webp`;
+                        const p2Img = `HKDSE_${group.year}/${group.year}_HKDSE_${group.paper}_Q${group.qIdentifier}_p2.webp`;
                         
                         // Override main container class to REMOVE 'page-break-inside-avoid' for Paper 1B/2
                         div.className = 'quiz-item shadow-sm border border-blue-100 rounded-md mb-2 bg-white'; 
